@@ -95,7 +95,7 @@ plot_mse_output <- function(mods,
     report_path <- file.path(full_output_dir, report_file)
     
     # Save RDS
-    saveRDS(mods, file = file.path(full_output_dir, "mods_tmp.RDS"))
+    # saveRDS(mods, file = file.path(full_output_dir, "mods_tmp.RDS"))
     
     # Rmd content (same for both HTML and PDF)
     rmd_lines <- c(
