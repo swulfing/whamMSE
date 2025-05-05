@@ -1,0 +1,45 @@
+---
+title: "Bug Reporting and Fixing"
+output: html_document
+---
+
+```{r echo=FALSE, results='asis'}
+# Define the news updates
+news_updates <- list(
+  list(date = "2025-01-28", title = "onto_move_pars", content = "A bug is fixed"),
+  list(date = "2025-01-28", title = "2D random effects for movement", content = "Movement can be now treated as 2D-AR1"),
+  list(date = "2025-01-28", title = "can_move in generate_move", content = "A bug in generate_move() function is fixed"),
+  list(date = "2025-01-16", title = "mean_vals bugs for shinyR fixed", content = "mean_vals are incorrectly set as zeros"),
+  list(date = "2024-07-30", title = "parallel computing bug fixed", content = "A bug related to NAA_re is fixed"),
+  list(date = "2024-07-15", title = "plot_mse_output bug fixed", content = "Now results can be summarized and reported in png, pdf, or html"),
+  list(date = "2024-07-11", title = "plot_mse_output not working", content = "debugging now"),
+  list(date = "2024-07-09", title = "input$random = NULL", content = "input$random must be NULL when generating an operating model to avoid repetitive inner optimizations")
+)
+
+# Create dropdown menu
+dropdown_menu <- function(news) {
+  tags$div(
+    class = "dropdown",
+    tags$button(class = "btn btn-primary dropdown-toggle", type = "button", id = "dropdownMenuButton", `data-toggle` = "dropdown", `aria-haspopup` = "true", `aria-expanded` = "false", "Bug Report"),
+    tags$div(class = "dropdown-menu", `aria-labelledby` = "dropdownMenuButton", 
+      lapply(news, function(item) {
+        tags$a(class = "dropdown-item", href = "#", item$title)
+      })
+    )
+  )
+}
+
+# Render the dropdown menu
+dropdown_menu(news_updates)
+```
+
+## Detailed Updates
+
+```{r echo=FALSE, results='asis'}
+# Display detailed news updates
+for (item in news_updates) {
+  cat(paste0("### ", item$title, "\n\n"))
+  cat(paste0("**Date:** ", item$date, "\n\n"))
+  cat(paste0(item$content, "\n\n"))
+}
+```
