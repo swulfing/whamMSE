@@ -2919,7 +2919,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
 }
 
 plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
-                                         width = 8, height = 7, dpi = 300, col.opt = "D",
+                                         width = 10, height = 10, dpi = 300, col.opt = "D",
                                          use.n.years.first = 5,
                                          use.n.years.last = 5,
                                          start.years = 1, 
