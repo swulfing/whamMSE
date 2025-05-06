@@ -94,23 +94,22 @@ plot_mse_output <- function(mods,
     report_file <- paste0("mse_report.", output_format)
     report_path <- file.path(full_output_dir, report_file)
     
-    # Save RDS
-    # saveRDS(mods, file = file.path(full_output_dir, "mods_tmp.RDS"))
-    
-    # Rmd content (same for both HTML and PDF)
+    # Rmd content
     rmd_lines <- c(
       "---",
       paste0("title: \"MSE Output Report\""),
       paste0("output: ", ifelse(output_format == "html", "html_document", "pdf_document")),
+      "params:",
+      "  mods: NULL",
       "---",
       "",
       "```{r setup, include=FALSE}",
       "knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)",
       "library(ggplot2); library(dplyr); library(tidyr); library(fmsb)",
       "library(ggpubr); library(gridExtra); library(ggtern)",
-      "mods <- readRDS('mods_tmp.RDS')",
+      "mods <- params$mods",
       "is.nsim <- if (!is.list(mods[[1]][[1]][[1]])) FALSE else TRUE",
-      "output_dir <- '.'",
+      paste0("output_dir <- '.'"),
       paste0("width <- ", width, "; height <- ", height, "; dpi <- ", dpi, "; col.opt <- '", col.opt, "'"),
       paste0("new_model_names <- ", if (is.null(new_model_names)) "NULL" else deparse(new_model_names)),
       paste0("base.model <- '", base.model, "'"),
@@ -160,7 +159,14 @@ plot_mse_output <- function(mods,
     writeLines(rmd_lines, con = rmd_path)
     
     # Render report
-    rmarkdown::render(rmd_path, output_file = report_file, output_dir = full_output_dir, quiet = TRUE)
+    rmarkdown::render(
+      rmd_path,
+      output_file = report_file,
+      output_dir = full_output_dir,
+      params = list(mods = mods),
+      envir = new.env(),
+      quiet = TRUE
+    )
     cat(paste0("\nSaved ", toupper(output_format), " report to: ", report_path, "\n"))
     if (output_format == "html") browseURL(report_path)
   }
