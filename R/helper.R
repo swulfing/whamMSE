@@ -766,8 +766,17 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
         mutate(Fbar = Fbar / base_val - 1)
     }
     
+    if (!is.null(base.model)) {
+      y1 = -1
+      y2 = 2
+    } else {
+      y1 = 0
+      y2 = 2
+    }
+    
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
+      coord_cartesian(ylim = c(y1, y2)) + 
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
@@ -1010,8 +1019,17 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
         mutate(Fbar = Fbar / base_val - 1)
     }
     
+    if (!is.null(base.model)) {
+      y1 = -1
+      y2 = 2
+    } else {
+      y1 = 0
+      y2 = 2
+    }
+      
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
+      coord_cartesian(ylim = c(y1, y2)) + 
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
@@ -2328,8 +2346,18 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
       res_long <- left_join(res_long, base_df, by = c("Realization", "Year", "Label")) %>%
         mutate(Fbar = Fbar / base_val - 1)
     }
+    
+    if (!is.null(base.model)) {
+      y1 = -1
+      y2 = 2
+    } else {
+      y1 = 0
+      y2 = 3
+    }
+    
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
+      coord_cartesian(ylim = c(y1, y2)) + 
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(ifelse(is.null(base.model),
@@ -2705,8 +2733,18 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
       res_long <- left_join(res_long, base_df, by = c("Realization", "Year", "Label")) %>%
         mutate(Fbar = Fbar / base_val - 1)
     }
+    
+    if (!is.null(base.model)) {
+      y1 = -1
+      y2 = 2
+    } else {
+      y1 = 0
+      y2 = 3
+    }
+    
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
+      coord_cartesian(ylim = c(y1, y2)) + 
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
@@ -2865,7 +2903,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
   # === Add points and reference lines
   if (show_density) {
     p <- p +
-      geom_point(aes(color = Model), size = 2.5, alpha = 0.2) +
+      geom_point(aes(color = Model), size = 1.5, alpha = 0.2) +
       scale_color_viridis_d(option = col.opt) +
       geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
       geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
@@ -2888,7 +2926,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
                       ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
   } else {
     p <- p +
-      geom_point(aes(color = Model), size = 2.5, alpha = 0.8) +
+      geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
       scale_color_viridis_d(option = col.opt) +
       geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
       geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
@@ -3108,11 +3146,12 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
              axislabcol = "grey30",
              vlcex = 0.9,
              title = paste("Model Performance"))
-  legend(x = 0.85, y = 0.5, legend = rownames(plot_df)[-c(1,2)], col = colors,
+  legend(x = 1.05, y = 0.5, legend = rownames(plot_df)[-c(1,2)], col = colors,
          lty = 1, lwd = 2, cex = 0.8, bty = "n")
   dev.off()
   
   # Also plot to screen (inline)
+  op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
   radarchart(plot_df,
              axistype = 4,
              pcol = colors,
@@ -3125,7 +3164,7 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
              title = paste("Model Performance"))
   legend(x = 0.85, y = 0.4, legend = rownames(plot_df)[-c(1,2)], col = colors,
          lty = 1, lwd = 2, cex = 0.8, bty = "n")
-  
+  on.exit(par(op))  # restore after plotting
 }
 
 # plot_model_performance_triangle <- function(mods, is.nsim,
@@ -4431,4 +4470,255 @@ plot_relative_trajectories2 <- function(mods, is.nsim,
     
   }
   return(plot2)
+}
+
+plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
+                               width = 10, height = 7, dpi = 300, col.opt = "D",
+                               new_model_names = NULL,
+                               base.model = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(rlang)
+  
+  # Helper to calculate AACV (Average Annual Catch Variation)
+  calculate_aacv <- function(catch_values) {
+    if (!is.numeric(catch_values)) {
+      stop("Input catch_values must be a numeric vector.")
+    }
+    catch_diff <- abs(diff(catch_values))
+    aacv <- sum(catch_diff) / sum(catch_values[-length(catch_values)])
+    return(aacv)
+  }
+  
+  res <- NULL
+  
+  if (!is.nsim) {
+    n_regions <- ncol(mods[[1]]$om$rep$SSB)
+    Years <- mods[[1]]$om$years
+    
+    res <- lapply(seq_along(mods), function(i) {
+      catch_mat <- mods[[i]]$om$rep$SSB # n_years × n_regions
+      aacv_list <- lapply(seq_len(n_regions), function(f) {
+        calculate_aacv(catch_mat[, f])
+      })
+      # Global catch AACV
+      global_aacv <- calculate_aacv(rowSums(catch_mat))
+      
+      tmp <- data.frame(
+        t(as.data.frame(aacv_list)),
+        Global = global_aacv,
+        Model = paste0("Model", i),
+        Realization = 1
+      )
+      colnames(tmp)[1:n_regions] <- paste0(var, "_Region", seq_len(n_regions))
+      colnames(tmp)[n_regions + 1] <- paste0(var, "_Global")
+      tmp
+    }) %>% bind_rows()
+    
+  } else {
+    n_regions <- ncol(mods[[1]][[1]]$om$rep$SSB)
+    Years <- mods[[1]][[1]]$om$years
+    
+    res <- lapply(seq_along(mods), function(r) {
+      lapply(seq_along(mods[[r]]), function(m) {
+        catch_mat <- mods[[r]][[m]]$om$rep$SSB
+        aacv_list <- lapply(seq_len(n_regions), function(f) {
+          calculate_aacv(catch_mat[, f])
+        })
+        global_aacv <- calculate_aacv(rowSums(catch_mat))
+        
+        tmp <- data.frame(
+          t(as.data.frame(aacv_list)),
+          Global = global_aacv,
+          Model = paste0("Model", m),
+          Realization = r
+        )
+        colnames(tmp)[1:n_regions] <- paste0(var, "_Region", seq_len(n_regions))
+        colnames(tmp)[n_regions + 1] <- paste0(var, "_Global")
+        tmp
+      }) %>% bind_rows()
+    }) %>% bind_rows()
+  }
+  
+  # Rename models if specified
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    res$Model <- factor(res$Model,
+                        levels = paste0("Model", seq_along(new_model_names)),
+                        labels = new_model_names)
+    # if (!is.null(base.model)) base.model <- new_model_names[base.model]
+    if (!is.null(base.model)) {
+      if (!(base.model %in% new_model_names)) {
+        warning("base.model does not match any of the new_model_names.")
+      }
+    }
+  }
+  
+  # Pivot longer
+  res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = "AACV")
+  
+  # Relative difference if base.model specified
+  if (!is.null(base.model)) {
+    base_df <- res %>% filter(Model == base.model) %>%
+      rename(base_val = AACV) %>%
+      select(Realization, Label, base_val)
+    
+    res <- left_join(res, base_df, by = c("Realization", "Label")) %>%
+      mutate(AACV = AACV / base_val - 1)
+  }
+  
+  # Plot
+  p1 <- ggplot(res, aes(x = Model, y = AACV, color = Model)) +
+    geom_boxplot(outlier.shape = NA) +
+    facet_grid(Label ~ ., scales = "free") +
+    scale_color_viridis_d(option = col.opt) +
+    ggtitle(paste0("Average Annual SSB Variation",
+                   if (!is.null(base.model)) paste0(" (Relative to ", base.model, ")"))) +
+    ylab(ifelse(is.null(base.model), "AACV", "Relative AACV Difference")) +
+    theme_bw() 
+  
+  # Save plot
+  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_rel"), ".png")
+  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  
+  return(p1)
+}
+
+
+plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
+                                width = 10, height = 7, dpi = 300, col.opt = "D",
+                                new_model_names = NULL,
+                                base.model = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(rlang)
+  
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) stop("Input must be numeric.")
+    diff_abs <- abs(diff(values))
+    aacv <- sum(diff_abs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  res <- NULL
+  
+  if (!is.nsim) {
+    n_fleets <- mods[[1]]$om$input$data$n_fleets[1]
+    n_regions <- mods[[1]]$om$input$data$n_regions[1]
+    Years <- mods[[1]]$om$years
+    
+    res <- lapply(seq_along(mods), function(i) {
+      fbar_mat <- mods[[i]]$om$rep$Fbar # Fbar matrix
+      
+      # Fleets
+      aacv_fleet <- lapply(seq_len(n_fleets), function(f) {
+        calculate_aacv(fbar_mat[, f])
+      })
+      
+      # Regions
+      aacv_region <- lapply(seq_len(n_regions), function(r) {
+        calculate_aacv(fbar_mat[, n_fleets + r])
+      })
+      
+      # Global
+      aacv_global <- calculate_aacv(fbar_mat[, n_fleets + n_regions + 1])
+      
+      tmp <- data.frame(
+        t(as.data.frame(aacv_fleet)),
+        t(as.data.frame(aacv_region)),
+        Global = aacv_global,
+        Model = paste0("Model", i),
+        Realization = 1
+      )
+      colnames(tmp)[1:n_fleets] <- paste0(var, "_Fleet", seq_len(n_fleets))
+      colnames(tmp)[(n_fleets + 1):(n_fleets + n_regions)] <- paste0(var, "_Region", seq_len(n_regions))
+      colnames(tmp)[n_fleets + n_regions + 1] <- paste0(var, "_Global")
+      tmp
+    }) %>% bind_rows()
+    
+  } else {
+    n_fleets <- mods[[1]][[1]]$om$input$data$n_fleets[1]
+    n_regions <- mods[[1]][[1]]$om$input$data$n_regions[1]
+    Years <- mods[[1]][[1]]$om$years
+    
+    res <- lapply(seq_along(mods), function(r) {
+      lapply(seq_along(mods[[r]]), function(m) {
+        fbar_mat <- mods[[r]][[m]]$om$rep$Fbar
+        
+        # Fleets
+        aacv_fleet <- lapply(seq_len(n_fleets), function(f) {
+          calculate_aacv(fbar_mat[, f])
+        })
+        
+        # Regions
+        aacv_region <- lapply(seq_len(n_regions), function(rr) {
+          calculate_aacv(fbar_mat[, n_fleets + rr])
+        })
+        
+        # Global
+        aacv_global <- calculate_aacv(fbar_mat[, n_fleets + n_regions + 1])
+        
+        tmp <- data.frame(
+          t(as.data.frame(aacv_fleet)),
+          t(as.data.frame(aacv_region)),
+          Global = aacv_global,
+          Model = paste0("Model", m),
+          Realization = r
+        )
+        colnames(tmp)[1:n_fleets] <- paste0(var, "_Fleet", seq_len(n_fleets))
+        colnames(tmp)[(n_fleets + 1):(n_fleets + n_regions)] <- paste0(var, "_Region", seq_len(n_regions))
+        colnames(tmp)[n_fleets + n_regions + 1] <- paste0(var, "_Global")
+        tmp
+      }) %>% bind_rows()
+    }) %>% bind_rows()
+  }
+  
+  # Rename models if needed
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    res$Model <- factor(res$Model,
+                        levels = paste0("Model", seq_along(new_model_names)),
+                        labels = new_model_names)
+    if (!is.null(base.model)) {
+      if (!(base.model %in% new_model_names)) {
+        warning("base.model does not match any of the new_model_names.")
+      }
+    }
+  }
+  
+  res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = "AACV")
+  
+  if (!is.null(base.model)) {
+    base_df <- res %>% filter(Model == base.model) %>%
+      rename(base_val = AACV) %>%
+      select(Realization, Label, base_val)
+    
+    res <- left_join(res, base_df, by = c("Realization", "Label")) %>%
+      mutate(AACV = AACV / base_val - 1)
+  }
+  
+  p1 <- ggplot(res, aes(x = Model, y = AACV, color = Model)) +
+    geom_boxplot(outlier.shape = NA) +
+    facet_grid(Label ~ ., scales = "free") +
+    scale_color_viridis_d(option = col.opt) +
+    ggtitle(paste0("Average Annual Fbar Variation",
+                   if (!is.null(base.model)) paste0(" (Relative to ", base.model, ")"))) +
+    ylab(ifelse(is.null(base.model), "AACV", "Relative AACV Difference")) +
+    theme_bw()
+  
+  # Save
+  out_dir <- file.path(main.dir, sub.dir)
+  if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_rel"), ".png")
+  ggsave(file.path(out_dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  
+  return(p1)
 }
