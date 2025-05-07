@@ -151,8 +151,11 @@ generate_basic_info <- function(n_stocks = 2,
     length(unique(c(...))) == 1
   }
   
-  if (!check_dimensions(n_stocks, n_regions, n_fleets, n_indices)) cat("\n Note: n_stocks, n_regions, n_fleets, n_indices are not the same.\n")
-  
+  cat("n_stocks:",n_stocks,"\n")
+  cat("n_regions:",n_regions,"\n")
+  cat("n_fleets:",n_fleets,"\n")
+  cat("n_indices:",n_indices,"\n")
+
   basic_info = list()
   basic_info$bias_correct_process = bias.correct.process
   basic_info$bias_correct_observation = bias.correct.observation

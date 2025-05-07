@@ -36,31 +36,35 @@
 #' 
 advice_fn <- function(em, pro.yr = assess.interval, hcr) {
   
+  hcr.type = if(is.null(hcr)) hcr$hcr.type = 1
   hcr.type = ifelse(is.null(hcr$hcr.type), 1, hcr$hcr.type) 
   hcr.opts = hcr$hcr.opts
   
   cat(paste0("\nHarvest Control Rule type ", hcr.type, "\n"))
   
-  if(is.null(hcr.opts$use.FXSPR)) {
+  if (is.null(hcr.opts$use.FXSPR)) {
     use.FXSPR = TRUE
-    if(is.null(hcr.opts$percentFXSPR)) {
-      percentFXSPR = 75
-    } else {
-      percentFXSPR = hcr.opts$percentFXSPR
-    }
+  } else {
+    use.FXSPR = hcr.opts$use.FXSPR
+  }
+    
+  if(is.null(hcr.opts$percentFXSPR)) {
+    percentFXSPR = 75
+  } else {
+    percentFXSPR = hcr.opts$percentFXSPR
   }
   
-  if(is.null(hcr.opts$use.FMSY)) {
+  if (is.null(hcr.opts$use.FMSY)) {
     use.FMSY = FALSE
   } else {
     use.FMSY = hcr.opts$use.FMSY
   }
   
-  if(is.null(hcr.opts$percentFMSY)) {
+  if (is.null(hcr.opts$percentFMSY)) {
     percentFMSY = 75
   } else {
     percentFMSY = hcr.opts$percentFMSY
-  }
+  } 
   
   if(!is.null(hcr.opts$avg.yrs) & length(hcr.opts$avg.yrs) > length(em$years)) avg.yrs = length(em$years)
   
@@ -182,6 +186,12 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr) {
         advice <- em_proj$rep$pred_catch[length(em_proj$years) + 1:pro.yr,]
       }
     }
+  }
+  
+  # Print the list using cat with formatting
+  cat("Projection Options:\n")
+  for (opt in names(proj_opts)) {
+    cat(sprintf("  %s: %s\n", opt, toString(proj_opts[[opt]])))
   }
   
   return(advice)
