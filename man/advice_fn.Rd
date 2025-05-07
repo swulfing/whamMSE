@@ -4,42 +4,56 @@
 \alias{advice_fn}
 \title{Generate Catch Advice for Management Strategy Evaluation}
 \usage{
-advice_fn(em, pro.yr = assess.interval, hcr)
+advice_fn(em, pro.yr = assess.interval, hcr = NULL)
 }
 \arguments{
-\item{em}{An estimation model fitted using WHAM.}
+\item{em}{A fitted WHAM estimation model.}
 
-\item{pro.yr}{Integer. The number of years for projection.}
+\item{pro.yr}{Integer. Number of years for projection.}
 
-\item{hcr}{A list specifying the harvest control rule (HCR) type and options. It should contain:
-\itemize{
-  \item{\code{hcr.type}}{Integer. The type of harvest control rule to use. Options include:}
-  \itemize{
-    \item \code{1}: Annual projected catch based on 75\% of F40\% (default).
-    \item \code{2}: Constant catch based on 75\% of F40\%.
-    \item \code{3}: "Hockey stick" approach based on stock status.
-  }
-  \item{\code{hcr.opts}}{A list of additional options for the harvest control rule, including:}
-  \itemize{
-    \item{\code{use.FXSPR}}{Logical. Calculate and use F at X\% SPR for projections (default = TRUE).}
-    \item{\code{percentFXSPR}}{Numeric. The percentage of F\_XSPR to use for calculating catch in projections (default = 75).}
-    \item{\code{use.FMSY}}{Logical. Calculate and use FMSY for projections (default = FALSE).}
-    \item{\code{percentFMSY}}{Numeric. Percentage of F_MSY to use for catch projections. Used only if use.FMSY = TRUE (default = 100).}
-    \item{\code{avg.yrs}}{Integer. The number of years over which mean values of MAA, WAA, M, and F will be averaged in projections (default = 5).}
-    \item{\code{max_percent}}{Numeric. Maximum percentage of F\_XSPR to use in projections (default = 75).}
-    \item{\code{min_percent}}{Numeric. Minimum percentage of F\_XSPR to use in projections (default = 0.01).}
-    \item{\code{BThresh_up}}{Numeric. Upper bound of overfished biomass threshold (default = 0.5).}
-    \item{\code{BThresh_low}}{Numeric. Lower bound of overfished biomass threshold (default = 0.1).}
-    \item{\code{cont.M.re}}{Logical. Whether to continue natural mortality random effects (e.g., AR1_y or 2D AR1) during projections (default = FALSE).}
-    \item{\code{cont.move.re}}{Logical. Whether to continue movement random effects during projections (default = FALSE).}
+\item{hcr}{List. Harvest control rule:
+\describe{
+  \item{\code{hcr.type}}{Integer (1: F\_XSPR, 2: constant catch, 3: hockey stick).}
+  \item{\code{hcr.opts}}{List of options, including:
+    \itemize{
+      \item \code{use_FXSPR}: Logical. Use F\%SPR-based projections (default: TRUE).
+      \item \code{percentFXSPR}: Numeric. % of F\%SPR to apply (default: 75).
+      \item \code{use_FMSY}: Logical. Use FMSY-based projections (default: FALSE).
+      \item \code{percentFMSY}: Numeric. % of FMSY to apply (default: 75).
+      \item \code{avg_yrs}: Integer. Number of years to average over (default: 5).
+      \item \code{cont.M.re}: Logical. Continue M random effects (default: FALSE).
+      \item \code{cont.move.re}: Logical. Continue movement random effects (default: NULL if 1 region).
+      \item \code{max_percent}: Numeric. Max % of F\%SPR or FMSY (default: 75).
+      \item \code{min_percent}: Numeric. Min % of F\%SPR or FMSY (default: 0.01).
+      \item \code{BThresh_up}: Numeric. Upper biomass threshold (default: 0.5).
+      \item \code{BThresh_low}: Numeric. Lower biomass threshold (default: 0.1).
+    }
   }
 }}
 }
 \value{
-A matrix containing the projected catch advice for the specified number of projection years.
+A matrix containing the projected catch advice for \code{pro.yr} years.
 }
 \description{
-A function to generate catch advice based on different harvest control rules (HCRs) for use in management strategy evaluation.
+A function to generate catch advice based on different harvest control rules (HCRs)
+for use in management strategy evaluation (MSE).
+}
+\examples{
+# Example: Define a harvest control rule using F_40\%SPR with 100\% target
+hcr <- list(
+  hcr.type = 1,
+  hcr.opts = list(
+    use_FXSPR = TRUE,
+    percentFXSPR = 100,  # Use 100\% of F_40\%SPR
+    avg_yrs = 5,         # Average over the last 5 years
+    cont.M.re = FALSE,   # Do not continue M random effects
+    cont.move.re = FALSE # Do not continue movement random effects
+  )
+)
+
+# Run advice_fn with a WHAM model `em`
+# advice <- advice_fn(em, pro.yr = 5, hcr = hcr)
+
 }
 \seealso{
 \code{\link{project_wham}}

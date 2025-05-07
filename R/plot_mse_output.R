@@ -82,6 +82,7 @@ plot_mse_output <- function(mods,
       function() plot_model_performance_radar(mods, is.nsim, main_dir, output_dir, width, height, dpi, col.opt, use.n.years.first, use.n.years.last, start.years, new_model_names),
       function() plot_model_performance_triangle(mods, is.nsim, main_dir, output_dir, width, height, dpi, new_model_names, col.opt, use.n.years.first, use.n.years.last, start.years),
       function() plot_model_performance_bar(mods, is.nsim, main_dir, output_dir, new_model_names, width, height, dpi, col.opt, use.n.years.first, use.n.years.last, start.years),
+      function() plot_AAV_performance(mods, is.nsim, main_dir, output_dir, width, height, dpi, new_model_names, col.opt),
       function() plot_mean_rec_par(mods, is.nsim, main_dir, output_dir, width, height, dpi, col.opt, new_model_names),
       function() plot_NAA_sigma_par(mods, is.nsim, main_dir, output_dir, width, height, dpi, col.opt, new_model_names)
     )
@@ -159,6 +160,7 @@ plot_mse_output <- function(mods,
       "plot_model_performance_radar(mods, is.nsim, '.', output_dir, width, height, dpi, col.opt, use.n.years.first, use.n.years.last, start.years, new_model_names)",
       "plot_model_performance_triangle(mods, is.nsim, '.', output_dir, width, height, dpi, new_model_names, col.opt, use.n.years.first, use.n.years.last, start.years)",
       "plot_model_performance_bar(mods, is.nsim, '.', output_dir, new_model_names, width, height, dpi, col.opt, use.n.years.first, use.n.years.last, start.years)",
+      "plot_AAV_performance(mods, is.nsim,'.', output_dir, width, height, dpi, new_model_names, col.opt)",
       "plot_mean_rec_par(mods, is.nsim, '.', output_dir, width, height, dpi, col.opt, new_model_names)",
       "plot_NAA_sigma_par(mods, is.nsim, '.', output_dir, width, height, dpi, col.opt, new_model_names)",
       "```"

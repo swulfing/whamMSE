@@ -2903,7 +2903,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
   # === Add points and reference lines
   if (show_density) {
     p <- p +
-      geom_point(aes(color = Model), size = 1.5, alpha = 0.2) +
+      geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
       scale_color_viridis_d(option = col.opt) +
       geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
       geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
@@ -2990,13 +2990,13 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
         
         # First and last period means
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
         
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
       }
       
       # Normalize: higher is better except for Fbar
@@ -3067,13 +3067,13 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
       
       # First and last period means
-      tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-      tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-      tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
       
-      tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-      tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-      tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+      tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+      tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+      tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
     }
     
     # Normalize: higher is better except for Fbar
@@ -3586,13 +3586,13 @@ plot_model_performance_bar <- function(mods, is.nsim,
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
         
         # First and last period
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
         
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
       }
       
       # Normalize within realization (safe check)
@@ -3647,13 +3647,13 @@ plot_model_performance_bar <- function(mods, is.nsim,
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
       
       # First and last period
-      tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-      tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-      tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
       
-      tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-      tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-      tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+      tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+      tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+      tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
     }
     
     # Normalize across models (safe check)
@@ -3753,7 +3753,7 @@ plot_model_performance_triangle <- function(mods, is.nsim,
       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
     }
     
-    c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx]))
+    c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx]))
   }
   
   results_short <- list()
@@ -3887,7 +3887,6 @@ plot_model_performance_triangle <- function(mods, is.nsim,
       .groups = "drop"
     )
   
-  
   if (!is.null(new_model_names)) {
     if (length(new_model_names) != length(unique(df_short_all$Model))) {
       stop("Length of new_model_names must match number of models.")
@@ -3916,10 +3915,27 @@ plot_model_performance_triangle <- function(mods, is.nsim,
     print(p)
   }
   
+  plot_and_save2 <- function(df, title, file) {
+    colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+    p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+      geom_point(size = 1) +
+      scale_color_manual(values = colors) +
+      labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
+      theme_rgbw() +
+      theme(plot.title = element_text(hjust = 0.5)) +
+      geom_confidence_tern(breaks = 0.95)
+    
+    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+           width = width, height = height, dpi = dpi)
+    
+    print(p)
+  }
+  
   plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short.png")
   plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long.png")
+  plot_and_save2(bind_rows(results_short), paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw.png")
+  plot_and_save2(bind_rows(results_long), paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw.png")
 }
-
 
 calculate_aacv <- function(catch_values) {
   # Ensure catch_values is a numeric vector
@@ -4721,4 +4737,160 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
   ggsave(file.path(out_dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
+}
+
+
+plot_AAV_performance <- function(mods, is.nsim,
+                                 main.dir, sub.dir,
+                                 width = 8, height = 7, dpi = 300,
+                                 new_model_names = NULL,
+                                 col.opt = "D") {
+  library(dplyr)
+  library(ggtern)
+  library(viridisLite)
+  
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  # --- Loop through each mod and collect variation measures ---
+  res_list <- list()
+  
+  if (!is.nsim) {
+    n_fleets <- ncol(mods[[1]]$om$rep$pred_catch)
+    n_regions <- ncol(mods[[1]]$om$rep$SSB)
+    
+    for (i in seq_along(mods)) {
+      om_rep <- mods[[i]]$om$rep
+      
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(om_rep$pred_catch))
+      
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(om_rep$SSB))
+      
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(om_rep$Fbar[, ncol(om_rep$Fbar)])
+      
+      res_list[[i]] <- data.frame(
+        Model = paste0("Model", i),
+        Catch = catch_aacv,
+        SSB = ssb_aacv,
+        Fbar = fbar_aacv
+      )
+    }
+    
+  } else {
+    n_fleets <- ncol(mods[[1]][[1]]$om$rep$pred_catch)
+    n_regions <- ncol(mods[[1]][[1]]$om$rep$SSB)
+    
+    for (r in seq_along(mods)) {
+      for (m in seq_along(mods[[r]])) {
+        om_rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(om_rep$pred_catch))
+        
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(om_rep$SSB))
+        
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(om_rep$Fbar[, ncol(om_rep$Fbar)])
+        
+        res_list[[length(res_list) + 1]] <- data.frame(
+          Model = paste0("Model", m),
+          Realization = r,
+          Catch = catch_aacv,
+          SSB = ssb_aacv,
+          Fbar = fbar_aacv
+        )
+      }
+    }
+  }
+  
+  res_all <- bind_rows(res_list)
+  
+  # --- Take median across realizations if needed ---
+  df_all <- res_all %>%
+    group_by(Model) %>%
+    summarise(
+      Catch = median(Catch),
+      SSB = median(SSB),
+      Fbar = median(Fbar),
+      .groups = "drop"
+    )
+  
+  # Rename models if user provided new names
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(df_all$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    df_all$Model <- factor(df_all$Model,
+                           levels = paste0("Model", seq_along(new_model_names)),
+                           labels = new_model_names)
+  }
+  
+  # --- Normalize & invert scores (higher variation is BAD) ---
+  for (v in c("Catch", "SSB", "Fbar")) {
+    range_v <- max(df_all[[v]]) - min(df_all[[v]])
+    if (range_v == 0) {
+      df_all[[paste0(v, "_score")]] <- 100 # if no variation, give full score
+    } else {
+      norm_v <- (df_all[[v]] - min(df_all[[v]])) / range_v
+      df_all[[paste0(v, "_score")]] <- 100 * (1 - norm_v)
+    }
+  }
+  
+  # --- Plot triangle using inverted scores ---
+  colors <- viridisLite::viridis(n = length(unique(df_all$Model)), option = col.opt)
+  
+  p <- ggtern(df_all, aes(x = Catch_score, y = SSB_score, z = Fbar_score, color = Model)) +
+    geom_point(alpha = 0.8, size = 8) +
+    scale_color_manual(values = colors) +
+    labs(title = "Average Annual Variation in Catch, SSB, and F\nHigher Score = Lower Variation",
+         T = "Catch",
+         L = "SSB",
+         R = "Fbar") +
+    theme_rgbw() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV.png"),
+         plot = p, width = width, height = height, dpi = dpi)
+  
+  print(p)
+  
+  # --- Normalize & invert scores (higher variation is BAD) ---
+  for (v in c("Catch", "SSB", "Fbar")) {
+    range_v <- max(res_all[[v]]) - min(res_all[[v]])
+    if (range_v == 0) {
+      res_all[[paste0(v, "_score")]] <- 100 # if no variation, give full score
+    } else {
+      norm_v <- (res_all[[v]] - min(res_all[[v]])) / range_v
+      res_all[[paste0(v, "_score")]] <- 100 * (1 - norm_v)
+    }
+  }
+  
+  p2 <- ggtern(res_all, aes(x = Catch_score, y = SSB_score, z = Fbar_score, color = Model)) +
+    geom_point(size = 1) +
+    scale_color_manual(values = colors) +
+    labs(title = "Average Annual Variation in Catch, SSB, and F\nHigher Score = Lower Variation",
+         T = "Catch",
+         L = "SSB",
+         R = "Fbar") +
+    theme_rgbw() +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    geom_confidence_tern(breaks = 0.95)
+  
+  print(p2)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_raw.png"),
+         plot = p2, width = width, height = height, dpi = dpi)
+  
 }

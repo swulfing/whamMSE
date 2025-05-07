@@ -142,6 +142,12 @@ loop_through_fn(
 \describe{
   \item{\code{agg_index_sigma}}{Matrix. Aggregated survey index CVs. Can be full (\code{n_years × n_indices}) or a subset of rows (e.g., \code{length(ind_em) × n_indices}).}
   \item{\code{index_Neff}}{Matrix. Effective sample sizes for index data. Must match dimensions of \code{agg_index_sigma}.}
+  \item{\code{remove_agg}}{Logical. Whether to remove aggregated index observations for specific pointers/years.}
+  \item{\code{remove_agg_pointer}}{Integer vector. Index pointers (columns) for which aggregated index data should be removed.}
+  \item{\code{remove_agg_years}}{Integer vector or matrix. Years (rows) to remove aggregated index data. If matrix, should be [years × pointers].}
+  \item{\code{remove_paa}}{Logical. Whether to remove index PAA observations for specific pointers/years.}
+  \item{\code{remove_paa_pointer}}{Integer vector. Index pointers (columns) for which index PAA data should be removed.}
+  \item{\code{remove_paa_years}}{Integer vector or matrix. Years (rows) to remove index PAA data. If matrix, should be [years × pointers].}
 }}
 
 \item{user_SPR_weights_info}{List. Update SPR weights for calculating biological reference points in the assessment model.
@@ -170,12 +176,12 @@ loop_through_fn(
   \item{\code{hcr.type}}{Integer (1: F\_XSPR, 2: constant catch, 3: hockey stick).}
   \item{\code{hcr.opts}}{List of options including:
     \itemize{
-      \item \code{use.FXSPR},
+      \item \code{use_FXSPR},
       \item \code{percentSPR}, 
       \item \code{percentFXSPR}, 
-      \item \code{use.FMSY}, 
+      \item \code{use_FMSY}, 
       \item \code{percentFMSY},
-      \item \code{avg.yrs}, 
+      \item \code{avg_yrs}, 
       \item \code{max_percent}, 
       \item \code{min_percent}, 
       \item \code{BThresh_up}, 
