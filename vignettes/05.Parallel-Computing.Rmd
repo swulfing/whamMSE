@@ -108,7 +108,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
                N1_pars = N1_pars)
 ```
 
-### 7. Generate wham input
+### 7. Generate `wham` input
 
 Here we use `prepare_wham_input()` function to generate a wham input
 using the basic information we set above:
