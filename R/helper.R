@@ -3995,7 +3995,7 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
       global_aacv <- calculate_aacv(rowSums(catch_mat))
       
       tmp <- data.frame(
-        t(as.data.frame(aacv_list)),
+        Local = t(unlist(aacv_list)),
         Global = global_aacv,
         Model = paste0("Model", i),
         Realization = 1
@@ -4018,7 +4018,7 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
         global_aacv <- calculate_aacv(rowSums(catch_mat))
         
         tmp <- data.frame(
-          t(as.data.frame(aacv_list)),
+          Local = t(unlist(aacv_list)),
           Global = global_aacv,
           Model = paste0("Model", m),
           Realization = r
@@ -4523,7 +4523,7 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       global_aacv <- calculate_aacv(rowSums(catch_mat))
       
       tmp <- data.frame(
-        t(as.data.frame(aacv_list)),
+        Local = t(unlist(aacv_list)),
         Global = global_aacv,
         Model = paste0("Model", i),
         Realization = 1
@@ -4546,7 +4546,7 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
         global_aacv <- calculate_aacv(rowSums(catch_mat))
         
         tmp <- data.frame(
-          t(as.data.frame(aacv_list)),
+          Local = t(unlist(aacv_list)),
           Global = global_aacv,
           Model = paste0("Model", m),
           Realization = r
@@ -4576,6 +4576,14 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   
   # Pivot longer
   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = "AACV")
+  
+  # Ensure Global is always the last row in facet
+  labels_order <- res %>%
+    distinct(Label) %>%
+    arrange(if_else(grepl("Global", Label), 2, 1), Label) %>%
+    pull(Label)
+  
+  res$Label <- factor(res$Label, levels = labels_order)
   
   # Relative difference if base.model specified
   if (!is.null(base.model)) {
@@ -4646,8 +4654,8 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
       aacv_global <- calculate_aacv(fbar_mat[, n_fleets + n_regions + 1])
       
       tmp <- data.frame(
-        t(as.data.frame(aacv_fleet)),
-        t(as.data.frame(aacv_region)),
+        t(unlist(aacv_fleet)),
+        t(unlist(aacv_region)),
         Global = aacv_global,
         Model = paste0("Model", i),
         Realization = 1
@@ -4681,8 +4689,8 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
         aacv_global <- calculate_aacv(fbar_mat[, n_fleets + n_regions + 1])
         
         tmp <- data.frame(
-          t(as.data.frame(aacv_fleet)),
-          t(as.data.frame(aacv_region)),
+          t(unlist(aacv_fleet)),
+          t(unlist(aacv_region)),
           Global = aacv_global,
           Model = paste0("Model", m),
           Realization = r
@@ -4711,6 +4719,15 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
   }
   
   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = "AACV")
+  
+  # Ensure Global is always the last row in facet
+  labels_order <- res %>%
+    distinct(Label) %>%
+    arrange(if_else(grepl("Global", Label), 2, 1), Label) %>%
+    pull(Label)
+  
+  res$Label <- factor(res$Label, levels = labels_order)
+  
   
   if (!is.null(base.model)) {
     base_df <- res %>% filter(Model == base.model) %>%
