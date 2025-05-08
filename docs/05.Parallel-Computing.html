@@ -1623,8 +1623,12 @@ index_pars &lt;- c(2,1)
 sel &lt;- list(model=rep(&quot;logistic&quot;,n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)))</code></pre>
 </div>
+<div id="configure-natural-mortality" class="section level3">
+<h3>5. Configure Natural Mortality</h3>
+<pre class="r"><code>M_em &lt;- list(model=&quot;constant&quot;, initial_means=array(0.2, dim = c(n_stocks, n_regions, n_ages)))</code></pre>
+</div>
 <div id="configure-numbers-at-age-naa" class="section level3">
-<h3>5. Configure numbers-at-age (NAA)</h3>
+<h3>6. Configure numbers-at-age (NAA)</h3>
 <pre class="r"><code>sigma        &lt;- &quot;rec+1&quot;
 re_cor       &lt;- &quot;iid&quot;
 ini.opt      &lt;- &quot;equilibrium&quot; # option &lt;- c(&quot;age-specific-fe&quot;, &quot;equilibrium&quot;)
@@ -1652,7 +1656,7 @@ NAA_re &lt;- list(N1_model=rep(ini.opt,n_stocks),
                N1_pars = N1_pars)</code></pre>
 </div>
 <div id="generate-wham-input" class="section level3">
-<h3>6. Generate wham input</h3>
+<h3>7. Generate wham input</h3>
 <p>Here we use <code>prepare_wham_input()</code> function to generate a
 wham input using the basic information we set above:</p>
 <pre class="r"><code>input &lt;- prepare_wham_input(basic_info = basic_info, 
@@ -1665,14 +1669,14 @@ wham input using the basic information we set above:</p>
                             F = F_info)</code></pre>
 </div>
 <div id="generate-operating-model" class="section level3">
-<h3>7. Generate operating model</h3>
+<h3>8. Generate operating model</h3>
 <pre class="r"><code>random = input$random # check what processes are random effects
 input$random = NULL # so inner optimization won&#39;t change simulated RE
 om &lt;- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)</code></pre>
 </div>
 <div id="specify-assessment-interval" class="section level3">
-<h3>8. Specify Assessment Interval</h3>
+<h3>9. Specify Assessment Interval</h3>
 <pre class="r"><code>assess.interval &lt;- 3 # Note: assessment interval is 3 years, given the feedback period is 3 years, there will be only 1 assessment
 base.years      &lt;- year_start:year_end # Burn-in period
 first.year      &lt;- head(base.years,1)
@@ -1682,7 +1686,7 @@ assess.years    &lt;- seq(terminal.year, tail(om$years,1)-assess.interval,by = a
 mods &lt;- list() # Create a list to save MSE outputs</code></pre>
 </div>
 <div id="create-a-folder-to-save-results" class="section level3">
-<h3>9. Create A Folder to Save Results</h3>
+<h3>10. Create A Folder to Save Results</h3>
 <pre class="r"><code>sub.dir = &quot;Results&quot;
 dir.create(file.path(getwd(), sub.dir), recursive = TRUE)
 
@@ -1692,7 +1696,7 @@ library(foreach)
 detectCores() # check how many cores available</code></pre>
 </div>
 <div id="one-region-panmictic-assessment-model" class="section level3">
-<h3>10. One-region Panmictic Assessment Model</h3>
+<h3>11. One-region Panmictic Assessment Model</h3>
 <pre class="r"><code>cluster &lt;- makeCluster(5)
 registerDoParallel(cluster)
 
@@ -1738,7 +1742,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)</code></pre>
 </div>
 <div id="spatially-implicit-assessment-model" class="section level3">
-<h3>11. Spatially Implicit Assessment Model</h3>
+<h3>12. Spatially Implicit Assessment Model</h3>
 <pre class="r"><code>cluster &lt;- makeCluster(5)
 registerDoParallel(cluster)
 
@@ -1781,7 +1785,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)</code></pre>
 </div>
 <div id="separate-panmictic-assessment-models" class="section level3">
-<h3>12. Separate Panmictic Assessment Models</h3>
+<h3>13. Separate Panmictic Assessment Models</h3>
 <pre class="r"><code>cluster &lt;- makeCluster(5)
 registerDoParallel(cluster)
 
@@ -1823,7 +1827,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)</code></pre>
 </div>
 <div id="spatially-disaggregated-without-movement" class="section level3">
-<h3>13. Spatially Disaggregated without Movement</h3>
+<h3>14. Spatially Disaggregated without Movement</h3>
 <pre class="r"><code>cluster &lt;- makeCluster(5)
 registerDoParallel(cluster)
 
@@ -1869,7 +1873,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)</code></pre>
 </div>
 <div id="spatially-explicit-with-movement-fixed-as-known" class="section level3">
-<h3>14. Spatially Explicit with Movement Fixed as Known</h3>
+<h3>15. Spatially Explicit with Movement Fixed as Known</h3>
 <pre class="r"><code>cluster &lt;- makeCluster(5)
 registerDoParallel(cluster)
 

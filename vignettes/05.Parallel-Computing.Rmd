@@ -73,7 +73,12 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)))
 ```
 
-### 5. Configure numbers-at-age (NAA)
+### 5. Configure Natural Mortality
+```{r, eval=FALSE}
+M_em <- list(model="constant", initial_means=array(0.2, dim = c(n_stocks, n_regions, n_ages)))
+```
+
+### 6. Configure numbers-at-age (NAA)
 
 ```{r, eval=FALSE}
 sigma        <- "rec+1"
@@ -103,7 +108,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
                N1_pars = N1_pars)
 ```
 
-### 6. Generate wham input
+### 7. Generate wham input
 
 Here we use `prepare_wham_input()` function to generate a wham input
 using the basic information we set above:
@@ -119,7 +124,7 @@ input <- prepare_wham_input(basic_info = basic_info,
                             F = F_info)
 ```
 
-### 7. Generate operating model
+### 8. Generate operating model
 
 ```{r, eval=FALSE}
 random = input$random # check what processes are random effects
@@ -128,7 +133,7 @@ om <- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)
 ```
 
-### 8. Specify Assessment Interval
+### 9. Specify Assessment Interval
 
 ```{r, eval=FALSE}
 assess.interval <- 3 # Note: assessment interval is 3 years, given the feedback period is 3 years, there will be only 1 assessment
@@ -140,7 +145,7 @@ assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = asse
 mods <- list() # Create a list to save MSE outputs
 ```
 
-### 9. Create A Folder to Save Results
+### 10. Create A Folder to Save Results
 ```{r, eval=FALSE}
 sub.dir = "Results"
 dir.create(file.path(getwd(), sub.dir), recursive = TRUE)
@@ -151,7 +156,7 @@ library(foreach)
 detectCores() # check how many cores available
 ```
 
-### 10. One-region Panmictic Assessment Model
+### 11. One-region Panmictic Assessment Model
 ```{r, eval=FALSE}
 cluster <- makeCluster(5)
 registerDoParallel(cluster)
@@ -198,7 +203,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)
 ```
 
-### 11. Spatially Implicit Assessment Model
+### 12. Spatially Implicit Assessment Model
 ```{r, eval=FALSE}
 cluster <- makeCluster(5)
 registerDoParallel(cluster)
@@ -242,7 +247,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)
 ```
 
-### 12. Separate Panmictic Assessment Models
+### 13. Separate Panmictic Assessment Models
 ```{r, eval=FALSE}
 cluster <- makeCluster(5)
 registerDoParallel(cluster)
@@ -285,7 +290,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)
 ```
 
-### 13. Spatially Disaggregated without Movement
+### 14. Spatially Disaggregated without Movement
 ```{r, eval=FALSE}
 cluster <- makeCluster(5)
 registerDoParallel(cluster)
@@ -332,7 +337,7 @@ foreach (i = 1:5) %dopar% {
 stopCluster(cluster)
 ```
 
-### 14. Spatially Explicit with Movement Fixed as Known
+### 15. Spatially Explicit with Movement Fixed as Known
 ```{r, eval=FALSE}
 cluster <- makeCluster(5)
 registerDoParallel(cluster)
