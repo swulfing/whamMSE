@@ -1564,13 +1564,17 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Environmental Consideration in MSE</h1>
 <h4 class="author">Chengxue Li</h4>
-<h4 class="date">Last update: 2025-04-15</h4>
+<h4 class="date">Last update: 2025-05-08</h4>
 
 </div>
 
 
-<p>This vignette introduces how to incorporate implementation error into
-MSE:</p>
+<p>This vignette demonstrates how to use the <code>whamMSE</code> (Woods
+Hole Assessment Model Management Strategy Evaluation) package to
+incorporate implementation error into a management strategy evaluation
+(MSE). <strong>Note:</strong> all code shown here is for demonstration
+purposes only; the results are for illustrative use and should not be
+interpreted as reflecting real-world stock assessments.</p>
 <div id="load-wham-and-whammse" class="section level3">
 <h3>1. Load “WHAM” and “whamMSE”:</h3>
 <pre class="r"><code>library(wham)
@@ -1579,7 +1583,7 @@ library(whamMSE)
 main.dir = here::here()</code></pre>
 </div>
 <div id="generate-basic-information" class="section level3">
-<h3>2. Generate basic information</h3>
+<h3>2. Generate Basic Information</h3>
 <pre class="r"><code>year_start  &lt;- 1  # starting year in the burn-in period
 year_end    &lt;- 20  # end year in the burn-in period
 MSE_years   &lt;- 3     # number of years in the feedback loop
@@ -1600,25 +1604,8 @@ catch_info = info$catch_info # collect fleet catch information
 index_info = info$index_info # collect survey information
 F_info = info$F # collect fishing information</code></pre>
 </div>
-<div id="configure-selecitvity-and-natural-mortality" class="section level3">
-<h3>3. Configure selecitvity and natural mortality</h3>
-<pre class="r"><code>n_stocks  &lt;- as.integer(basic_info[&#39;n_stocks&#39;])
-n_regions &lt;- as.integer(basic_info[&#39;n_regions&#39;])
-n_fleets  &lt;- as.integer(basic_info[&#39;n_fleets&#39;])
-n_indices &lt;- as.integer(basic_info[&#39;n_indices&#39;])
-n_ages    &lt;- as.integer(basic_info[&#39;n_ages&#39;])
-
-# Selectivity Configuration
-fleet_pars &lt;- c(5,1)
-index_pars &lt;- c(2,1)
-sel &lt;- list(model=rep(&quot;logistic&quot;,n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)))
-
-# M Configuration
-M &lt;- list(model=&quot;constant&quot;,initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))</code></pre>
-</div>
 <div id="configure-numbers-at-age-naa" class="section level3">
-<h3>4. Configure numbers-at-age (NAA)</h3>
+<h3>3. Configure Numbers-at-Age (NAA)</h3>
 <pre class="r"><code>sigma        &lt;- &quot;rec+1&quot;
 re_cor       &lt;- &quot;iid&quot;
 ini.opt      &lt;- &quot;equilibrium&quot; 
@@ -1631,39 +1618,64 @@ NAA_re &lt;- list(N1_model=rep(ini.opt,n_stocks),
                sigma_vals = sigma_vals) # NAA_where must be specified in basic_info!</code></pre>
 </div>
 <div id="generate-wham-input" class="section level3">
-<h3>5. Generate wham input</h3>
+<h3>4. Generate <code>wham</code> Input</h3>
 <p>Here we use <code>prepare_wham_input()</code> function to generate a
 wham input using the basic information we set above:</p>
 <pre class="r"><code>input &lt;- prepare_wham_input(basic_info = basic_info, 
-                            selectivity = sel, 
-                            M = M, 
                             NAA_re = NAA_re,
                             catch_info = catch_info, 
                             index_info = index_info, 
                             F = F_info)</code></pre>
 </div>
 <div id="generate-operating-model" class="section level3">
-<h3>6. Generate operating model</h3>
+<h3>5. Generate Operating Model</h3>
 <pre class="r"><code>random = input$random # check what processes are random effects
 input$random = NULL # so inner optimization won&#39;t change simulated RE
 om &lt;- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)</code></pre>
 </div>
 <div id="generate-dataset" class="section level3">
-<h3>7. Generate dataset</h3>
+<h3>6. Generate Dataset</h3>
 <pre class="r"><code>om_with_data &lt;- update_om_fn(om, seed = 123, random = random)</code></pre>
 </div>
-<div id="specify-assessment-interval-and-assessment-year-in-the-feedback-loop" class="section level3">
-<h3>8. Specify assessment interval and assessment year in the feedback
-loop</h3>
+<div id="specify-assessment-interval" class="section level3">
+<h3>7. Specify Assessment Interval</h3>
 <pre class="r"><code>assess.interval &lt;- 3 # Note: assessment interval is 3 years, given the feedback period is 3 years, there will be only 1 assessment
 base.years      &lt;- year_start:year_end # Burn-in period
 first.year      &lt;- head(base.years,1)
 terminal.year   &lt;- tail(base.years,1)
 assess.years    &lt;- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)</code></pre>
 </div>
-<div id="use-the-em-same-as-om-to-conduct-mse" class="section level3">
-<h3>9. Use the EM same as OM to conduct MSE</h3>
+<div id="conduct-mse-with-implementation-error" class="section level3">
+<h3>8. Conduct MSE with Implementation Error</h3>
+<p>In this example, we introduce <strong>implementation error</strong>
+to simulate deviations between catch advice and actual realized catch.
+Implementation error accounts for uncertainty or non-compliance when
+applying catch advice in management, which can influence stock dynamics
+in the MSE framework.</p>
+<p>We support the following <strong>implementation error
+options</strong>:</p>
+<ul>
+<li><code>&quot;lognormal&quot;</code>: Multiplies annual catch advice by a
+log-normal random variable drawn from <code>exp(N(mean, sd))</code>.
+This captures multiplicative error with log-normal variability.</li>
+<li><code>&quot;normal&quot;</code>: Adds additive noise by multiplying annual
+catch advice by <code>1 + N(mean, sd)</code>. This is centered at 1 (no
+bias) by default if mean = 0.</li>
+<li><code>&quot;uniform&quot;</code>: Multiplies annual catch advice by a uniform
+random multiplier between <code>min</code> and <code>max</code>. This
+simulates bounded but random variability. For example, setting
+<code>min = 1.1</code> and <code>max = 1.2</code> represents a case of
+consistent overreporting, where the annual realized catch is randomly
+drawn to be 10–20% higher than the annual catch advice.</li>
+<li><code>&quot;constant&quot;</code>: Applies a fixed multiplier to the catch
+advice (e.g., 1.2 means 20% overshoot every year).</li>
+</ul>
+<p>For this run, we used the <strong><code>&quot;constant&quot;</code></strong>
+method, with a <strong>constant_value of 1.2</strong>, meaning the
+realized catch was consistently 20% higher than the advised catch. This
+is useful to test performance under persistent overharvest
+scenarios.</p>
 <pre class="r"><code>mod = loop_through_fn(om = om_with_data,
                       em_info = info, 
                       random = random,
@@ -1687,9 +1699,7 @@ assess.years    &lt;- seq(terminal.year, tail(om$years,1)-assess.interval,by = a
                       base_years = base.years,
                       year.use = 20,
                       add.years = TRUE, 
-                      seed = 123,
-                      save.sdrep = TRUE,
-                      save.last.em = TRUE)</code></pre>
+                      seed = 123)</code></pre>
 </div>
 
 
