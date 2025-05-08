@@ -174,7 +174,7 @@ mods <- lapply(1:nsim, function(r) {
 ```
 
 ### 4. Plot MSE Results
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 library(whamMSE)
 plot_mse_output(mods,
                 main_dir = getwd(),
@@ -189,3 +189,6 @@ plot_mse_output(mods,
                 use.n.years.last = 5)
 
 ```
+
+### 5. MSE Performance Metrics
+<embed src="Report/mse_report.pdf" width="110%" height="800px" type="application/pdf">
