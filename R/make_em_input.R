@@ -512,9 +512,21 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
+          remove_agg = update_catch_info$remove_agg
+          remove_agg_pointer = update_catch_info$remove_agg_pointer 
+          remove_agg_years = update_catch_info$remove_agg_years
+          remove_paa = update_catch_info$remove_paa
+          remove_paa_pointer = update_catch_info$remove_paa_pointer 
+          remove_paa_years = update_catch_info$remove_paa_years
           em_input = update_input_catch_info(input = em_input, 
                                              agg_catch_sigma = agg_catch_sigma, 
                                              catch_Neff = catch_Neff,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -530,12 +542,12 @@ make_em_input <- function(om,
           em_input = update_input_index_info(input = em_input, 
                                              agg_index_sigma = agg_index_sigma, 
                                              index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -583,9 +595,21 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
+          remove_agg = update_catch_info$remove_agg
+          remove_agg_pointer = update_catch_info$remove_agg_pointer 
+          remove_agg_years = update_catch_info$remove_agg_years
+          remove_paa = update_catch_info$remove_paa
+          remove_paa_pointer = update_catch_info$remove_paa_pointer 
+          remove_paa_years = update_catch_info$remove_paa_years
           em_input = update_input_catch_info(input = em_input, 
                                              agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
+                                             catch_Neff = catch_Neff,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -601,12 +625,12 @@ make_em_input <- function(om,
           em_input = update_input_index_info(input = em_input, 
                                              agg_index_sigma = agg_index_sigma, 
                                              index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -722,9 +746,21 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
+          remove_agg = update_catch_info$remove_agg
+          remove_agg_pointer = update_catch_info$remove_agg_pointer 
+          remove_agg_years = update_catch_info$remove_agg_years
+          remove_paa = update_catch_info$remove_paa
+          remove_paa_pointer = update_catch_info$remove_paa_pointer 
+          remove_paa_years = update_catch_info$remove_paa_years
           em_input = update_input_catch_info(input = em_input, 
                                              agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
+                                             catch_Neff = catch_Neff,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -740,12 +776,12 @@ make_em_input <- function(om,
           em_input = update_input_index_info(input = em_input, 
                                              agg_index_sigma = agg_index_sigma, 
                                              index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -792,9 +828,21 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
+          remove_agg = update_catch_info$remove_agg
+          remove_agg_pointer = update_catch_info$remove_agg_pointer 
+          remove_agg_years = update_catch_info$remove_agg_years
+          remove_paa = update_catch_info$remove_paa
+          remove_paa_pointer = update_catch_info$remove_paa_pointer 
+          remove_paa_years = update_catch_info$remove_paa_years
           em_input = update_input_catch_info(input = em_input, 
                                              agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
+                                             catch_Neff = catch_Neff,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         
@@ -810,12 +858,12 @@ make_em_input <- function(om,
           em_input = update_input_index_info(input = em_input, 
                                              agg_index_sigma = agg_index_sigma, 
                                              index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
+                                             remove_agg = remove_agg,
+                                             remove_agg_pointer = remove_agg_pointer,
+                                             remove_agg_years = remove_agg_years,
+                                             remove_paa = remove_paa,
+                                             remove_paa_pointer = remove_paa_pointer, 
+                                             remove_paa_years = remove_paa_years,
                                              ind_em = ind_em)
         }
         

@@ -21,33 +21,33 @@ update_input_index_info(
 \item{input}{List. A WHAM input list that must contain \code{input$data}.}
 
 \item{agg_index_sigma}{Numeric matrix. Aggregated index standard deviations (CVs) to update. 
-Can be full size (\code{n_years × n_indices}) or subset rows (\code{length(ind_em) × n_indices}).}
+Can be full size (\code{n_years × n_indices}) or a subset of rows (\code{length(ind_em) × n_indices}).}
 
-\item{index_Neff}{Numeric matrix. Effective sample size for index data. Must match dimensions of \code{agg_index_sigma}.}
+\item{index_Neff}{Numeric matrix. Effective sample size for index data. Must match the dimensions of \code{agg_index_sigma}.}
 
-\item{remove_agg}{Logical. Whether to remove aggregated index observations for specific pointers/years.}
+\item{remove_agg}{Logical. Whether to remove aggregated index observations for specific indices/years.}
 
 \item{remove_agg_pointer}{Integer vector. Index pointers (columns) for which aggregated index data should be removed.}
 
-\item{remove_agg_years}{Integer vector or matrix. Years (rows) to remove aggregated index data. If matrix, should be [years × pointers].}
+\item{remove_agg_years}{Integer vector or matrix. Years (rows) to remove aggregated index data. Can be a vector (applies to all pointers) or a matrix with dimensions [years × pointers].}
 
-\item{remove_paa}{Logical. Whether to remove index PAA observations for specific pointers/years.}
+\item{remove_paa}{Logical. Whether to remove index PAA observations for specific indices/years.}
 
 \item{remove_paa_pointer}{Integer vector. Index pointers (columns) for which index PAA data should be removed.}
 
-\item{remove_paa_years}{Integer vector or matrix. Years (rows) to remove index PAA data. If matrix, should be [years × pointers].}
+\item{remove_paa_years}{Integer vector or matrix. Years (rows) to remove index PAA data. Can be a vector (applies to all pointers) or a matrix with dimensions [years × pointers].}
 
 \item{ind_em}{Integer vector or NULL. If provided, only updates rows corresponding to these indices. If NULL, updates all rows.}
 }
 \value{
-The modified \code{input} list with updated \code{agg_index_sigma}, \code{index_Neff}, and associated index flags.
+The modified \code{input} list with updated \code{agg_index_sigma}, \code{index_Neff}, and updated index flags.
 }
 \description{
-Updates \code{input$data$index_Neff} and \code{input$data$agg_index_sigma} using provided index CV and Neff matrices.
-Optionally removes index data (aggregated or PAA) for specified pointers and years, and updates internal flags.
+Updates \code{input$data$agg_index_sigma} and \code{input$data$index_Neff} using the provided CV and Neff matrices.
+Optionally removes index data (aggregated or PAA) for specified indices (pointers) and years, and updates internal flags accordingly.
 }
 \details{
-If \code{ind_em} is specified, only those rows will be updated in the input matrices. 
-Removal of index or PAA observations is handled via internal flags and array zeroing.
-The function automatically calls \code{set_osa_obs()} at the end to update OSA flags.
+If \code{ind_em} is specified, only those rows are updated in the input matrices.
+Removal of aggregated index or PAA observations is handled by setting corresponding flags and array elements to zero.
+The function automatically calls \code{set_osa_obs()} at the end to refresh OSA flags.
 }
