@@ -4,20 +4,54 @@
 \alias{update_input_catch_info}
 \title{Update Catch CV and Neff in Input List (with Optional Row Subsetting)}
 \usage{
-update_input_catch_info(input, agg_catch_sigma, catch_Neff, ind_em = NULL)
+update_input_catch_info(
+  input,
+  agg_catch_sigma,
+  catch_Neff,
+  remove_agg = FALSE,
+  remove_agg_pointer = NULL,
+  remove_agg_years = NULL,
+  remove_paa = FALSE,
+  remove_paa_pointer = NULL,
+  remove_paa_years = NULL,
+  ind_em = NULL
+)
 }
 \arguments{
-\item{input}{List. Must contain `input$data`.}
+\item{input}{List. A WHAM input list that must contain \code{input$data}.}
 
-\item{agg_catch_sigma}{Matrix. Either full (n_years x n_fleets) or subset (length(ind_em) x n_fleets).}
+\item{agg_catch_sigma}{Numeric matrix. Aggregated catch standard deviations (CVs) to update. 
+Can be full size (\code{n_years × n_fleets}) or a subset of rows (\code{length(ind_em) × n_fleets}).}
 
-\item{catch_Neff}{Matrix. Same dimension as `agg_catch_sigma`.}
+\item{catch_Neff}{Numeric matrix. Effective sample size for catch data. Must match the dimensions of \code{agg_catch_sigma}.}
 
-\item{ind_em}{Integer vector or NULL. Row indices of years to update. If NULL, updates all rows.}
+\item{remove_agg}{Logical. Whether to remove aggregated catch observations for specific fleets/years.}
+
+\item{remove_agg_pointer}{Integer vector. Fleet pointers (columns) for which aggregated catch data should be removed.}
+
+\item{remove_agg_years}{Integer vector or matrix. Years (rows) to remove aggregated catch data. Can be a vector (applies to all fleets) or a matrix with dimensions [years × fleets].}
+
+\item{remove_paa}{Logical. Whether to remove catch PAA observations for specific fleets/years.}
+
+\item{remove_paa_pointer}{Integer vector. Fleet pointers (columns) for which catch PAA data should be removed.}
+
+\item{remove_paa_years}{Integer vector or matrix. Years (rows) to remove catch PAA data. Can be a vector (applies to all fleets) or a matrix with dimensions [years × fleets].}
+
+\item{ind_em}{Integer vector or NULL. Row indices (years) to update. If NULL, updates all rows.}
 }
 \value{
-The updated `input` list.
+The modified \code{input} list with updated \code{agg_catch_sigma}, \code{catch_Neff}, and updated catch flags.
 }
 \description{
-Updates `input$data$catch_Neff` and `input$data$agg_catch_sigma` using provided catch CV and Neff matrices.
+Updates \code{input$data$agg_catch_sigma} and \code{input$data$catch_Neff} using the provided CV and Neff matrices.
+Optionally removes catch data (aggregated or PAA) for specified fleets and years, and updates internal flags accordingly.
+}
+\details{
+If \code{ind_em} is specified, only those rows are updated in the input matrices.
+Removal of aggregated catch or PAA observations is handled by setting corresponding flags and array elements to zero.
+}
+\examples{
+# Example (assuming input is a WHAM input list)
+# input <- update_input_catch_info(input, agg_catch_sigma, catch_Neff)
+# input <- update_input_catch_info(input, agg_catch_sigma, catch_Neff, remove_agg = TRUE, remove_agg_pointer = 1, remove_agg_years = 5:10)
 }

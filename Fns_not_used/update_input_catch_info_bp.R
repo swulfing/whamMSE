@@ -88,7 +88,7 @@ update_input_catch_info <- function(input, agg_catch_sigma, catch_Neff,
     if (any(all_zero_paa)) {
       id <- which(all_zero_paa, arr.ind = TRUE)
       for (i in seq_len(nrow(id))) {
-        input$data$use_catch_paa[id[i, 1], id[i, 2]] <- 0
+        input$data$use_catch_paa[id[i, 2], id[i, 1]] <- 0
       }
     }
     
