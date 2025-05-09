@@ -267,27 +267,13 @@ make_em_input <- function(om,
       # Fill in the data from the operating model simulation
       info$catch_info$agg_catch <- data$agg_catch[ind_em, , drop = FALSE]
       info$catch_info$catch_paa <- data$catch_paa[, ind_em, , drop = FALSE]
-      info$catch_info$use_agg_catch <- data$use_agg_catch[ind_em, , drop = FALSE]
-      info$catch_info$use_catch_paa <- data$use_catch_paa[ind_em, , drop = FALSE]
-      
-      # if (!is.null(filter_indices) & any(filter_indices == 0)) {
-      #   info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
-      #   info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
-      # } else {
-      #   info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
-      #   info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-      # }
       
       if (!is.null(filter_indices) & any(filter_indices == 0)) {
         info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, idx, drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, idx, drop = FALSE]
       } else {
         info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
         info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, , drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, ,  drop = FALSE]
       }
       
       # Override any movement or trend information
@@ -364,8 +350,6 @@ make_em_input <- function(om,
         # Fill in the data from operating model simulation
         info$catch_info$agg_catch <- data$agg_catch[ind_em, relevant_fleets, drop = FALSE]
         info$catch_info$catch_paa <- data$catch_paa[relevant_fleets, ind_em, , drop = FALSE]
-        info$catch_info$use_agg_catch <- data$use_agg_catch[ind_em, relevant_fleets, drop = FALSE]
-        info$catch_info$use_catch_paa <- data$use_catch_paa[ind_em, relevant_fleets, drop = FALSE]
         
         relevant_indices <- which(index_regions == r)
         
@@ -376,8 +360,6 @@ make_em_input <- function(om,
         
         info$index_info$agg_indices <- data$agg_indices[ind_em, relevant_indices, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[relevant_indices, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, relevant_indices, drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, relevant_indices, drop = FALSE]
         
         # Ecov Effect 
         if(!is.null(ecov_em)) {
@@ -455,27 +437,13 @@ make_em_input <- function(om,
       
       info$catch_info$agg_catch <- data$agg_catch[ind_em, , drop = FALSE]
       info$catch_info$catch_paa <- data$catch_paa[, ind_em, , drop = FALSE]
-      info$catch_info$use_agg_catch <- data$use_agg_catch[ind_em, , drop = FALSE]
-      info$catch_info$use_catch_paa <- data$use_catch_paa[ind_em, , drop = FALSE]
-      
-      # if (!is.null(filter_indices) & any(filter_indices == 0)) {
-      #   info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
-      #   info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
-      # } else {
-      #   info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
-      #   info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-      # }
       
       if (!is.null(filter_indices) & any(filter_indices == 0)) {
         info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, idx, drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, idx, drop = FALSE]
       } else {
         info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
         info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, , drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, ,  drop = FALSE]
       }
       
       # Ecov Effect 
@@ -512,31 +480,13 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
-          em_input = update_input_catch_info(input = em_input, 
-                                             agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff,
-                                             ind_em = ind_em)
+          em_input = update_input_catch_info(input = em_input, agg_catch_sigma = agg_catch_sigma, catch_Neff = catch_Neff, ind_em = ind_em)
         }
         
         if(!is.null(update_index_info)) {
           agg_index_sigma = update_index_info$agg_index_sigma
           index_Neff = update_index_info$index_Neff
-          remove_agg = update_index_info$remove_agg
-          remove_agg_pointer = update_index_info$remove_agg_pointer 
-          remove_agg_years = update_index_info$remove_agg_years
-          remove_paa = update_index_info$remove_paa
-          remove_paa_pointer = update_index_info$remove_paa_pointer 
-          remove_paa_years = update_index_info$remove_paa_years
-          em_input = update_input_index_info(input = em_input, 
-                                             agg_index_sigma = agg_index_sigma, 
-                                             index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
-                                             ind_em = ind_em)
+          em_input = update_input_index_info(input = em_input, agg_index_sigma = agg_index_sigma, index_Neff = index_Neff, ind_em = ind_em)
         }
         
       } else {
@@ -583,31 +533,13 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
-          em_input = update_input_catch_info(input = em_input, 
-                                             agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
-                                             ind_em = ind_em)
+          em_input = update_input_catch_info(input = em_input, agg_catch_sigma = agg_catch_sigma, catch_Neff = catch_Neff, ind_em = ind_em)
         }
         
         if(!is.null(update_index_info)) {
           agg_index_sigma = update_index_info$agg_index_sigma
           index_Neff = update_index_info$index_Neff
-          remove_agg = update_index_info$remove_agg
-          remove_agg_pointer = update_index_info$remove_agg_pointer 
-          remove_agg_years = update_index_info$remove_agg_years
-          remove_paa = update_index_info$remove_paa
-          remove_paa_pointer = update_index_info$remove_paa_pointer 
-          remove_paa_years = update_index_info$remove_paa_years
-          em_input = update_input_index_info(input = em_input, 
-                                             agg_index_sigma = agg_index_sigma, 
-                                             index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
-                                             ind_em = ind_em)
+          em_input = update_input_index_info(input = em_input, agg_index_sigma = agg_index_sigma, index_Neff = index_Neff, ind_em = ind_em)
         }
         
       }
@@ -634,39 +566,27 @@ make_em_input <- function(om,
       if(id_indices == 0 || is.null(id_indices)) id_indices = numeric(0)
       
       if(length(id_fleets) > 0) {
-        info$catch_info$agg_catch <- data$agg_catch[ind_em, -id_fleets, drop = FALSE]
+        info$catch_info$agg_catch <- data$agg_catch[ind_em, -id_fleets , drop = FALSE]
         info$catch_info$catch_paa <- data$catch_paa[-id_fleets, ind_em, , drop = FALSE]
-        info$catch_info$use_agg_catch <- info$catch_info$use_agg_catch[ind_em, -id_fleets, drop = FALSE]
-        info$catch_info$use_catch_paa <- info$catch_info$use_catch_paa[ind_em, -id_fleets, drop = FALSE]
       } else {
         info$catch_info$agg_catch <- data$agg_catch[ind_em, , drop = FALSE]
         info$catch_info$catch_paa <- data$catch_paa[, ind_em, , drop = FALSE]
-        info$catch_info$use_agg_catch <- info$catch_info$use_agg_catch[ind_em, , drop = FALSE]
-        info$catch_info$use_catch_paa <- info$catch_info$use_catch_paa[ind_em, , drop = FALSE]
       }
 
       if (!is.null(filter_indices) & any(filter_indices == 0)) {
         info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, idx, drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, idx, drop = FALSE]
       } else {
         info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
         info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, , drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, , drop = FALSE]
       }
       
       if(length(id_indices) > 0) {
         info$index_info$agg_indices <- data$agg_indices[ind_em, -id_indices, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[-id_indices, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, -id_indices, drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, -id_indices, drop = FALSE]
       } else {
         info$index_info$agg_indices <- data$agg_indices[ind_em, , drop = FALSE]
         info$index_info$index_paa <- data$index_paa[, ind_em, , drop = FALSE]
-        info$index_info$use_indices <- data$use_indices[ind_em, , drop = FALSE]
-        info$index_info$use_index_paa <- data$use_index_paa[ind_em, , drop = FALSE]
       }
       
       if(is.null(reduce_region_info)) Stop("Users must prepare a list of new model configuration (NAA_where, sel_em, M_em, NAA_re_em, move_em, onto_move_list) if some areas are dropped from the model!")
@@ -722,31 +642,13 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
-          em_input = update_input_catch_info(input = em_input, 
-                                             agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
-                                             ind_em = ind_em)
+          em_input = update_input_catch_info(input = em_input, agg_catch_sigma = agg_catch_sigma, catch_Neff = catch_Neff, ind_em = ind_em)
         }
         
         if(!is.null(update_index_info)) {
           agg_index_sigma = update_index_info$agg_index_sigma
           index_Neff = update_index_info$index_Neff
-          remove_agg = update_index_info$remove_agg
-          remove_agg_pointer = update_index_info$remove_agg_pointer 
-          remove_agg_years = update_index_info$remove_agg_years
-          remove_paa = update_index_info$remove_paa
-          remove_paa_pointer = update_index_info$remove_paa_pointer 
-          remove_paa_years = update_index_info$remove_paa_years
-          em_input = update_input_index_info(input = em_input, 
-                                             agg_index_sigma = agg_index_sigma, 
-                                             index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
-                                             ind_em = ind_em)
+          em_input = update_input_index_info(input = em_input, agg_index_sigma = agg_index_sigma, index_Neff = index_Neff, ind_em = ind_em)
         }
         
       } else {
@@ -792,31 +694,13 @@ make_em_input <- function(om,
         if(!is.null(update_catch_info)) {
           agg_catch_sigma = update_catch_info$agg_catch_sigma
           catch_Neff = update_catch_info$catch_Neff
-          em_input = update_input_catch_info(input = em_input, 
-                                             agg_catch_sigma = agg_catch_sigma, 
-                                             catch_Neff = catch_Neff, 
-                                             ind_em = ind_em)
+          em_input = update_input_catch_info(input = em_input, agg_catch_sigma = agg_catch_sigma, catch_Neff = catch_Neff, ind_em = ind_em)
         }
         
         if(!is.null(update_index_info)) {
           agg_index_sigma = update_index_info$agg_index_sigma
           index_Neff = update_index_info$index_Neff
-          remove_agg = update_index_info$remove_agg
-          remove_agg_pointer = update_index_info$remove_agg_pointer 
-          remove_agg_years = update_index_info$remove_agg_years
-          remove_paa = update_index_info$remove_paa
-          remove_paa_pointer = update_index_info$remove_paa_pointer 
-          remove_paa_years = update_index_info$remove_paa_years
-          em_input = update_input_index_info(input = em_input, 
-                                             agg_index_sigma = agg_index_sigma, 
-                                             index_Neff = index_Neff, 
-                                             remove_agg = update_index_info$remove_agg,
-                                             remove_agg_pointer = update_index_info$remove_agg_pointer,
-                                             remove_agg_years = update_index_info$remove_agg_years,
-                                             remove_paa = update_index_info$remove_paa,
-                                             remove_paa_pointer = update_index_info$remove_paa_pointer, 
-                                             remove_paa_years = update_index_info$remove_paa_years,
-                                             ind_em = ind_em)
+          em_input = update_input_index_info(input = em_input, agg_index_sigma = agg_index_sigma, index_Neff = index_Neff, ind_em = ind_em)
         }
         
       }
