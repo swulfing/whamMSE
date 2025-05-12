@@ -676,6 +676,7 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
 
 plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                   width = 10, height = 7, dpi = 300, col.opt = "D",
+                                  f.ymin = NULL, f.ymax = NULL,
                                   new_model_names = NULL,
                                   use.n.years = NULL,
                                   base.model = NULL) {
@@ -767,11 +768,11 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
     }
     
     if (!is.null(base.model)) {
-      y1 = -1
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = -1
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     } else {
-      y1 = 0
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
     
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
@@ -921,6 +922,7 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
 
 plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                    width = 10, height = 7, dpi = 300, col.opt = "D",
+                                   f.ymin = NULL, f.ymax = NULL, 
                                    new_model_names = NULL,
                                    use.n.years = NULL,
                                    start.years = NULL,
@@ -1020,11 +1022,11 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
     }
     
     if (!is.null(base.model)) {
-      y1 = -1
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = -1
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     } else {
-      y1 = 0
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
       
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
@@ -2224,6 +2226,7 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
 
 plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
                              width = 10, height = 7, dpi = 300, col.opt = "D",
+                             f.ymin = NULL, f.ymax = NULL, 
                              new_model_names = NULL,
                              use.n.years = NULL,
                              base.model = NULL,
@@ -2348,11 +2351,11 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
     }
     
     if (!is.null(base.model)) {
-      y1 = -1
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = -1
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     } else {
-      y1 = 0
-      y2 = 3
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
     
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
@@ -2604,6 +2607,7 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
 
 plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
                               width = 10, height = 7, dpi = 300, col.opt = "D",
+                              f.ymin = NULL, f.ymax = NULL, 
                               new_model_names = NULL,
                               use.n.years = NULL,
                               start.years = NULL,
@@ -2735,11 +2739,11 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
     }
     
     if (!is.null(base.model)) {
-      y1 = -1
-      y2 = 2
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = -1
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     } else {
-      y1 = 0
-      y2 = 3
+      if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
+      if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
     
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +

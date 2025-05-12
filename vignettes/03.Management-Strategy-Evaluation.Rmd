@@ -170,7 +170,7 @@ example:
 | EM4   | Spatially disaggregated              | No              | NAA, Rec            | Global SPR-based    | Spatially disaggregated without movement                               |
 | EM5   | Spatially explicit                   | Yes (Est.)      | NAA, Rec, Movement  | Global SPR-based    | Spatially explicit with movement estimated using a prior                                        |
 
-### 11. Perform Managament Strategy Evaluation
+### 11. Perform Management Strategy Evaluation
 
 The code below does a closed-loop simulation with an operating model,
 fitting an estimating model, generating catch advice and incorporating
@@ -351,7 +351,7 @@ mods[[5]] = loop_through_fn(om = om_with_data,
                             seed = 123)
 ```
 
-### 12. Compare model performance
+### 12. Compare Model Performance
 
 The "whamMSE" package has comprehensive output analysis tools (see
 Vignettes: Output-Analysis). For now we just extract some key quantities

@@ -13,6 +13,8 @@ plot_mse_output(
   height = 7,
   dpi = 300,
   col.opt = "D",
+  f.ymin = NULL,
+  f.ymax = NULL,
   new_model_names = NULL,
   base.model = "Model1",
   start.years = 1,
