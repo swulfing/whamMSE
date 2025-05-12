@@ -3537,7 +3537,7 @@ plot_NAA_sigma_par <- function(mods, is.nsim, main.dir, sub.dir,
     geom_boxplot(outlier.shape = NA) +
     facet_grid(Var ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
-    ggtitle("Variance of NAA from the Last EM") +
+    ggtitle("Standard Deviation of NAA from the Last EM") +
     ylab("") +
     theme_bw() +
     theme(
