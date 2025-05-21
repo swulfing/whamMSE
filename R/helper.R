@@ -3931,229 +3931,6 @@ plot_status_triangle <- function(mods, is.nsim,
   plot_and_save2(bind_rows(results_long), paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
 }
 
-
-
-plot_model_performance_triangle2 <- function(mods, is.nsim,
-                                             main.dir, sub.dir,
-                                             width = 8, height = 7, dpi = 300,
-                                             col.opt = "D",
-                                             method = NULL,
-                                             new_model_names = NULL,
-                                             use.n.years.first = 5,
-                                             use.n.years.last = 5,
-                                             start.years = 1) {
-  library(dplyr)
-  library(ggtern)
-  library(viridisLite)
-  
-  # Safer warning
-  if (missing(start.years)) {
-    warning("start.years not provided; defaulting to 1 (first historical year).")
-  }
-  
-  # Function to extract mean Catch, SSB, and Fbar
-  process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
-    catch_ts <- rowSums(rep$pred_catch)
-    ssb_ts <- rowSums(rep$SSB)
-    fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] # SAFER: use last column (global Fbar)
-    
-    if (type == "short") {
-      idx <- start.years:(start.years + use.n.years - 1)
-    } else {
-      idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
-    }
-    
-    if(is.null(method)) method = "median"
-    if(method == "median") {
-      return(c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx])))
-    }
-    if(method == "mean") {
-      return(c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx])))
-    }
-  }
-  
-  results_short <- list()
-  results_long <- list()
-  
-  if (is.nsim) {
-    n_models <- length(mods[[1]])
-    n_reps <- length(mods)
-    
-    for (r in seq_len(n_reps)) {
-      df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
-      for (m in seq_len(n_models)) {
-        rep <- mods[[r]][[m]]$om$rep
-        input <- mods[[r]][[m]]$om$input$data
-        n_fleets <- input$n_fleets[1]
-        n_regions <- input$n_regions[1]
-        
-        short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
-        long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
-        
-        df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
-        df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
-      }
-      
-      # Normalize within realization (Catch & SSB up, Fbar inverted)
-      for (v in c("Catch", "SSB")) {
-        range_v <- max(df_short[[v]]) - min(df_short[[v]])
-        df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
-        
-        range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
-        df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
-      }
-      for (v in c("Fbar")) {
-        range_v <- max(df_short[[v]]) - min(df_short[[v]])
-        norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
-        df_short[[v]] <- 1 - norm_f # inverted
-        
-        range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
-        norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
-        df_long[[v]] <- 1 - norm_f_long
-      }
-      
-      # Now we already have values 0–1: just renormalize to sum = 1
-      df_short <- df_short %>%
-        mutate(total = Catch + SSB + Fbar,
-               Catch = ifelse(total == 0, 0, Catch / total),
-               SSB = ifelse(total == 0, 0, SSB / total),
-               Fbar = ifelse(total == 0, 0, Fbar / total),
-               Realization = r)
-      
-      df_long <- df_long %>%
-        mutate(total = Catch + SSB + Fbar,
-               Catch = ifelse(total == 0, 0, Catch / total),
-               SSB = ifelse(total == 0, 0, SSB / total),
-               Fbar = ifelse(total == 0, 0, Fbar / total),
-               Realization = r)
-      
-      results_short[[r]] <- df_short
-      results_long[[r]] <- df_long
-    }
-  } else {
-    n_models <- length(mods)
-    df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
-    
-    for (m in seq_len(n_models)) {
-      rep <- mods[[m]]$om$rep
-      input <- mods[[m]]$om$input$data
-      n_fleets <- input$n_fleets[1]
-      n_regions <- input$n_regions[1]
-      
-      short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
-      long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
-      
-      df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
-      df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
-    }
-    
-    for (v in c("Catch", "SSB")) {
-      range_v <- max(df_short[[v]]) - min(df_short[[v]])
-      df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
-      
-      range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
-      df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
-    }
-    for (v in c("Fbar")) {
-      range_v <- max(df_short[[v]]) - min(df_short[[v]])
-      norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
-      df_short[[v]] <- 1 - norm_f
-      
-      range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
-      norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
-      df_long[[v]] <- 1 - norm_f_long
-    }
-    
-    df_short <- df_short %>%
-      mutate(total = Catch + SSB + Fbar,
-             Catch = ifelse(total == 0, 0, Catch / total),
-             SSB = ifelse(total == 0, 0, SSB / total),
-             Fbar = ifelse(total == 0, 0, Fbar / total),
-             Realization = 1)
-    
-    df_long <- df_long %>%
-      mutate(total = Catch + SSB + Fbar,
-             Catch = ifelse(total == 0, 0, Catch / total),
-             SSB = ifelse(total == 0, 0, SSB / total),
-             Fbar = ifelse(total == 0, 0, Fbar / total),
-             Realization = 1)
-    
-    results_short[[1]] <- df_short
-    results_long[[1]] <- df_long
-  }
-  
-  df_short_all <- bind_rows(results_short)
-  df_long_all <- bind_rows(results_long)
-  
-  df_short_all <- bind_rows(results_short) %>%
-    group_by(Model) %>%
-    summarise(
-      Catch = median(Catch),
-      SSB = median(SSB),
-      Fbar = median(Fbar),
-      .groups = "drop"
-    )
-  
-  df_long_all <- bind_rows(results_long) %>%
-    group_by(Model) %>%
-    summarise(
-      Catch = median(Catch),
-      SSB = median(SSB),
-      Fbar = median(Fbar),
-      .groups = "drop"
-    )
-  
-  if (!is.null(new_model_names)) {
-    if (length(new_model_names) != length(unique(df_short_all$Model))) {
-      stop("Length of new_model_names must match number of models.")
-    }
-    df_short_all$Model <- factor(df_short_all$Model,
-                                 levels = paste0("Model", seq_along(new_model_names)),
-                                 labels = new_model_names)
-    df_long_all$Model <- factor(df_long_all$Model,
-                                levels = paste0("Model", seq_along(new_model_names)),
-                                labels = new_model_names)
-  }
-  
-  # === Plot function ===
-  plot_and_save <- function(df, title, file) {
-    colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
-    p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
-      geom_point(alpha = 0.8, size = 8) +
-      scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
-      theme_rgbw() +
-      theme(plot.title = element_text(hjust = 0.5))
-    
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
-    
-    print(p)
-  }
-  
-  plot_and_save2 <- function(df, title, file) {
-    colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
-    p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
-      geom_point(size = 1) +
-      scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
-      theme_rgbw() +
-      theme(plot.title = element_text(hjust = 0.5)) +
-      geom_confidence_tern(breaks = 0.95)
-    
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
-    
-    print(p)
-  }
-  
-  plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short.png")
-  plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long.png")
-  plot_and_save2(bind_rows(results_short), paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw.png")
-  plot_and_save2(bind_rows(results_long), paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw.png")
-}
-
-
 plot_model_performance_triangle2 <- function(mods, is.nsim,
                                              main.dir, sub.dir,
                                              width = 8, height = 7, dpi = 300,
@@ -4199,10 +3976,10 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     
     if(is.null(method)) method = "median"
     if(method == "median") {
-      return(c(calculate_aacv(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx])))
+      return(c(calculate_aacv(catch_ts[idx]), median(ssb_ts[idx]), median(catch_ts[idx])))
     }
     if(method == "mean") {
-      return(c(calculate_aacv(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx])))
+      return(c(calculate_aacv(catch_ts[idx]), mean(ssb_ts[idx]), mean(catch_ts[idx])))
     }
   }
   
@@ -4355,7 +4132,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch_Variation", L = "SSB", R = "Fbar") +
+      labs(title = title, T = "Catch", L = "SSB", R = "Catch_Variation") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
@@ -4370,7 +4147,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch_Variation", L = "SSB", R = "Fbar") +
+      labs(title = title, T = "Catch", L = "SSB", R = "Catch_Variation") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
