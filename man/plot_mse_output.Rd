@@ -13,6 +13,8 @@ plot_mse_output(
   height = 7,
   dpi = 300,
   col.opt = "D",
+  method = "mean",
+  outlier.opt = NA,
   f.ymin = NULL,
   f.ymax = NULL,
   new_model_names = NULL,
@@ -38,6 +40,14 @@ plot_mse_output(
 \item{dpi}{Resolution of saved plots in dots per inch.}
 
 \item{col.opt}{Color palette option for `viridis`-based scales.}
+
+\item{method}{method = NULL: global median, method = "mean": median of means, method = "median": median of medians}
+
+\item{outlier.opt}{outlier.opt = NA (default): no outliers will be shown, outlier.opt = 0 - 25 (26 different shapes to use)}
+
+\item{f.ymin}{Numeric value specifying the lower limit of the y-axis for F-based performance plots. (Default = NULL)}
+
+\item{f.ymax}{Numeric value specifying the upper limit of the y-axis for F-based performance plots. (Default = NULL)}
 
 \item{new_model_names}{Optional character vector of custom model names.}
 
