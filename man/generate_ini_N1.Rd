@@ -8,7 +8,7 @@ generate_ini_N1(
   basic_info,
   ini.opt = "equilibrium",
   log_N1 = NULL,
-  log_N1_F = NULL,
+  N1_F = NULL,
   init_NAA = NULL
 )
 }
@@ -19,7 +19,7 @@ generate_ini_N1(
 
 \item{log_N1}{a vector (length = n_stocks) of log number-at-age 1 at equilibrium}
 
-\item{log_N1_F}{a vector (length = n_stocks) of fishing mortality at equilibrium
+\item{N1_F}{a vector (length = n_stocks) of fishing mortality at equilibrium
 \describe{
    \item{"age-specific-fe"}{(default) age- and region-specific fixed effects parameters}
    \item{"equilibrium"}{2 fixed effects parameters: an initial recruitment and an instantaneous fishing mortality rate to generate an equilibruim abundance at age.}

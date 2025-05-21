@@ -225,9 +225,79 @@ plot_catch_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   return(p1)  # Return the plot if you want to print or modify later
 }
 
+# plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
+#                                  width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                  new_model_names = NULL,
+#                                  use.n.years = NULL) {
+#   library(dplyr)
+#   library(tidyr) 
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   res <- NULL
+#   
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     # Only one realization
+#     res <- lapply(seq_along(mods), function(i) {
+#       data.frame(
+#         SSB = mods[[i]]$om$rep$SSB,
+#         Model = paste0("Model", i),
+#         Year = Years,
+#         Realization = 1  # default realization
+#       ) %>% tail(use.n.years)  # use user-specified last n years
+#     }) %>% bind_rows()
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     # Multiple realizations
+#     res <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         data.frame(
+#           SSB = mods[[r]][[m]]$om$rep$SSB,
+#           Model = paste0("Model", m),
+#           Year = Years,
+#           Realization = r
+#         ) %>% tail(use.n.years)  # use user-specified last n years
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#   }
+#   
+#   # Allow renaming Model names
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(res$Model))) {
+#       stop("Length of new_model_names must match the number of models.")
+#     }
+#     res$Model <- factor(res$Model,
+#                         levels = paste0("Model", seq_along(new_model_names)),
+#                         labels = new_model_names)
+#   }
+#   
+#   # Pivot longer if needed (for multiple SSB types)
+#   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+#   
+#   # Plot
+#   p1 <- ggplot(res, aes(x = Model, y = !!sym(var), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var, "Last", use.n.years, "Years")) +
+#     ylab(var) +
+#     theme_bw()
+#   
+#   # Save the plot
+#   ggsave(file.path(main.dir, sub.dir, paste0(var, "_last_",use.n.years,"_years.PNG")), p1, width = width, height = height, dpi = dpi)
+#   
+#   return(p1)
+# }
+
 plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
                                  width = 10, height = 7, dpi = 300, col.opt = "D",
-                                 method = NULL,
                                  new_model_names = NULL,
                                  use.n.years = NULL,
                                  base.model = NULL) {
@@ -294,14 +364,6 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       mutate(!!var := (!!sym(var)) / base_val - 1)
   }
   
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    res <- res %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                .groups = "drop")
-  }
-  
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
     geom_boxplot(outlier.shape = NA) +
@@ -321,9 +383,101 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   return(p1)
 }
 
+# plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
+#                                   width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                   new_model_names = NULL,
+#                                   use.n.years = NULL,
+#                                   start.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   if (is.null(start.years)) cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+#   
+#   res <- NULL
+#   
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     # Only one realization
+#     res <- lapply(seq_along(mods), function(i) {
+#       tmp <- data.frame(
+#         SSB = mods[[i]]$om$rep$SSB,
+#         Model = paste0("Model", i),
+#         Year = Years,
+#         Realization = 1  # default realization
+#       ) 
+#       start.row <- if (is.null(start.years)) 1 else start.years
+#       n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#       
+#       if (!is.null(start.row)) {
+#         # Custom start row slicing
+#         start_idx <- start.row
+#         end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#         tmp <- tmp[start_idx:end_idx, ]
+#       }
+#     }) %>% bind_rows()
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     # Multiple realizations
+#     res <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         tmp <- data.frame(
+#           SSB = mods[[r]][[m]]$om$rep$SSB,
+#           Model = paste0("Model", m),
+#           Year = Years,
+#           Realization = r
+#         )
+#         start.row <- if (is.null(start.years)) 1 else start.years
+#         n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#         
+#         if (!is.null(start.row)) {
+#           # Custom start row slicing
+#           start_idx <- start.row
+#           end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#           tmp <- tmp[start_idx:end_idx, ]
+#         }
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#   }
+#   
+#   # Allow renaming Model names
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(res$Model))) {
+#       stop("Length of new_model_names must match the number of models.")
+#     }
+#     res$Model <- factor(res$Model,
+#                         levels = paste0("Model", seq_along(new_model_names)),
+#                         labels = new_model_names)
+#   }
+#   
+#   # Pivot longer if needed (for multiple SSB types)
+#   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+#   
+#   # Plot
+#   p1 <- ggplot(res, aes(x = Model, y = !!sym(var), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var, "First", use.n.years, "Years")) +
+#     ylab(var) +
+#     theme_bw()
+#   
+#   # Save the plot
+#   ggsave(file.path(main.dir, sub.dir, paste0(var, "_first_",use.n.years,"_years.PNG")), p1, width = width, height = height, dpi = dpi)
+#   
+#   return(p1)
+# }
+
 plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
                                   width = 10, height = 7, dpi = 300, col.opt = "D",
-                                  method = NULL,
                                   new_model_names = NULL,
                                   use.n.years = NULL,
                                   start.years = NULL,
@@ -405,14 +559,6 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       mutate(!!var := (!!sym(var)) / base_val - 1)
   }
   
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    res <- res %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                .groups = "drop")
-  }
-  
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
     geom_boxplot(outlier.shape = NA) +
@@ -431,9 +577,105 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   return(p1)
 }
 
+# plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
+#                                   width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                   new_model_names = NULL,
+#                                   use.n.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   make_plot_data <- function(index_range, label_prefix) {
+#     if (!is.nsim) {
+#       
+#       Years = mods[[1]]$om$years
+#       
+#       # Get number of fleets and regions
+#       n_fleets <- mods[[1]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[1]]$om$input$data$n_regions[1]
+#       
+#       # Only one realization
+#       lapply(seq_along(mods), function(i) {
+#         tmp <- mods[[i]]$om$rep$Fbar[, index_range, drop = FALSE]
+#         tmp <- as.data.frame(tmp)
+#         names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#         tmp$Model <- paste0("Model", i)
+#         tmp$Year <- Years
+#         tmp$Realization <- 1
+#         tmp <- tail(tmp, use.n.years)  # use user-specified last n years
+#       }) %>% bind_rows()
+#     } else {
+#       
+#       Years = mods[[1]][[1]]$om$years
+#       
+#       # Get number of fleets and regions
+#       n_fleets <- mods[[1]][[1]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[1]][[1]]$om$input$data$n_regions[1]
+#       
+#       # Multiple realizations
+#       lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           tmp <- mods[[r]][[m]]$om$rep$Fbar[, index_range, drop = FALSE]
+#           tmp <- as.data.frame(tmp)
+#           names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#           tmp$Model <- paste0("Model", m)
+#           tmp$Year <- Years
+#           tmp$Realization <- r
+#           tmp <- tail(tmp, use.n.years)  # use user-specified last n years
+#         }) %>% bind_rows()
+#       }) %>% bind_rows()
+#     }
+#   }
+#   
+#   # Fleet-level Fbar
+#   res_fleet <- make_plot_data(1:n_fleets, "Fleet_")
+#   
+#   # Region-level Fbar
+#   res_region <- make_plot_data((n_fleets + 1):(n_fleets + n_regions), "Region_")
+#   
+#   # Global Fbar (only one column)
+#   res_global <- make_plot_data(n_fleets + n_regions + 1, "Global")
+#   
+#   # Function to handle renaming and plotting
+#   plot_and_save <- function(res, title, ylab_text, filename) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(res$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       res$Model <- factor(res$Model,
+#                           levels = paste0("Model", seq_along(new_model_names)),
+#                           labels = new_model_names)
+#     }
+#     
+#     res_long <- pivot_longer(res, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                              names_to = "Label", values_to = "Fbar")
+#     
+#     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   # Create and save each plot
+#   p_fleet <- plot_and_save(res_fleet, "Fbar by Fleet", "Fbar", paste0(var, "_fleet_last_",use.n.years,"_years"))
+#   p_region <- plot_and_save(res_region, "Fbar by Region", "Fbar", paste0(var, "_region_last_",use.n.years,"_years"))
+#   p_global <- plot_and_save(res_global, "Global Fbar", "Fbar", paste0(var, "_global_last_",use.n.years,"_years"))
+#   
+#   return(list(fleet = p_fleet, region = p_region, global = p_global))
+# }
+
 plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                   width = 10, height = 7, dpi = 300, col.opt = "D",
-                                  method = NULL,
                                   f.ymin = NULL, f.ymax = NULL,
                                   new_model_names = NULL,
                                   use.n.years = NULL,
@@ -533,14 +775,6 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
       if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
     
-    # Apply mean or median summarization if method is specified
-    if (!is.null(method)) {
-      res_long <- res_long %>%
-        group_by(Model, Realization, Label) %>%
-        summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                  .groups = "drop")
-    }
-    
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
       coord_cartesian(ylim = c(y1, y2)) + 
@@ -564,9 +798,130 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
   return(list(fleet = p_fleet, region = p_region, global = p_global))
 }
 
+# plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
+#                                    width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                    new_model_names = NULL,
+#                                    use.n.years = NULL,
+#                                    start.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   if (is.null(start.years)) cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+#   
+#   make_plot_data <- function(index_range, label_prefix) {
+#     
+#     if (!is.nsim) {
+#       
+#       Years = mods[[1]]$om$years
+#       
+#       # Only one realization
+#       lapply(seq_along(mods), function(i) {
+#         tmp <- mods[[i]]$om$rep$Fbar[, index_range, drop = FALSE]
+#         tmp <- as.data.frame(tmp)
+#         names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#         tmp$Model <- paste0("Model", i)
+#         tmp$Year <- Years
+#         tmp$Realization <- 1
+#         
+#         start.row <- if (is.null(start.years)) 1 else start.years
+#         n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#         
+#         if (!is.null(start.row)) {
+#           # Custom start row slicing
+#           start_idx <- start.row
+#           end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#           tmp <- tmp[start_idx:end_idx, ]
+#         }
+#         
+#       }) %>% bind_rows()
+#     } else {
+#       
+#       Years = mods[[1]][[1]]$om$years
+#       
+#       # Multiple realizations
+#       lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           tmp <- mods[[r]][[m]]$om$rep$Fbar[, index_range, drop = FALSE]
+#           tmp <- as.data.frame(tmp)
+#           names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#           tmp$Model <- paste0("Model", m)
+#           tmp$Year <- Years
+#           tmp$Realization <- r
+#           
+#           start.row <- if (is.null(start.years)) 1 else start.years
+#           n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#           
+#           if (!is.null(start.row)) {
+#             # Custom start row slicing
+#             start_idx <- start.row
+#             end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#             tmp <- tmp[start_idx:end_idx, ]
+#           }
+#           
+#         }) %>% bind_rows()
+#       }) %>% bind_rows()
+#     }
+#   }
+#   
+#   if (!is.nsim) {
+#     # Get number of fleets and regions
+#     n_fleets <- mods[[1]]$om$input$data$n_fleets[1]
+#     n_regions <- mods[[1]]$om$input$data$n_regions[1]
+#   } else {
+#     n_fleets <- mods[[1]][[1]]$om$input$data$n_fleets[1]
+#     n_regions <- mods[[1]][[1]]$om$input$data$n_regions[1]
+#   }
+#   
+#   # Fleet-level Fbar
+#   res_fleet <- make_plot_data(1:n_fleets, "Fleet_")
+#   
+#   # Region-level Fbar
+#   res_region <- make_plot_data((n_fleets + 1):(n_fleets + n_regions), "Region_")
+#   
+#   # Global Fbar (only one column)
+#   res_global <- make_plot_data(n_fleets + n_regions + 1, "Global")
+#   
+#   # Function to handle renaming and plotting
+#   plot_and_save <- function(res, title, ylab_text, filename) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(res$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       res$Model <- factor(res$Model,
+#                           levels = paste0("Model", seq_along(new_model_names)),
+#                           labels = new_model_names)
+#     }
+#     
+#     res_long <- pivot_longer(res, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                              names_to = "Label", values_to = "Fbar")
+#     
+#     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   # Create and save each plot
+#   p_fleet <- plot_and_save(res_fleet, "Fbar by Fleet", "Fbar", paste0(var, "_fleet_first_",use.n.years,"_years"))
+#   p_region <- plot_and_save(res_region, "Fbar by Region", "Fbar", paste0(var, "_region_first_",use.n.years,"_years"))
+#   p_global <- plot_and_save(res_global, "Global Fbar", "Fbar", paste0(var, "_global_first_",use.n.years,"_years"))
+#   
+#   return(list(fleet = p_fleet, region = p_region, global = p_global))
+# }
+
 plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                    width = 10, height = 7, dpi = 300, col.opt = "D",
-                                   method = NULL,
                                    f.ymin = NULL, f.ymax = NULL, 
                                    new_model_names = NULL,
                                    use.n.years = NULL,
@@ -673,15 +1028,7 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
       if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
       if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
     }
-    
-    # Apply mean or median summarization if method is specified
-    if (!is.null(method)) {
-      res_long <- res_long %>%
-        group_by(Model, Realization, Label) %>%
-        summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                  .groups = "drop")
-    }
-    
+      
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
       geom_boxplot(outlier.shape = NA) +
       coord_cartesian(ylim = c(y1, y2)) + 
@@ -705,9 +1052,81 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
   return(list(fleet = p_fleet, region = p_region, global = p_global))
 }
 
+# plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
+#                                    width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                    new_model_names = NULL,
+#                                    use.n.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   res <- NULL
+#   
+#   # Prepare data
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     # Only one realization
+#     res <- lapply(seq_along(mods), function(i) {
+#       data.frame(
+#         Catch = mods[[i]]$om$rep$pred_catch,
+#         Model = paste0("Model", i),
+#         Year = Years,
+#         Realization = 1
+#       ) %>% tail(use.n.years)
+#     }) %>% bind_rows()
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     # Multiple realizations
+#     res <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         data.frame(
+#           Catch = mods[[r]][[m]]$om$rep$pred_catch,
+#           Model = paste0("Model", m),
+#           Year = Years,
+#           Realization = r
+#         ) %>% tail(use.n.years)
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#   }
+#   
+#   # Allow renaming Model names
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(res$Model))) {
+#       stop("Length of new_model_names must match the number of models.")
+#     }
+#     res$Model <- factor(res$Model,
+#                         levels = paste0("Model", seq_along(new_model_names)),
+#                         labels = new_model_names)
+#   }
+#   
+#   # Pivot longer if needed (for multiple Catch types)
+#   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+#   
+#   # Plot
+#   p1 <- ggplot(res, aes(x = Model, y = !!sym(var), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var, "Last", use.n.years, "Years")) +
+#     ylab(var) +
+#     theme_bw()
+#   
+#   # Save the plot
+#   ggsave(file.path(main.dir, sub.dir, paste0(var, "_last_",use.n.years,"_years.PNG")), p1, width = width, height = height, dpi = dpi)
+#   
+#   return(p1)
+# }
+
 plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
                                    width = 10, height = 7, dpi = 300, col.opt = "D",
-                                   method = NULL,
                                    new_model_names = NULL,
                                    use.n.years = NULL,
                                    base.model = NULL) {
@@ -778,14 +1197,6 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
       mutate(!!var := (!!sym(var)) / base_val - 1) 
   }
   
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    res <- res %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                .groups = "drop")
-  }
-  
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
     geom_boxplot(outlier.shape = NA) +
@@ -802,10 +1213,92 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   return(p1)
 }
 
+# plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
+#                                     width = 10, height = 7, dpi = 300, col.opt = "D",
+#                                     new_model_names = NULL,
+#                                     use.n.years = NULL,
+#                                     start.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#   if (is.null(use.n.years)) use.n.years = 5
+#   
+#   if (is.null(start.years)) cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+#   
+#   res <- NULL
+#   
+#   # Prepare data
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     # Only one realization
+#     res <- lapply(seq_along(mods), function(i) {
+#       tmp <- data.frame(
+#         Catch = mods[[i]]$om$rep$pred_catch,
+#         Model = paste0("Model", i),
+#         Year = Years,
+#         Realization = 1
+#       ) 
+#       start.row <- if (is.null(start.years)) 1 else start.years
+#       n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#       
+#       if (!is.null(start.row)) {
+#         # Custom start row slicing
+#         start_idx <- start.row
+#         end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#         tmp <- tmp[start_idx:end_idx, ]
+#       }
+#     }) %>% bind_rows()
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     # Multiple realizations
+#     res <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         tmp <- data.frame(
+#           Catch = mods[[r]][[m]]$om$rep$pred_catch,
+#           Model = paste0("Model", m),
+#           Year = Years,
+#           Realization = r
+#         )
+#         start.row <- if (is.null(start.years)) 1 else start.years
+#         n_rows <- if (is.null(use.n.years)) 5 else use.n.years
+#         
+#         if (!is.null(start.row)) {
+#           # Custom start row slicing
+#           start_idx <- start.row
+#           end_idx <- min(start.row + n_rows - 1, nrow(tmp))  # make sure don't go beyond available rows
+#           tmp <- tmp[start_idx:end_idx, ]
+#         }
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#   }
+#   
+#   # Pivot longer if needed (for multiple Catch types)
+#   res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+#   
+#   # Plot
+#   p1 <- ggplot(res, aes(x = Model, y = !!sym(var), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var, "First", use.n.years, "Years")) +
+#     ylab(var) +
+#     theme_bw()
+#   
+#   # Save the plot
+#   ggsave(file.path(main.dir, sub.dir, paste0(var, "_first_",use.n.years,"_years.PNG")), p1, width = width, height = height, dpi = dpi)
+#   
+#   return(p1)
+# }
 
 plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
                                     width = 10, height = 7, dpi = 300, col.opt = "D",
-                                    method = NULL,
                                     new_model_names = NULL,
                                     use.n.years = NULL,
                                     start.years = NULL,
@@ -887,14 +1380,6 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
       mutate(!!var := (!!sym(var)) / base_val - 1)
   }
   
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    res <- res %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                .groups = "drop")
-  }
-  
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
     geom_boxplot(outlier.shape = NA) +
@@ -913,9 +1398,151 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
   return(p1)
 }
 
+# plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status",
+#                             width = 10, height = 7, dpi = 300, col.opt = "D",
+#                             new_model_names = NULL,
+#                             use.n.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#     use.n.years <- 5
+#   }
+#   
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     title_main = paste0("Probability SSB/SSB", mods[[1]]$om$input$data$percentSPR, "% < 0.5 (Last ", use.n.years, " Years)")
+#     
+#     # Only one realization
+#     res_list <- lapply(seq_along(mods), function(i) {
+#       tmp <- mods[[i]]$om$rep$SSB
+#       tmp <- cbind(tmp, rowSums(tmp)) # Add total SSB across stocks/regions
+#       tmp <- tmp / exp(mods[[i]]$om$rep$log_SSB_FXSPR) # Normalize by SSB at Fspr
+#       tmp <- as.data.frame(tmp)
+#       
+#       name_tmp <- paste0("SSB/SSB", mods[[i]]$om$input$data$percentSPR, "%")
+#       names(tmp) <- paste0(name_tmp, ".s", 1:ncol(tmp))
+#       names(tmp)[ncol(tmp)] <- name_tmp # Last column is global one
+#       
+#       tmp$Model <- paste0("Model", i)
+#       tmp$Year <- Years
+#       tmp$Realization <- 1
+#       
+#       tmp <- tail(tmp, use.n.years)
+#     }) 
+#     
+#     res <- bind_rows(res_list)
+#     
+#     # --- Calculate probabilities SSB/SSBSPR < 0.5 ---
+#     prob <- lapply(seq_along(mods), function(i) {
+#       x <- res_list[[i]]
+#       y <- x[, grepl("^SSB/SSB", names(x)), drop = FALSE]
+#       out <- as.data.frame(t(colMeans(y < 0.5, na.rm = TRUE)))
+#       out$Model <- paste0("Model", i)
+#       return(out)
+#     }) %>% bind_rows()
+#     
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     title_main = paste0("Probability SSB/SSB", mods[[1]][[1]]$om$input$data$percentSPR, "% < 0.5 (Last ", use.n.years, " Years)")
+#     
+#     # Multiple realizations
+#     res_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         
+#         tmp <- mods[[r]][[m]]$om$rep$SSB
+#         tmp <- cbind(tmp, rowSums(tmp)) # Add total SSB across stocks/regions
+#         tmp <- tmp / exp(mods[[r]][[m]]$om$rep$log_SSB_FXSPR) # Normalize by SSB at Fspr
+#         tmp <- as.data.frame(tmp)
+#         
+#         name_tmp <- paste0("SSB/SSB", mods[[r]][[m]]$om$input$data$percentSPR, "%")
+#         names(tmp) <- paste0(name_tmp, ".s", 1:ncol(tmp))
+#         names(tmp)[ncol(tmp)] <- name_tmp # Last column is global one
+#         
+#         tmp$Model <- paste0("Model", m)
+#         tmp$Year <- Years
+#         tmp$Realization <- r # default realization
+#         
+#         tmp <- tail(tmp, use.n.years)
+#       })
+#     })
+#     
+#     res <- bind_rows(res_list)
+#     
+#     # --- Calculate probabilities SSB/SSBSPR < 0.5 ---
+#     prob <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         x <- res_list[[r]][[m]]
+#         y <- x[, grepl("^SSB/SSB", names(x)), drop = FALSE]
+#         out <- as.data.frame(t(colMeans(y < 0.5, na.rm = TRUE)))
+#         out$Model <- paste0("Model", m)
+#         return(out)
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#     
+#   }
+#   
+#   # --- Rename models if needed ---
+#   rename_models <- function(df) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(df$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       df$Model <- factor(df$Model,
+#                          levels = paste0("Model", seq_along(new_model_names)),
+#                          labels = new_model_names)
+#     }
+#     df
+#   }
+#   
+#   res <- rename_models(res)
+#   prob <- rename_models(prob)
+#   
+#   # --- Boxplot of SSB status ---
+#   var_name <- unique(gsub("\\.s\\d+", "", grep("^SSB[./]SSB", names(res), value = TRUE)))
+#   
+#   res_long <- pivot_longer(res, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = var_name)
+#   
+#   p1 <- ggplot(res_long, aes(x = Model, y = !!rlang::sym(var_name), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var_name, "(Last", use.n.years, "Years)")) +
+#     ylab(var_name) +
+#     theme_bw()
+#   
+#   ggsave(file.path(main.dir, sub.dir, paste0("SSB_status_last_", use.n.years, "_years.PNG")),
+#          p1, width = width, height = height, dpi = dpi)
+#   
+#   # --- Point plot of probability SSB/SSBSPR < 0.5 ---
+#   prob_long <- pivot_longer(prob, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = "Prob")
+#   
+#   p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(title_main) +
+#     ylab("Probability") +
+#     theme_bw()
+#   
+#   ggsave(file.path(main.dir, sub.dir, paste0("SSB_status_overfishing_prob_last_", use.n.years, "_years.PNG")),
+#          p2, width = width, height = height, dpi = dpi)
+#   
+#   return(list(
+#     boxplot = p1,
+#     probplot = p2
+#   ))
+# }
+
 plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status",
                             width = 10, height = 7, dpi = 300, col.opt = "D",
-                            method = NULL,
                             new_model_names = NULL,
                             use.n.years = NULL,
                             base.model = NULL,
@@ -1031,15 +1658,6 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
       mutate(value = value / base_val - 1)
   }
   
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    var = "value"
-    res_long <- res_long %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                .groups = "drop")
-  }
-  
   # Plot
   p1 <- ggplot(res_long, aes(x = Model, y = value, color = Model)) +
     geom_boxplot(outlier.shape = NA) +
@@ -1086,9 +1704,162 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
   ))
 }
 
+# plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status",
+#                              width = 10, height = 7, dpi = 300, col.opt = "D",
+#                              new_model_names = NULL,
+#                              use.n.years = NULL,
+#                              start.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#     use.n.years <- 5
+#   }
+#   
+#   if (is.null(start.years)) {
+#     cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+#     start.years <- 1
+#   }
+#   
+#   if (!is.nsim) {
+#     
+#     Years = mods[[1]]$om$years
+#     
+#     title_main = paste0("Probability SSB/SSB", mods[[1]]$om$input$data$percentSPR, "% < 0.5 (Last ", use.n.years, " Years)")
+#     
+#     # Only one realization
+#     res_list <- lapply(seq_along(mods), function(i) {
+#       tmp <- mods[[i]]$om$rep$SSB
+#       tmp <- cbind(tmp, rowSums(tmp)) # Add total SSB across stocks/regions
+#       tmp <- tmp / exp(mods[[i]]$om$rep$log_SSB_FXSPR) # Normalize by SSB at Fspr
+#       tmp <- as.data.frame(tmp)
+#       
+#       name_tmp <- paste0("SSB/SSB", mods[[i]]$om$input$data$percentSPR, "%")
+#       names(tmp) <- paste0(name_tmp, ".s", 1:ncol(tmp))
+#       names(tmp)[ncol(tmp)] <- name_tmp # Last column is global one
+#       
+#       tmp$Model <- paste0("Model", i)
+#       tmp$Year <- Years
+#       tmp$Realization <- 1
+#       
+#       start_idx <- start.years
+#       end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+#       tmp <- tmp[start_idx:end_idx, ]
+#       
+#     }) 
+#     
+#     res <- bind_rows(res_list)
+#     
+#     # --- Calculate probabilities SSB/SSBSPR < 0.5 ---
+#     prob <- lapply(seq_along(mods), function(i) {
+#       x <- res_list[[i]]
+#       y <- x[, grepl("^SSB/SSB", names(x)), drop = FALSE]
+#       out <- as.data.frame(t(colMeans(y < 0.5, na.rm = TRUE)))
+#       out$Model <- paste0("Model", i)
+#       return(out)
+#     }) %>% bind_rows()
+#     
+#   } else {
+#     
+#     Years = mods[[1]][[1]]$om$years
+#     
+#     title_main = paste0("Probability SSB/SSB", mods[[1]][[1]]$om$input$data$percentSPR, "% < 0.5 (Last ", use.n.years, " Years)")
+#     
+#     # Multiple realizations
+#     res_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         
+#         tmp <- mods[[r]][[m]]$om$rep$SSB
+#         tmp <- cbind(tmp, rowSums(tmp)) # Add total SSB across stocks/regions
+#         tmp <- tmp / exp(mods[[r]][[m]]$om$rep$log_SSB_FXSPR) # Normalize by SSB at Fspr
+#         tmp <- as.data.frame(tmp)
+#         
+#         name_tmp <- paste0("SSB/SSB", mods[[r]][[m]]$om$input$data$percentSPR, "%")
+#         names(tmp) <- paste0(name_tmp, ".s", 1:ncol(tmp))
+#         names(tmp)[ncol(tmp)] <- name_tmp # Last column is global one
+#         
+#         tmp$Model <- paste0("Model", m)
+#         tmp$Year <- Years
+#         tmp$Realization <- r # default realization
+#         
+#         start_idx <- start.years
+#         end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+#         tmp <- tmp[start_idx:end_idx, ]
+#       })
+#     })
+#     
+#     res <- bind_rows(res_list)
+#     
+#     # --- Calculate probabilities SSB/SSBSPR < 0.5 ---
+#     prob <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         x <- res_list[[r]][[m]]
+#         y <- x[, grepl("^SSB/SSB", names(x)), drop = FALSE]
+#         out <- as.data.frame(t(colMeans(y < 0.5, na.rm = TRUE)))
+#         out$Model <- paste0("Model", m)
+#         return(out)
+#       }) %>% bind_rows()
+#     }) %>% bind_rows()
+#     
+#   }
+#   
+#   # --- Rename models if needed ---
+#   rename_models <- function(df) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(df$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       df$Model <- factor(df$Model,
+#                          levels = paste0("Model", seq_along(new_model_names)),
+#                          labels = new_model_names)
+#     }
+#     df
+#   }
+#   
+#   res <- rename_models(res)
+#   prob <- rename_models(prob)
+#   
+#   # --- Boxplot of SSB status ---
+#   var_name <- unique(gsub("\\.s\\d+", "", grep("^SSB[./]SSB", names(res), value = TRUE)))
+#   
+#   res_long <- pivot_longer(res, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = var_name)
+#   
+#   p1 <- ggplot(res_long, aes(x = Model, y = !!rlang::sym(var_name), color = Model)) +
+#     geom_boxplot(outlier.shape = NA) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(paste(var_name, "(First", use.n.years, "Years)")) +
+#     ylab(var_name) +
+#     theme_bw()
+#   
+#   ggsave(file.path(main.dir, sub.dir, paste0("SSB_status_first_", use.n.years, "_years.PNG")),
+#          p1, width = width, height = height, dpi = dpi)
+#   
+#   # --- Point plot of probability SSB/SSBSPR < 0.5 ---
+#   prob_long <- pivot_longer(prob, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = "Prob")
+#   
+#   p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+#     geom_point(size = 3) +
+#     facet_grid(Label ~ ., scales = "free") +
+#     scale_color_viridis_d(option = col.opt) +
+#     ggtitle(title_main) +
+#     ylab("Probability") +
+#     theme_bw()
+#   
+#   ggsave(file.path(main.dir, sub.dir, paste0("SSB_status_overfishing_prob_first_", use.n.years, "_years.PNG")),
+#          p2, width = width, height = height, dpi = dpi)
+#   
+#   return(list(
+#     boxplot = p1,
+#     probplot = p2
+#   ))
+# }
+
 plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status",
                              width = 10, height = 7, dpi = 300, col.opt = "D",
-                             method = NULL,
                              new_model_names = NULL,
                              use.n.years = NULL,
                              start.years = NULL,
@@ -1186,6 +1957,31 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   res <- rename_models(res)
   prob <- rename_models(prob)
   
+  # Boxplot of SSB status
+  # var_name <- unique(gsub("\\.s\\d+", "", grep("^SSB[./]SSB", names(res), value = TRUE)))
+  # res_long <- pivot_longer(res, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = var_name)
+  # 
+  # if (!is.null(base.model)) {
+  #   base_df <- res_long %>%
+  #     filter(Model == base.model) %>%
+  #     rename(base_val = !!sym(var_name)) %>%
+  #     select(Realization, Year, Label, base_val)
+  #   
+  #   res_long <- left_join(res_long, base_df, by = c("Realization", "Year", "Label")) %>%
+  #     mutate(!!var_name := (!!sym(var_name)) / base_val - 1)
+  # }
+  # 
+  # p1 <- ggplot(res_long, aes(x = Model, y = .data[[var_name]], color = Model)) +
+  #   geom_boxplot(outlier.shape = NA) +
+  #   facet_grid(Label ~ ., scales = "free") +
+  #   scale_color_viridis_d(option = col.opt) +
+  #   ggtitle(paste0(ifelse(is.null(base.model), var_name, paste0("Relative ", var_name, " vs ", base.model)),
+  #                  ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+  #   ylab(ifelse(is.null(base.model),
+  #               var_name,
+  #               paste0("Relative ", var_name, " Difference"))) +
+  #   theme_bw()
+  
   # Get the variable name pattern
   var_name <- unique(gsub("\\.s\\d+", "", grep("^SSB[./]SSB", names(res), value = TRUE)))
   
@@ -1206,15 +2002,6 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
     
     res_long <- left_join(res_long, base_df, by = c("Realization", "Year", "Label")) %>%
       mutate(value = value / base_val - 1)
-  }
-  
-  # Apply mean or median summarization if method is specified
-  if (!is.null(method)) {
-    var = "value"
-    res_long <- res_long %>%
-      group_by(Model, Realization, Label) %>%
-      summarise(!!var := if (method == "mean") mean(value) else median(value),
-                .groups = "drop")
   }
   
   # Plot
@@ -1261,9 +2048,184 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   ))
 }
 
+# plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
+#                              width = 10, height = 7, dpi = 300, col.opt = "D",
+#                              new_model_names = NULL,
+#                              use.n.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#     use.n.years <- 5
+#   }
+#   
+#   make_plot_data <- function(index_range, label_prefix) {
+#     
+#     if (!is.nsim) {
+#       
+#       Years = mods[[1]]$om$years
+#       
+#       # Only one realization
+#       
+#       res_list <- lapply(seq_along(mods), function(i) {
+#         tmp1 <- mods[[i]]$om$rep$Fbar[, index_range, drop = FALSE]
+#         tmp2 <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, index_range, drop = FALSE])
+#         tmp <- as.data.frame(tmp1 / tmp2)
+#         names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#         tmp$Model <- paste0("Model", i)
+#         tmp$Year <- Years
+#         tmp$Realization <- 1
+#         
+#         tmp <- tail(tmp, use.n.years)
+#       }) 
+#       
+#       res <- bind_rows(res_list)
+#       
+#       # Calculate overfishing probability (>1)
+#       prob <- lapply(res_list, function(x) {
+#         y <- x[, 1:length(index_range), drop = FALSE]
+#         data.frame(t(colMeans(y > 1, na.rm = TRUE)))
+#       }) %>%
+#         bind_rows() %>%
+#         mutate(Model = paste0("Model", seq_along(mods)))
+#       
+#       return(list(data = res, prob = prob))
+#       
+#     } else {
+#       
+#       Years = mods[[1]][[1]]$om$years
+#       
+#       # Multiple realizations
+#       
+#       res_list <- lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           
+#           tmp1 <- mods[[r]][[m]]$om$rep$Fbar[, index_range, drop = FALSE]
+#           tmp2 <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, index_range, drop = FALSE])
+#           tmp <- as.data.frame(tmp1 / tmp2)
+#           names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#           tmp$Model <- paste0("Model", m)
+#           tmp$Year <- Years
+#           tmp$Realization <- r
+#           
+#           tmp <- tail(tmp, use.n.years)
+#         })
+#       })
+#       
+#       res <- bind_rows(res_list)
+#       
+#       prob <- lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           x <- res_list[[r]][[m]]
+#           y <- x[, 1:length(index_range), drop = FALSE]
+#           df <- data.frame(t(colMeans(y > 1, na.rm = TRUE)))
+#           df$Model <- paste0("Model",m)
+#           df
+#         }) %>% bind_rows()
+#       }) %>% bind_rows()
+#       
+#       return(list(data = res, prob = prob)) 
+#     }
+#   }
+#   
+#   if (!is.nsim) {
+#     title_main <- paste0("F/F", mods[[1]]$om$input$data$percentSPR, "%")
+#   } else {
+#     title_main <- paste0("F/F", mods[[1]][[1]]$om$input$data$percentSPR, "%")
+#   }
+#   
+#   # Prepare data
+#   res_fleet_all <- make_plot_data(1:n_fleets, "Fleet_")
+#   res_fleet <- res_fleet_all$data
+#   prob_fleet <- res_fleet_all$prob
+#   
+#   res_region_all <- make_plot_data((n_fleets + 1):(n_fleets + n_regions), "Region_")
+#   res_region <- res_region_all$data
+#   prob_region <- res_region_all$prob
+#   
+#   res_global_all <- make_plot_data(n_fleets + n_regions + 1, "Global")
+#   res_global <- res_global_all$data
+#   prob_global <- res_global_all$prob
+#   
+#   # Helper to rename models
+#   rename_models <- function(res_or_prob) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(res_or_prob$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       res_or_prob$Model <- factor(res_or_prob$Model,
+#                                   levels = paste0("Model", seq_along(new_model_names)),
+#                                   labels = new_model_names)
+#     }
+#     return(res_or_prob)
+#   }
+#   
+#   res_fleet <- rename_models(res_fleet)
+#   res_region <- rename_models(res_region)
+#   res_global <- rename_models(res_global)
+#   
+#   prob_fleet <- rename_models(prob_fleet)
+#   prob_region <- rename_models(prob_region)
+#   prob_global <- rename_models(prob_global)
+#   
+#   # Plot function for boxplot
+#   plot_boxplot <- function(res, title, ylab_text, filename) {
+#     res_long <- pivot_longer(res, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                              names_to = "Label", values_to = "Fbar")
+#     
+#     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   # Plot function for point plot (probabilities)
+#   plot_pointplot <- function(prob, title, ylab_text, filename) {
+#     prob_long <- pivot_longer(prob, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                               names_to = "Label", values_to = "Prob")
+#     
+#     p <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   # Create and save all plots
+#   p_fleet_box <- plot_boxplot(res_fleet, paste(title_main, "by Fleet","(Last",use.n.years, "Years)"), title_main, paste0(var, "_fleet_last_", use.n.years, "_years"))
+#   p_region_box <- plot_boxplot(res_region, paste(title_main, "by Region","(Last",use.n.years, "Years)"), title_main, paste0(var, "_region_last_", use.n.years, "_years"))
+#   p_global_box <- plot_boxplot(res_global, paste(title_main, "Global","(Last",use.n.years, "Years)"), title_main, paste0(var, "_global_last_", use.n.years, "_years"))
+#   
+#   p_fleet_point <- plot_pointplot(prob_fleet, paste0("Probability (",title_main,"> 1) - Fleet","(Last",use.n.years, "Years)"), "Probability", paste0(var, "_fleet_overfishing_prob","_fleet_last_", use.n.years, "_years"))
+#   p_region_point <- plot_pointplot(prob_region, paste0("Probability (",title_main,"> 1) - Region","(Last",use.n.years, "Years)"), "Probability", paste0(var, "_region_overfishing_prob","_fleet_last_", use.n.years, "_years"))
+#   p_global_point <- plot_pointplot(prob_global, paste0("Probability (",title_main,"> 1) - Global","(Last",use.n.years, "Years)"), "Probability", paste0(var, "_global_overfishing_prob","_fleet_last_", use.n.years, "_years"))
+#   
+#   return(list(
+#     fleet_box = p_fleet_box,
+#     region_box = p_region_box,
+#     global_box = p_global_box,
+#     fleet_prob = p_fleet_point,
+#     region_prob = p_region_point,
+#     global_prob = p_global_point
+#   ))
+# }
+
 plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
                              width = 10, height = 7, dpi = 300, col.opt = "D",
-                             method = NULL,
                              f.ymin = NULL, f.ymax = NULL, 
                              new_model_names = NULL,
                              use.n.years = NULL,
@@ -1366,6 +2328,10 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
   prob_region <- rename_models(prob_region)
   prob_global <- rename_models(prob_global)
   
+  # if (!is.null(base.model) && !is.null(new_model_names)) {
+  #   base.model <- new_model_names[base.model]
+  # }
+  
   if (!is.null(base.model) && !is.null(new_model_names)) {
     if (!(base.model %in% new_model_names)) {
       warning("base.model does not match any of the new_model_names.")
@@ -1390,15 +2356,6 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
     } else {
       if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
       if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
-    }
-    
-    # Apply mean or median summarization if method is specified
-    if (!is.null(method)) {
-      var = "Fbar"
-      res_long <- res_long %>%
-        group_by(Model, Realization, Label) %>%
-        summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                  .groups = "drop")
     }
     
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
@@ -1454,9 +2411,202 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
   ))
 }
 
+# plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
+#                               width = 10, height = 7, dpi = 300, col.opt = "D",
+#                               new_model_names = NULL,
+#                               use.n.years = NULL,
+#                               start.years = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+#     use.n.years <- 5
+#   }
+#   
+#   if (is.null(start.years)) {
+#     cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+#     start.years <- 1
+#   }
+#   
+#   make_plot_data <- function(index_range, label_prefix) {
+#     
+#     if (!is.nsim) {
+#       
+#       Years = mods[[1]]$om$years
+#       
+#       # Get number of fleets and regions
+#       n_fleets <- mods[[1]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[1]]$om$input$data$n_regions[1]
+#       
+#       # Only one realization
+#       res_list <- lapply(seq_along(mods), function(i) {
+#         tmp1 <- mods[[i]]$om$rep$Fbar[, index_range, drop = FALSE]
+#         tmp2 <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, index_range, drop = FALSE])
+#         tmp <- as.data.frame(tmp1 / tmp2)
+#         names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#         tmp$Model <- paste0("Model", i)
+#         tmp$Year <- Years
+#         tmp$Realization <- 1
+#         
+#         start_idx <- start.years
+#         end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+#         tmp <- tmp[start_idx:end_idx, ]
+#       }) 
+#       
+#       res <- bind_rows(res_list)
+#       
+#       # Calculate overfishing probability (>1)
+#       prob <- lapply(res_list, function(x) {
+#         y <- x[, 1:length(index_range), drop = FALSE]
+#         data.frame(t(colMeans(y > 1, na.rm = TRUE)))
+#       }) %>%
+#         bind_rows() %>%
+#         mutate(Model = paste0("Model", seq_along(mods)))
+#       
+#       return(list(data = res, prob = prob))
+#       
+#     } else {
+#       
+#       Years = mods[[1]][[1]]$om$years
+#       
+#       title_main <- paste0("F/F", mods[[1]][[1]]$om$input$data$percentSPR, "%")
+#       
+#       # Get number of fleets and regions
+#       n_fleets <- mods[[1]][[1]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[1]][[1]]$om$input$data$n_regions[1]
+#       
+#       # Multiple realizations
+#       res_list <- lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           
+#           tmp1 <- mods[[r]][[m]]$om$rep$Fbar[, index_range, drop = FALSE]
+#           tmp2 <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, index_range, drop = FALSE])
+#           tmp <- as.data.frame(tmp1 / tmp2)
+#           names(tmp) <- paste0(label_prefix, seq_along(index_range))
+#           tmp$Model <- paste0("Model", m)
+#           tmp$Year <- Years
+#           tmp$Realization <- r
+#           
+#           start_idx <- start.years
+#           end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+#           tmp <- tmp[start_idx:end_idx, ]
+#         })
+#       })
+#       
+#       res <- bind_rows(res_list)
+#       
+#       prob <- lapply(seq_along(mods), function(r) {
+#         lapply(seq_along(mods[[r]]), function(m) {
+#           x <- res_list[[r]][[m]]
+#           y <- x[, 1:length(index_range), drop = FALSE]
+#           df <- data.frame(t(colMeans(y > 1, na.rm = TRUE)))
+#           df$Model <- paste0("Model",m)
+#           df
+#         }) %>% bind_rows()
+#       }) %>% bind_rows()
+#       
+#       return(list(data = res, prob = prob)) 
+#     }
+#   }
+# 
+#   # Prepare data
+#   res_fleet_all <- make_plot_data(1:n_fleets, "Fleet_")
+#   res_fleet <- res_fleet_all$data
+#   prob_fleet <- res_fleet_all$prob
+#   
+#   res_region_all <- make_plot_data((n_fleets + 1):(n_fleets + n_regions), "Region_")
+#   res_region <- res_region_all$data
+#   prob_region <- res_region_all$prob
+#   
+#   res_global_all <- make_plot_data(n_fleets + n_regions + 1, "Global")
+#   res_global <- res_global_all$data
+#   prob_global <- res_global_all$prob
+#   
+#   # Helper to rename models
+#   rename_models <- function(res_or_prob) {
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(res_or_prob$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       res_or_prob$Model <- factor(res_or_prob$Model,
+#                                   levels = paste0("Model", seq_along(new_model_names)),
+#                                   labels = new_model_names)
+#     }
+#     return(res_or_prob)
+#   }
+#   
+#   res_fleet <- rename_models(res_fleet)
+#   res_region <- rename_models(res_region)
+#   res_global <- rename_models(res_global)
+#   
+#   prob_fleet <- rename_models(prob_fleet)
+#   prob_region <- rename_models(prob_region)
+#   prob_global <- rename_models(prob_global)
+#   
+#   # Plot function for boxplot
+#   plot_boxplot <- function(res, title, ylab_text, filename) {
+#     res_long <- pivot_longer(res, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                              names_to = "Label", values_to = "Fbar")
+#     
+#     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   # Plot function for point plot (probabilities)
+#   plot_pointplot <- function(prob, title, ylab_text, filename) {
+#     prob_long <- pivot_longer(prob, cols = starts_with(c("Fleet_", "Region_", "Global")),
+#                               names_to = "Label", values_to = "Prob")
+#     
+#     p <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+#       geom_boxplot(outlier.shape = NA) +
+#       facet_grid(Label ~ ., scales = "free") +
+#       scale_color_viridis_d(option = col.opt) +
+#       ggtitle(title) +
+#       ylab(ylab_text) +
+#       theme_bw()
+#     
+#     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
+#     return(p)
+#   }
+#   
+#   if (!is.nsim) {
+#     title_main <- paste0("F/F", mods[[1]]$om$input$data$percentSPR, "%")
+#   } else {
+#     title_main <- paste0("F/F", mods[[1]][[1]]$om$input$data$percentSPR, "%")
+#   }
+#   
+#   # Create and save all plots
+#   p_fleet_box <- plot_boxplot(res_fleet, paste(title_main, "by Fleet","(First",use.n.years, "Years)"), title_main, paste0(var, "_fleet_first_", use.n.years, "_years"))
+#   p_region_box <- plot_boxplot(res_region, paste(title_main, "by Region","(First",use.n.years, "Years)"), title_main, paste0(var, "_region_first_", use.n.years, "_years"))
+#   p_global_box <- plot_boxplot(res_global, paste(title_main, "Global","(First",use.n.years, "Years)"), title_main, paste0(var, "_global_first_", use.n.years, "_years"))
+#   
+#   p_fleet_point <- plot_pointplot(prob_fleet, paste0("Probability (",title_main,"> 1) - Fleet","(First",use.n.years, "Years)"), "Probability", paste0(var, "_fleet_overfishing_prob","_fleet_first_", use.n.years, "_years"))
+#   p_region_point <- plot_pointplot(prob_region, paste0("Probability (",title_main,"> 1) - Region","(First",use.n.years, "Years)"), "Probability", paste0(var, "_region_overfishing_prob","_fleet_first_", use.n.years, "_years"))
+#   p_global_point <- plot_pointplot(prob_global, paste0("Probability (",title_main,"> 1) - Global","(First",use.n.years, "Years)"), "Probability", paste0(var, "_global_overfishing_prob","_fleet_first_", use.n.years, "_years"))
+#   
+#   return(list(
+#     fleet_box = p_fleet_box,
+#     region_box = p_region_box,
+#     global_box = p_global_box,
+#     fleet_prob = p_fleet_point,
+#     region_prob = p_region_point,
+#     global_prob = p_global_point
+#   ))
+# }
+
 plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_status",
                               width = 10, height = 7, dpi = 300, col.opt = "D",
-                              method = NULL,
                               f.ymin = NULL, f.ymax = NULL, 
                               new_model_names = NULL,
                               use.n.years = NULL,
@@ -1566,6 +2716,10 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
   prob_region <- rename_models(prob_region)
   prob_global <- rename_models(prob_global)
   
+  # if (!is.null(base.model) && !is.null(new_model_names)) {
+  #   base.model <- new_model_names[base.model]
+  # }
+  
   if (!is.null(base.model) && !is.null(new_model_names)) {
     if (!(base.model %in% new_model_names)) {
       warning("base.model does not match any of the new_model_names.")
@@ -1590,15 +2744,6 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
     } else {
       if(!is.null(f.ymin)) y1 = f.ymin else y1 = 0
       if(!is.null(f.ymax)) y2 = f.ymax else y2 = 2
-    }
-    
-    # Apply mean or median summarization if method is specified
-    if (!is.null(method)) {
-      var = "Fbar"
-      res_long <- res_long %>%
-        group_by(Model, Realization, Label) %>%
-        summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
-                  .groups = "drop")
     }
     
     p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
@@ -1817,7 +2962,6 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
 
 plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
                                          width = 10, height = 10, dpi = 300, col.opt = "D",
-                                         method = NULL,
                                          use.n.years.first = 5,
                                          use.n.years.last = 5,
                                          start.years = 1, 
@@ -1850,22 +2994,13 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
         
         # First and last period means
-        if(is.null(method)) method = "median"
-        if (method == "median") {
-          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-        } else if (method == "mean") {
-          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-        } 
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
       }
       
       # Normalize: higher is better except for Fbar
@@ -1935,23 +3070,14 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
       n_regions <- mods[[m]]$om$input$data$n_regions[1]
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
       
-      if(is.null(method)) method = "median"
       # First and last period means
-      if (method == "median") {
-        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-      } else if (method == "mean") {
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-      }
+      tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+      
+      tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+      tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+      tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
     }
     
     # Normalize: higher is better except for Fbar
@@ -2024,7 +3150,7 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
              axislabcol = "grey30",
              vlcex = 0.9,
              title = paste("Model Performance"))
-  legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
+  legend(x = 1.25, y = 0.4, legend = rownames(plot_df)[-c(1,2)], col = colors,
          lty = 1, lwd = 2, cex = 0.8, bty = "n")
   dev.off()
   
@@ -2040,10 +3166,192 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
              axislabcol = "grey30",
              vlcex = 0.9,
              title = paste("Model Performance"))
-  legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
+  legend(x = 1, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
          lty = 1, lwd = 2, cex = 0.8, bty = "n")
   on.exit(par(op))  # restore after plotting
 }
+
+# plot_model_performance_triangle <- function(mods, is.nsim,
+#                                             main.dir, sub.dir,
+#                                             width = 8, height = 7, dpi = 300,
+#                                             new_model_names = NULL,
+#                                             col.opt = "D",
+#                                             use.n.years.first = 5,
+#                                             use.n.years.last = 5,
+#                                             start.years = 1) {
+#   library(dplyr)
+#   library(ggtern)
+#   library(viridisLite)
+#   
+#   if(start.years == 1) warnings("Starting year must be specified otherwise the first year in the historical period will be used!")
+#   
+#   process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
+#     catch_ts <- rowSums(rep$pred_catch)
+#     ssb_ts <- rowSums(rep$SSB)
+#     fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+#     
+#     if (type == "short") {
+#       idx <- start.years:(start.years + use.n.years - 1)
+#     } else {
+#       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
+#     }
+#     
+#     c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx]))
+#   }
+#   
+#   results_short <- list()
+#   results_long <- list()
+#   
+#   if (is.nsim) {
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     
+#     for (r in seq_len(n_reps)) {
+#       df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         input <- mods[[r]][[m]]$om$input$data
+#         n_fleets <- input$n_fleets[1]
+#         n_regions <- input$n_regions[1]
+#         
+#         short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#         long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#         
+#         df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#         df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#       }
+#       
+#       # Normalize within realization
+#       for (v in c("Catch", "SSB")) {
+#         df_short[[v]] <- 100 * (df_short[[v]] - min(df_short[[v]])) / (max(df_short[[v]]) - min(df_short[[v]]))
+#         df_long[[v]] <- 100 * (df_long[[v]] - min(df_long[[v]])) / (max(df_long[[v]]) - min(df_long[[v]]))
+#       }
+#       for (v in c("Fbar")) {
+#         df_short[[v]] <- 100 * (1 - (df_short[[v]] - min(df_short[[v]])) / (max(df_short[[v]]) - min(df_short[[v]])))
+#         df_long[[v]] <- 100 * (1 - (df_long[[v]] - min(df_long[[v]]) ) / (max(df_long[[v]]) - min(df_long[[v]]) ))
+#       }
+#       
+#       df_short <- df_short %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = Catch / total,
+#                SSB = SSB / total,
+#                Fbar = Fbar / total,
+#                Realization = r)
+#       
+#       df_long <- df_long %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = Catch / total,
+#                SSB = SSB / total,
+#                Fbar = Fbar / total,
+#                Realization = r)
+#       
+#       results_short[[r]] <- df_short
+#       results_long[[r]] <- df_long
+#     }
+#   } else {
+#     n_models <- length(mods)
+#     df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       rep <- mods[[m]]$om$rep
+#       input <- mods[[m]]$om$input$data
+#       n_fleets <- input$n_fleets[1]
+#       n_regions <- input$n_regions[1]
+#       
+#       short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#       long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#       
+#       df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#       df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#     }
+#     
+#     # Normalize across single realization
+#     for (v in c("Catch", "SSB")) {
+#       range_short <- max(df_short[[v]]) - min(df_short[[v]])
+#       if (range_short == 0) {
+#         df_short[[v]] <- 100  # All identical, assign full score
+#       } else {
+#         df_short[[v]] <- 100 * (df_short[[v]] - min(df_short[[v]])) / range_short
+#       }
+#       
+#       range_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       if (range_long == 0) {
+#         df_long[[v]] <- 100
+#       } else {
+#         df_long[[v]] <- 100 * (df_long[[v]] - min(df_long[[v]])) / range_long
+#       }
+#     }
+#     
+#     for (v in c("Fbar")) {
+#       range_short <- max(df_short[[v]]) - min(df_short[[v]])
+#       if (range_short == 0) {
+#         df_short[[v]] <- 100
+#       } else {
+#         norm_f_short <- (df_short[[v]] - min(df_short[[v]])) / range_short
+#         df_short[[v]] <- 100 * (1 - norm_f_short)
+#       }
+#       
+#       range_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       if (range_long == 0) {
+#         df_long[[v]] <- 100
+#       } else {
+#         norm_f_long <- (df_long[[v]] - min(df_long[[v]])) / range_long
+#         df_long[[v]] <- 100 * (1 - norm_f_long)
+#       }
+#     }
+#     
+#     df_short <- df_short %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = Catch / total,
+#              SSB = SSB / total,
+#              Fbar = Fbar / total,
+#              Realization = 1)
+#     
+#     df_long <- df_long %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = Catch / total,
+#              SSB = SSB / total,
+#              Fbar = Fbar / total,
+#              Realization = 1)
+#     
+#     results_short[[1]] <- df_short
+#     results_long[[1]] <- df_long
+#   }
+#   
+#   df_short_all <- bind_rows(results_short)
+#   df_long_all <- bind_rows(results_long)
+#   
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(df_short_all$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     df_short_all$Model <- factor(df_short_all$Model,
+#                                  levels = paste0("Model", seq_along(new_model_names)),
+#                                  labels = new_model_names)
+#     df_long_all$Model <- factor(df_long_all$Model,
+#                                 levels = paste0("Model", seq_along(new_model_names)),
+#                                 labels = new_model_names)
+#   }
+#   
+#   # === Plot function ===
+#   plot_and_save <- function(df, title, file) {
+#     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+#     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+#       geom_point(alpha = 0.3, size = 2) +
+#       scale_color_manual(values = colors) +
+#       labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
+#       theme_rgbw() +
+#       theme(plot.title = element_text(hjust = 0.5))
+#     
+#     ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+#            width = width, height = height, dpi = dpi)
+#     
+#     print(p)
+#   }
+#   
+#   plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years+use.n.years.first-1), "model_performance_triangle_short.png")
+#   plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long.png")
+# }
 
 plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir, 
                               width = 10, height = 7, dpi = 300, col.opt = "D",
@@ -2252,7 +3560,6 @@ plot_model_performance_bar <- function(mods, is.nsim,
                                        new_model_names = NULL,
                                        width = 12, height = 8, dpi = 300,
                                        col.opt = "D",
-                                       method = NULL,
                                        use.n.years.first = 5,
                                        use.n.years.last = 5,
                                        start.years = 1) {
@@ -2282,23 +3589,14 @@ plot_model_performance_bar <- function(mods, is.nsim,
         ssb_ts <- rowSums(rep$SSB)
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
         
-        if(is.null(method)) method = "median"
-        # First and last period means
-        if (method == "median") {
-          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-        } else if (method == "mean") {
-          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-        }
+        # First and last period
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
       }
       
       # Normalize within realization (safe check)
@@ -2352,23 +3650,14 @@ plot_model_performance_bar <- function(mods, is.nsim,
       ssb_ts <- rowSums(rep$SSB)
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
       
-      if(is.null(method)) method = "median"
-      # First and last period means
-      if (method == "median") {
-        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-      } else if (method == "mean") {
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-      }
+      # First and last period
+      tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+      tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+      
+      tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+      tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+      tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
     }
     
     # Normalize across models (safe check)
@@ -2442,9 +3731,8 @@ plot_model_performance_bar <- function(mods, is.nsim,
 plot_model_performance_triangle <- function(mods, is.nsim,
                                             main.dir, sub.dir,
                                             width = 8, height = 7, dpi = 300,
-                                            col.opt = "D",
-                                            method = NULL,
                                             new_model_names = NULL,
+                                            col.opt = "D",
                                             use.n.years.first = 5,
                                             use.n.years.last = 5,
                                             start.years = 1) {
@@ -2469,13 +3757,7 @@ plot_model_performance_triangle <- function(mods, is.nsim,
       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
     }
     
-    if(is.null(method)) method = "median"
-    if(method == "median") {
-      return(c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx])))
-    }
-    if(method == "mean") {
-      return(c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx])))
-    }
+    c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx]))
   }
   
   results_short <- list()
@@ -2803,9 +4085,7 @@ plot_relative_trajectories <- function(mods, is.nsim,
                                        base.model = "Model1",
                                        new_model_names = NULL,
                                        width = 10, height = 7, dpi = 300,
-                                       col.opt = "D",
-                                       user.Q1 = NULL,
-                                       user.Q3 = NULL) {
+                                       col.opt = "D") {
 
   library(ggplot2)
   library(dplyr)
@@ -2925,14 +4205,12 @@ plot_relative_trajectories <- function(mods, is.nsim,
                     labels = new_model_names)
 
   # --- Summarize ---
-  if(is.null(user.Q1)) user.Q1 = 0.4
-  if(is.null(user.Q3)) user.Q3 = 0.6
   sum_data <- data %>%
     group_by(EM, Index, Years) %>%
     summarize(
       Median = median(Value, na.rm = TRUE),
-      Q1 = quantile(Value, user.Q1, na.rm = TRUE),
-      Q3 = quantile(Value, user.Q3, na.rm = TRUE),
+      Q1 = quantile(Value, 0.4, na.rm = TRUE),
+      Q3 = quantile(Value, 0.6, na.rm = TRUE),
       .groups = "drop"
     )
 
@@ -2971,9 +4249,7 @@ plot_relative_trajectories1 <- function(mods, is.nsim,
                                         base.model = "Model1",
                                         new_model_names = NULL,
                                         width = 10, height = 7, dpi = 300,
-                                        col.opt = "D",
-                                        user.Q1 = NULL,
-                                        user.Q3 = NULL) {
+                                        col.opt = "D") {
   
   library(ggplot2)
   library(dplyr)
@@ -3062,14 +4338,12 @@ plot_relative_trajectories1 <- function(mods, is.nsim,
                     labels = new_model_names)
   
   # --- Summarize ---
-  if(is.null(user.Q1)) user.Q1 = 0.4
-  if(is.null(user.Q3)) user.Q3 = 0.6
   sum_data <- data %>%
     group_by(EM, Index, Years) %>%
     summarize(
       Median = median(Value, na.rm = TRUE),
-      Q1 = quantile(Value, user.Q1, na.rm = TRUE),
-      Q3 = quantile(Value, user.Q3, na.rm = TRUE),
+      Q1 = quantile(Value, 0.4, na.rm = TRUE),
+      Q3 = quantile(Value, 0.6, na.rm = TRUE),
       .groups = "drop"
     )
   
@@ -3099,9 +4373,7 @@ plot_relative_trajectories2 <- function(mods, is.nsim,
                                         base.model = "Model1",
                                         new_model_names = NULL,
                                         width = 10, height = 7, dpi = 300,
-                                        col.opt = "D",
-                                        user.Q1 = NULL,
-                                        user.Q3 = NULL) {
+                                        col.opt = "D") {
   
   library(ggplot2)
   library(dplyr)
@@ -3189,14 +4461,12 @@ plot_relative_trajectories2 <- function(mods, is.nsim,
                     labels = new_model_names)
   
   # --- Summarize ---
-  if(is.null(user.Q1)) user.Q1 = 0.4
-  if(is.null(user.Q3)) user.Q3 = 0.6
   sum_data <- data %>%
     group_by(EM, Index, Years) %>%
     summarize(
       Median = median(Value, na.rm = TRUE),
-      Q1 = quantile(Value, user.Q1, na.rm = TRUE),
-      Q3 = quantile(Value, user.Q3, na.rm = TRUE),
+      Q1 = quantile(Value, 0.4, na.rm = TRUE),
+      Q3 = quantile(Value, 0.6, na.rm = TRUE),
       .groups = "drop"
     )
   
