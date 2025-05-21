@@ -4132,7 +4132,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Catch_Variation") +
+      labs(title = title, T = "Catch", L = "SSB", R = "AACV") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
@@ -4147,7 +4147,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Catch_Variation") +
+      labs(title = title, T = "Catch", L = "SSB", R = "AACV") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
