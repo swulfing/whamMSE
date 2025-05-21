@@ -2063,6 +2063,10 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
   library(ggplot2)
   library(viridisLite)
   
+  # Assume all models have the same OM (e.g., from the first realization)
+  om_tmp <- if (is.nsim) mods[[1]][[1]] else mods[[1]]
+  mean_rec_true <- exp(om_tmp$om$parList$mean_rec_pars[, 1])
+  
   res <- NULL
   
   if (is.nsim) {
@@ -2129,8 +2133,27 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
                         labels = new_model_names)
   }
   
+  res$True_Value <- NA
+  
+  library(stringr)
+  
+  # Match entries like "Mean_Rec_1", "Mean_Rec_2", etc.
+  is_indexed <- grepl("^Mean_Rec_\\d+$", res$Var)
+  
+  # Extract index
+  rec_idx <- as.numeric(str_extract(res$Var[is_indexed], "\\d+"))
+  
+  # Assign based on extracted index
+  res$True_Value[is_indexed] <- mean_rec_true[rec_idx]
+  
+  # # Handle non-indexed single value
+  # res$True_Value[res$Var == "Mean_Rec"] <- mean_rec_true[1]
+  # 
+  # if(length(res$Var) > 1) res$True_Value[res$Var == "Mean_Rec"] = NA
+  
   p1 <- ggplot(res, aes(x = Model, y = Value, col = Model)) +
     geom_boxplot(outlier.shape = outlier.opt) +
+    geom_hline(aes(yintercept = True_Value), col = "red", linetype = "dashed") +
     facet_grid(Var ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle("Mean Recruitment from the Last EM") +
@@ -2149,9 +2172,6 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
   
   return(p1)
 }
-
-rec_sig_true <- exp(tmp$om$parList$log_NAA_sigma[, 1, 1])
-naa_sig_true <- exp(tmp$om$parList$log_NAA_sigma[, 1, 2])
 
 plot_NAA_sigma_par <- function(mods, is.nsim, main.dir, sub.dir,
                                width = 10, height = 15, dpi = 300, col.opt = "D",
