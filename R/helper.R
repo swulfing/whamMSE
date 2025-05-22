@@ -2146,10 +2146,10 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
   # Assign based on extracted index
   res$True_Value[is_indexed] <- mean_rec_true[rec_idx]
   
-  # # Handle non-indexed single value
-  # res$True_Value[res$Var == "Mean_Rec"] <- mean_rec_true[1]
-  # 
-  # if(length(res$Var) > 1) res$True_Value[res$Var == "Mean_Rec"] = NA
+  # Handle non-indexed single value
+  res$True_Value[res$Var == "Mean_Rec"] <- mean_rec_true[1]
+
+  if(length(res$Var) > 1) res$True_Value[res$Var == "Mean_Rec"] = NA
   
   p1 <- ggplot(res, aes(x = Model, y = Value, col = Model)) +
     geom_boxplot(outlier.shape = outlier.opt) +

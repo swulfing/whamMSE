@@ -14,7 +14,7 @@
 #' @param col.opt Color palette option for `viridis`-based scales.
 #' @param method method = NULL: global median, method = "mean": median of means, method = "median": median of medians
 #' @param outlier.opt outlier.opt = NA (default): no outliers will be shown, outlier.opt = 0 - 25 (26 different shapes to use)
-#' @param f.ymin Numeric value specifying the lower limit of the y-axis for F-based performance plots. (Default = NULL)
+#' @param f.ymin Numeric value specifying the lower limit of the y-axis for F-based performance plots (Default = NULL)
 #' @param f.ymax Numeric value specifying the upper limit of the y-axis for F-based performance plots. (Default = NULL)
 #' @param new_model_names Optional character vector of custom model names.
 #' @param base.model Model name used as a baseline for relative difference plots.
@@ -110,7 +110,7 @@ plot_mse_output <- function(mods,
     rmd_path <- file.path(full_output_dir, "mse_report.Rmd")
     report_file <- paste0("mse_report.", output_format)
     report_path <- file.path(full_output_dir, report_file)
-    
+
     # Rmd content
     rmd_lines <- c(
       "---",
@@ -127,14 +127,14 @@ plot_mse_output <- function(mods,
       "mods <- params$mods",
       "is.nsim <- if (!is.list(mods[[1]][[1]][[1]])) FALSE else TRUE",
       paste0("output_dir <- '.'"),
-      paste0("width <- ", width,
-             "; height <- ", height,
-             "; dpi <- ", dpi,
-             "; col.opt <- '", col.opt, "'", 
-             "; method <- '", method, "'", 
-             "; outlier.opt <- '", outlier.opt, "'", 
-             "; f.ymin <- ", f.ymin,
-             "; f.ymax <- ", f.ymax),
+      paste0("width <- ", width),
+      paste0("height <- ", height),
+      paste0("dpi <- ", dpi),
+      paste0("col.opt <- '", col.opt, "'"),
+      paste0("method <- '", method, "'"),
+      paste0("outlier.opt <- ", outlier.opt), 
+      paste0("f.ymin <- ", f.ymin),
+      paste0("f.ymax <- ", f.ymax),
       paste0("new_model_names <- ", if (is.null(new_model_names)) "NULL" else deparse(new_model_names)),
       paste0("base.model <- '", base.model, "'"),
       paste0("start.years <- ", start.years),

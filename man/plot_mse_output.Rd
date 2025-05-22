@@ -45,7 +45,7 @@ plot_mse_output(
 
 \item{outlier.opt}{outlier.opt = NA (default): no outliers will be shown, outlier.opt = 0 - 25 (26 different shapes to use)}
 
-\item{f.ymin}{Numeric value specifying the lower limit of the y-axis for F-based performance plots. (Default = NULL)}
+\item{f.ymin}{Numeric value specifying the lower limit of the y-axis for F-based performance plots (Default = NULL)}
 
 \item{f.ymax}{Numeric value specifying the upper limit of the y-axis for F-based performance plots. (Default = NULL)}
 
