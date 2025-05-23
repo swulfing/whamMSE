@@ -6,7 +6,12 @@
 #' @param om List. The operating model containing pseudo data and simulation configurations.
 #' @param em_info List. Information used to generate the assessment model (default = NULL).
 #' @param random Character vector. Processes treated as random effects in the operating model (default = "log_NAA").
-#' @param M_em, sel_em, NAA_re_em, move_em, catchability_em, ecov_em List. Configuration for natural mortality, selectivity, NAA, movement, catchability, and environmental covariates in the assessment model.
+#' @param M_em Configuration for natural mortality in the assessment model.
+#' @param sel_em Configuration for selectivity in the assessment model.
+#' @param NAA_re_em Configuration for NAA in the assessment model.
+#' @param move_em Configuration for movement in the assessment model.
+#' @param catchability_em Configuration for survey catchability in the assessment model.
+#' @param ecov_em Configuration for environmental covariates in the assessment model.
 #' @param age_comp_em Character. Likelihood distribution for age composition data in the assessment model. Options include:
 #'   \itemize{
 #'     \item \code{"multinomial"} (default)
@@ -54,7 +59,7 @@
 #'     \item{\code{use_index_weighted_waa}}{Logical. Use survey-index-weighted WAA.}
 #'   }
 #'
-#' @param aggregate_weights_info List (optional). Used to compute weighted average WAA/maturity:
+#' @param aggregate_weights_info List (optional). Used to compute weighted average weight-at-age and maturity-at-age:
 #'   \describe{
 #'     \item{\code{ssb_waa_weights}}{List.
 #'       \itemize{
@@ -101,22 +106,22 @@
 #'         \item \code{"multiple_index_gear"}, 
 #'         \item \code{"user_defined_fleets"}, 
 #'         \item \code{"user_defined_regions"}
-#'       }}
+#'       }
 #'     \item{\code{user_weights}}{Numeric vector. User-defined weights (must sum to 1).}
 #'     \item{\code{weight_years}}{Integer. Number of past years used to average weights.}
 #'     \item{\code{survey_pointer}}{Integer vector. Indices used for weighting (when \code{weight_type = 3}).}
-#'   }
-#'
+#'     }
+#'     }
 #' @param add_implementation_error List (optional). Adds variability to catch realization:
 #'   \describe{
 #'     \item{\code{method}}{Character. Distribution type: \code{"lognormal"}, \code{"normal"}, \code{"uniform"}, or \code{"constant"}.}
 #'     \item{\code{mean}}{Numeric. Mean of error distribution (log scale if lognormal).}
-#'     \item{\code{cv}}{Numeric. Coefficient of variation (for lognormal).}
+#'     \item{\code{cv}}{Numeric. Coefficient of variation (required for lognormal).}
 #'     \item{\code{sd}}{Numeric. Standard deviation (required for normal).}
-#'     \item{\code{min}, \code{max}}{Numeric. Bounds for uniform distribution.}
+#'     \item{\code{min}}{Numeric. Lower bound for uniform distribution.} 
+#'     \item{\code{max}}{Numeric. Upper bound for uniform distribution.}
 #'     \item{\code{constant_value}}{Numeric. Fixed multiplier (used if \code{method = "constant"}).}
 #'   }
-#'
 #' @param filter_indices Integer vector (optional). 0/1 vector to exclude survey indices by region.
 #' @param update_catch_info List (optional). Update catch CV and Neff values in the assessment model. The structure must include:
 #'   \describe{
