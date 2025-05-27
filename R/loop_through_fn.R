@@ -307,7 +307,8 @@ loop_through_fn <- function(om,
         
         if(is.vector(em.advice)) em.advice = matrix(em.advice, byrow = TRUE)
         
-        cat("\nProject catch from assessment model is ", em.advice, "\n")
+        cat("\nProject catch from assessment model is\n")
+        print(em.advice)
         
         cat("\nNow allocating catch...\n")
         
