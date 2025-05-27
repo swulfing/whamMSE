@@ -15,15 +15,15 @@
 #' @param age_comp_em Character. Likelihood distribution for age composition data in the assessment model.
 #'   \itemize{
 #'     \item \code{"multinomial"} (default)
-#'     \item \code{"dir-mult"}, 
-#'     \item \code{"dirichlet-miss0"}, 
+#'     \item \code{"dir-mult"}
+#'     \item \code{"dirichlet-miss0"}
 #'     \item \code{"dirichlet-pool0"}
-#'     \item \code{"logistic-normal-miss0"}, 
-#'     \item \code{"logistic-normal-ar1-miss0"}, 
+#'     \item \code{"logistic-normal-miss0"}
+#'     \item \code{"logistic-normal-ar1-miss0"}
 #'     \item \code{"logistic-normal-pool0"}
-#'     \item \code{"logistic-normal-01-infl"}, 
+#'     \item \code{"logistic-normal-01-infl"}
 #'     \item \code{"logistic-normal-01-infl-2par"}
-#'     \item \code{"mvtweedie"}, 
+#'     \item \code{"mvtweedie"}
 #'     \item \code{"dir-mult-linear"}
 #'   }
 #'
