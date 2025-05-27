@@ -63,13 +63,19 @@ loop_through_fn(
 
 \item{ecov_em}{Configuration for environmental covariates in the assessment model.}
 
-\item{age_comp_em}{Character. Likelihood distribution for age composition data in the assessment model. Options include:
+\item{age_comp_em}{Character. Likelihood distribution for age composition data in the assessment model.
 \itemize{
   \item \code{"multinomial"} (default)
-  \item \code{"dir-mult"}, \code{"dirichlet-miss0"}, \code{"dirichlet-pool0"}
-  \item \code{"logistic-normal-miss0"}, \code{"logistic-normal-ar1-miss0"}, \code{"logistic-normal-pool0"}
-  \item \code{"logistic-normal-01-infl"}, \code{"logistic-normal-01-infl-2par"}
-  \item \code{"mvtweedie"}, \code{"dir-mult-linear"}
+  \item \code{"dir-mult"}, 
+  \item \code{"dirichlet-miss0"}, 
+  \item \code{"dirichlet-pool0"}
+  \item \code{"logistic-normal-miss0"}, 
+  \item \code{"logistic-normal-ar1-miss0"}, 
+  \item \code{"logistic-normal-pool0"}
+  \item \code{"logistic-normal-01-infl"}, 
+  \item \code{"logistic-normal-01-infl-2par"}
+  \item \code{"mvtweedie"}, 
+  \item \code{"dir-mult-linear"}
 }}
 
 \item{em.opt}{List. EM model options.
@@ -80,11 +86,12 @@ loop_through_fn(
       \item 1: Panmictic
       \item 2: Fleets-as-areas
       \item 3: Separate regional EMs
-    }}
+    }
+  }
   \item{\code{do.move}, \code{est.move}}{Logical. Include/estimate movement in EM (default = FALSE).}
 }}
 
-\item{aggregate_catch_info}{List (optional). Aggregation settings for catch data:
+\item{aggregate_catch_info}{List (optional). Aggregation settings for catch data.
 \describe{
   \item{\code{n_fleets}}{Integer. Number of fleets.}
   \item{\code{catch_cv}}{Numeric vector. CV for each fleet.}
@@ -95,7 +102,7 @@ loop_through_fn(
   \item{\code{use_catch_weighted_waa}}{Logical. Use fleet-catch-weighted WAA.}
 }}
 
-\item{aggregate_index_info}{List (optional). Aggregation settings for index data:
+\item{aggregate_index_info}{List (optional). Aggregation settings for index data.
 \describe{
   \item{\code{n_indices}}{Integer. Number of indices.}
   \item{\code{index_cv}}{Numeric vector. CV for each index.}
@@ -110,60 +117,63 @@ loop_through_fn(
   \item{\code{use_index_weighted_waa}}{Logical. Use survey-index-weighted WAA.}
 }}
 
-\item{aggregate_weights_info}{List (optional). Used to compute weighted average weight-at-age and maturity-at-age:
+\item{aggregate_weights_info}{List (optional). Used to compute weighted average weight-at-age and maturity-at-age.
 \describe{
   \item{\code{ssb_waa_weights}}{List.
-    \itemize{
-      \item \code{fleet}: Logical. Use fleet-specific weights.
-      \item \code{index}: Logical. Use index-specific weights.
-      \item \code{pointer}: Integer. Points to fleet/index group to use.
-    }}
+    \describe{
+      \item{\code{fleet}}{Logical. Use fleet-specific weights.}
+      \item{\code{index}}{Logical. Use index-specific weights.}
+      \item{\code{pointer}}{Integer. Points to fleet/index group to use.}
+    }
+  }
   \item{\code{maturity_weights}}{List.
-    \itemize{
-      \item \code{fleet}: Logical.
-      \item \code{index}: Logical.
-      \item \code{pointer}: Integer.
-    }}
+    \describe{
+      \item{\code{fleet}}{Logical.}
+      \item{\code{index}}{Logical.}
+      \item{\code{pointer}}{Integer.}
+    }
+  }
 }}
 
-\item{reduce_region_info}{List (optional). Reduce regions and reassign data:
+\item{reduce_region_info}{List (optional). Reduce regions and reassign data.
 \describe{
   \item{\code{remove_regions}}{Integer vector. 0/1 flag to remove regions.}
   \item{\code{reassign}}{Numeric. Region reassignment code.}
   \item{\code{NAA_where}}{3D array (stock × region × age) indicating stock presence.}
   \item{\code{sel_em}, \code{M_em}, \code{NAA_re_em}, \code{move_em}}{EM configs for reduced regions.}
-  \item{\code{onto_move_list}}{List with:
-    \itemize{
-      \item \code{onto_move}: 3D array (stock × region × region).
-      \item \code{onto_move_pars}: 4D array (stock × region × region × 4).
-      \item \code{age_mu_devs}: 4D array (stock × region × region × age).
-    }}
+  \item{\code{onto_move_list}}{List.
+    \describe{
+      \item{\code{onto_move}}{3D array (stock × region × region).}
+      \item{\code{onto_move_pars}}{4D array (stock × region × region × 4).}
+      \item{\code{age_mu_devs}}{4D array (stock × region × region × age).}
+    }
+  }
 }}
 
 \item{filter_indices}{Integer vector (optional). 0/1 vector to exclude survey indices by region.}
 
-\item{update_catch_info}{List (optional). Update catch CV and Neff values in the assessment model. The structure must include:
+\item{update_catch_info}{List (optional). Update catch CV and Neff values in the assessment model.
 \describe{
-  \item{\code{agg_catch_sigma}}{Matrix. Catch CVs (standard deviation of log catch). Can be full (\code{n_years × n_fleets}) or a subset of rows (e.g., \code{length(ind_em) × n_fleets}).}
+  \item{\code{agg_catch_sigma}}{Matrix. Catch CVs (standard deviation of log catch).}
   \item{\code{catch_Neff}}{Matrix. Effective sample sizes for catch. Must match dimensions of \code{agg_catch_sigma}.}
 }}
 
-\item{update_index_info}{List (optional). Update index CV and Neff values in the assessment model. The structure must include:
+\item{update_index_info}{List (optional). Update index CV and Neff values in the assessment model.
 \describe{
-  \item{\code{agg_index_sigma}}{Matrix. Aggregated survey index CVs. Can be full (\code{n_years × n_indices}) or a subset of rows (e.g., \code{length(ind_em) × n_indices}).}
-  \item{\code{index_Neff}}{Matrix. Effective sample sizes for index data. Must match dimensions of \code{agg_index_sigma}.}
+  \item{\code{agg_index_sigma}}{Matrix. Aggregated survey index CVs.}
+  \item{\code{index_Neff}}{Matrix. Effective sample sizes for index data.}
   \item{\code{remove_agg}}{Logical. Whether to remove aggregated index observations for specific pointers/years.}
-  \item{\code{remove_agg_pointer}}{Integer vector. Index pointers (columns) for which aggregated index data should be removed.}
-  \item{\code{remove_agg_years}}{Integer vector or matrix. Years (rows) to remove aggregated index data. If matrix, should be [years × pointers].}
-  \item{\code{remove_paa}}{Logical. Whether to remove index PAA observations for specific pointers/years.}
-  \item{\code{remove_paa_pointer}}{Integer vector. Index pointers (columns) for which index PAA data should be removed.}
-  \item{\code{remove_paa_years}}{Integer vector or matrix. Years (rows) to remove index PAA data. If matrix, should be [years × pointers].}
+  \item{\code{remove_agg_pointer}}{Integer vector. Index pointers to remove.}
+  \item{\code{remove_agg_years}}{Integer vector or matrix. Years to remove.}
+  \item{\code{remove_paa}}{Logical. Whether to remove index PAA observations.}
+  \item{\code{remove_paa_pointer}}{Integer vector. Index pointers to remove PAA.}
+  \item{\code{remove_paa_years}}{Integer vector or matrix. Years to remove index PAA data.}
 }}
 
-\item{user_SPR_weights_info}{List. Update SPR weights for calculating biological reference points in the assessment model.
+\item{user_SPR_weights_info}{List. Update SPR weights for calculating biological reference points.
 \describe{
-  \item{\code{method}}{Character. Specifies how weights are assigned to regions or stocks.}.
-  \item{\code{weight_years}}{Integer. Number of years at the end of the time series over which to average catch or index values (default = 1).}
+  \item{\code{method}}{Character. Specifies how weights are assigned to regions or stocks.}
+  \item{\code{weight_years}}{Integer. Number of years to average catch or index values.}
   \item{\code{index_pointer}}{Integer. Index number used when \code{method = "index_region"}.}
 }}
 
@@ -181,50 +191,50 @@ loop_through_fn(
 
 \item{FXSPR_init}{Numeric. Initial F for reference point calculation (optional).}
 
-\item{hcr}{List. Harvest control rule:
+\item{hcr}{List. Harvest control rule.
 \describe{
   \item{\code{hcr.type}}{Integer (1: F\_XSPR, 2: constant catch, 3: hockey stick).}
-  \item{\code{hcr.opts}}{List of options including:
+  \item{\code{hcr.opts}}{List of options:
     \itemize{
-      \item \code{use_FXSPR},
-      \item \code{percentSPR}, 
-      \item \code{percentFXSPR}, 
-      \item \code{use_FMSY}, 
-      \item \code{percentFMSY},
-      \item \code{avg_yrs}, 
-      \item \code{max_percent}, 
-      \item \code{min_percent}, 
-      \item \code{BThresh_up}, 
-      \item \code{BThresh_low},
-      \item \code{cont.M.re}, 
+      \item \code{use_FXSPR}
+      \item \code{percentSPR}
+      \item \code{percentFXSPR}
+      \item \code{use_FMSY}
+      \item \code{percentFMSY}
+      \item \code{avg_yrs}
+      \item \code{max_percent}
+      \item \code{min_percent}
+      \item \code{BThresh_up}
+      \item \code{BThresh_low}
+      \item \code{cont.M.re}
       \item \code{cont.move.re}
-      }
-      }
+    }
+  }
 }}
 
-\item{catch_alloc}{List. Catch allocation specifications:
+\item{catch_alloc}{List. Catch allocation specifications.
 \describe{
   \item{\code{weight_type}}{Integer (1–4). Weighting method.}
   \item{\code{method}}{Character. Allocation method:
     \itemize{
       \item \code{"equal"}
-      \item \code{"fleet_equal"}, 
-      \item \code{"fleet_region"}, 
-      \item \code{"fleet_gear"}, 
-      \item \code{"fleet_combined"}, 
-      \item \code{"fleet_catch"},
-      \item \code{"index_equal"}, 
-      \item \code{"index_gear"}, 
-      \item \code{"multiple_index_equal"}, 
-      \item \code{"multiple_index_gear"}, 
-      \item \code{"user_defined_fleets"}, 
+      \item \code{"fleet_equal"}
+      \item \code{"fleet_region"}
+      \item \code{"fleet_gear"}
+      \item \code{"fleet_combined"}
+      \item \code{"fleet_catch"}
+      \item \code{"index_equal"}
+      \item \code{"index_gear"}
+      \item \code{"multiple_index_equal"}
+      \item \code{"multiple_index_gear"}
+      \item \code{"user_defined_fleets"}
       \item \code{"user_defined_regions"}
     }
+  }
   \item{\code{user_weights}}{Numeric vector. User-defined weights (must sum to 1).}
   \item{\code{weight_years}}{Integer. Number of past years used to average weights.}
   \item{\code{survey_pointer}}{Integer vector. Indices used for weighting (when \code{weight_type = 3}).}
-  }
-  }}
+}}
 
 \item{do.retro}{Logical. Run retrospective analysis (default = FALSE).}
 
@@ -238,19 +248,19 @@ loop_through_fn(
 
 \item{save.last.em}{Logical. Save final EM (default = FALSE).}
 
-\item{add_implementation_error}{List (optional). Adds variability to catch realization:
+\item{add_implementation_error}{List (optional). Adds variability to catch realization.
 \describe{
   \item{\code{method}}{Character. Distribution type: \code{"lognormal"}, \code{"normal"}, \code{"uniform"}, or \code{"constant"}.}
   \item{\code{mean}}{Numeric. Mean of error distribution (log scale if lognormal).}
   \item{\code{cv}}{Numeric. Coefficient of variation (required for lognormal).}
   \item{\code{sd}}{Numeric. Standard deviation (required for normal).}
-  \item{\code{min}}{Numeric. Lower bound for uniform distribution.} 
+  \item{\code{min}}{Numeric. Lower bound for uniform distribution.}
   \item{\code{max}}{Numeric. Upper bound for uniform distribution.}
   \item{\code{constant_value}}{Numeric. Fixed multiplier (used if \code{method = "constant"}).}
 }}
 }
 \value{
-List with elements:
+List with elements.
   \describe{
     \item{\code{om}}{Updated OM.}
     \item{\code{em_list}}{List of EM results.}
