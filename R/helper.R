@@ -314,7 +314,7 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     theme_bw()
   
   # Save
-  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_rel"),
+  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_last_", use.n.years, "_years.PNG")
   ggsave(file.path(main.dir, sub.dir, plot_name),
          p1, width = width, height = height, dpi = dpi)
@@ -426,7 +426,7 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     theme_bw()
   
   # Save the plot
-  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_rel"),
+  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_first_", use.n.years, "_years.PNG")
   ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
@@ -554,7 +554,7 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
       ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
       theme_bw()
     
-    plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_rel"), ".PNG")
+    plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
     ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
     
     return(p)
@@ -696,7 +696,7 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
       ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
       theme_bw()
     
-    plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_rel"), ".PNG")
+    plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
     ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
     
     return(p)
@@ -801,7 +801,7 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
     ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
     theme_bw()
   
-  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_rel"), "_last_", use.n.years, "_years.PNG")
+  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"), "_last_", use.n.years, "_years.PNG")
   ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
@@ -912,7 +912,7 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
     theme_bw()
   
   # Save the plot
-  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_rel"),
+  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_first_", use.n.years, "_years.PNG")
   ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
@@ -1063,7 +1063,7 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
   # Save plot
   ggsave(file.path(main.dir, sub.dir, paste0(
     "SSB_status",
-    ifelse(is.null(base.model), "", "_rel"),
+    ifelse(is.null(base.model), "", "_Relative"),
     "_last_", use.n.years, "_years.PNG"
   )),
   p1, width = width, height = height, dpi = dpi)
@@ -1240,7 +1240,7 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   # Save plot
   
   ggsave(file.path(main.dir, sub.dir,
-                   paste0("SSB_status", ifelse(is.null(base.model), "", "_rel"),
+                   paste0("SSB_status", ifelse(is.null(base.model), "", "_Relative"),
                           "_first_", use.n.years, "_years.PNG")),
          p1, width = width, height = height, dpi = dpi)
   
@@ -1420,7 +1420,7 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
                      paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
       ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_rel"), ".PNG")),
+    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
            p, width = width, height = height, dpi = dpi)
     return(p)
   }
@@ -1620,7 +1620,7 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
                      ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
       ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_rel"), ".PNG")),
+    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
            p, width = width, height = height, dpi = dpi)
     return(p)
   }
@@ -2698,7 +2698,7 @@ plot_model_performance_triangle <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
+      labs(title = title, T = "Fbar", L = "SSB", R = "Catch") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
@@ -2713,7 +2713,7 @@ plot_model_performance_triangle <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "Fbar") +
+      labs(title = title, T = "Fbar", L = "SSB", R = "Catch") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
@@ -2726,8 +2726,25 @@ plot_model_performance_triangle <- function(mods, is.nsim,
   
   plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short.png")
   plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long.png")
-  plot_and_save2(bind_rows(results_short), paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw.png")
-  plot_and_save2(bind_rows(results_long), paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw.png")
+  
+  results_short2 <- bind_rows(results_short)
+  
+  results_long2 <- bind_rows(results_long)
+  
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(results_short2$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    results_short2$Model <- factor(results_short2$Model,
+                                   levels = paste0("Model", seq_along(new_model_names)),
+                                   labels = new_model_names)
+    results_long2$Model <- factor(results_long2$Model,
+                                  levels = paste0("Model", seq_along(new_model_names)),
+                                  labels = new_model_names)
+  }
+  
+  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw.png")
+  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw.png")
 }
 
 calculate_aacv <- function(catch_values) {
@@ -2864,7 +2881,7 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
     theme_bw() 
   
   # Save plot
-  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_rel"), ".png")
+  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
   ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
@@ -3413,7 +3430,7 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     theme_bw() 
   
   # Save plot
-  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_rel"), ".png")
+  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
   ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
@@ -3558,7 +3575,7 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
   # Save
   out_dir <- file.path(main.dir, sub.dir)
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_rel"), ".png")
+  plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
   ggsave(file.path(out_dir, plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
@@ -3917,7 +3934,7 @@ plot_status_triangle <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch_status", L = "SSB_status", R = "Fbar_status") +
+      labs(title = title, T = "Fbar\nstatus", L = "SSB\nstatus", R = "Catch\nstatus") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
@@ -3932,7 +3949,7 @@ plot_status_triangle <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch_status", L = "SSB_status", R = "Fbar_status") +
+      labs(title = title, T = "Fbar\nstatus", L = "SSB\nstatus", R = "Catch\nstatus") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
@@ -3945,8 +3962,24 @@ plot_status_triangle <- function(mods, is.nsim,
   
   plot_and_save(df_short_all, paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short.png")
   plot_and_save(df_long_all, paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), "Relative_status_triangle_long.png")
-  plot_and_save2(bind_rows(results_short), paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short_raw.png")
-  plot_and_save2(bind_rows(results_long), paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
+  
+  results_short2 <- bind_rows(results_short)
+  results_long2 <- bind_rows(results_long)
+  
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(results_short2$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    results_short2$Model <- factor(results_short2$Model,
+                                 levels = paste0("Model", seq_along(new_model_names)),
+                                 labels = new_model_names)
+    results_long2$Model <- factor(results_long2$Model,
+                                levels = paste0("Model", seq_along(new_model_names)),
+                                labels = new_model_names)
+  }
+  
+  plot_and_save2(results_short2, paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short_raw.png")
+  plot_and_save2(results_long2, paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
 }
 
 plot_model_performance_triangle2 <- function(mods, is.nsim,
@@ -4150,7 +4183,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "AACV") +
+      labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
@@ -4165,7 +4198,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
-      labs(title = title, T = "Catch", L = "SSB", R = "AACV") +
+      labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
@@ -4178,6 +4211,22 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short2.png")
   plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long2.png")
-  plot_and_save2(bind_rows(results_short), paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
-  plot_and_save2(bind_rows(results_long), paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
+  
+  results_short2 <- bind_rows(results_short)
+  results_long2 <- bind_rows(results_long)
+  
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(results_short2$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    results_short2$Model <- factor(results_short2$Model,
+                                   levels = paste0("Model", seq_along(new_model_names)),
+                                   labels = new_model_names)
+    results_long2$Model <- factor(results_long2$Model,
+                                  levels = paste0("Model", seq_along(new_model_names)),
+                                  labels = new_model_names)
+  }
+  
+  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
+  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
 }
