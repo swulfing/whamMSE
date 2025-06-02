@@ -50,7 +50,7 @@ plot_ssb_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   res <- pivot_longer(res, cols = starts_with("SSB"), names_to = "Label", values_to = "SSB")
 
   # Plot
-  p1 <- ggplot(res, aes(x = Year, y = SSB, color = Model, group = interaction(Model, Realization))) +
+  p <- ggplot(res, aes(x = Year, y = SSB, color = Model, group = interaction(Model, Realization))) +
     geom_line(size = 0.5, alpha = 0.5) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
@@ -59,9 +59,9 @@ plot_ssb_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     theme_bw()
 
   # Save the plot
-  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p, width = width, height = height, dpi = dpi)
   
-  return(p1)  # Return the plot if you want to print or modify later
+  return(p)  # Return the plot if you want to print or modify later
 }
 
 plot_fbar_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
@@ -211,7 +211,7 @@ plot_catch_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   res <- pivot_longer(res, cols = starts_with("Catch"), names_to = "Label", values_to = "Catch")
   
   # Plot
-  p1 <- ggplot(res, aes(x = Year, y = Catch, color = Model, group = interaction(Model, Realization))) +
+  p <- ggplot(res, aes(x = Year, y = Catch, color = Model, group = interaction(Model, Realization))) +
     geom_line(size = 0.5, alpha = 0.5) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
@@ -220,18 +220,22 @@ plot_catch_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
     theme_bw()
   
   # Save the plot
-  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p, width = width, height = height, dpi = dpi)
   
-  return(p1)  # Return the plot if you want to print or modify later
+  return(p)  # Return the plot if you want to print or modify later
 }
 
 plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
                                  width = 10, height = 7, dpi = 300, col.opt = "D",
                                  method = NULL,
                                  outlier.opt = NA,
-                                 new_model_names = NULL,
+                                 plot.style = "median_iqr",
+                                 show.whisker = TRUE,
                                  use.n.years = NULL,
-                                 base.model = NULL) {
+                                 new_model_names = NULL,
+                                 base.model = NULL
+                                 ) {
+  
   library(dplyr)
   library(tidyr)
   library(ggplot2)
@@ -304,32 +308,93 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   }
   
   # Plot
-  p1 <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
-                   ": Last ", use.n.years, " Years")) +
-    ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   # Save
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_last_", use.n.years, "_years.PNG")
   ggsave(file.path(main.dir, sub.dir, plot_name),
-         p1, width = width, height = height, dpi = dpi)
+         p, width = width, height = height, dpi = dpi)
   
-  return(p1)
+  return(p)
 }
+
 
 plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
                                   width = 10, height = 7, dpi = 300, col.opt = "D",
                                   method = NULL,
                                   outlier.opt = NA,
-                                  new_model_names = NULL,
+                                  plot.style = "median_iqr",
+                                  show.whisker = TRUE,
                                   use.n.years = NULL,
                                   start.years = NULL,
-                                  base.model = NULL) {
+                                  new_model_names = NULL,
+                                  base.model = NULL
+                                  ) {
   
   library(dplyr)
   library(tidyr)
@@ -416,31 +481,91 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   }
   
   # Plot
-  p1 <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
-                   ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
-    ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   # Save the plot
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_first_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
   
-  return(p1)
+  return(p)
 }
 
 plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                   width = 10, height = 7, dpi = 300, col.opt = "D",
                                   method = NULL,
                                   outlier.opt = NA,
-                                  f.ymin = NULL, f.ymax = NULL,
-                                  new_model_names = NULL,
+                                  plot.style = "median_iqr", 
+                                  show.whisker = TRUE,
+                                  f.ymin = NULL, 
+                                  f.ymax = NULL,
                                   use.n.years = NULL,
-                                  base.model = NULL) {
+                                  new_model_names = NULL,
+                                  base.model = NULL
+                                  ) {
   
   library(dplyr)
   library(tidyr)
@@ -544,15 +669,72 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
                   .groups = "drop")
     }
     
-    p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
-      coord_cartesian(ylim = c(y1, y2)) + 
-      facet_grid(Label ~ ., scales = "free") +
-      scale_color_viridis_d(option = col.opt) +
-      ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
-                     ": Last ", use.n.years, " Years")) +
-      ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
-      theme_bw()
+    # Plot
+    if (plot.style == "boxplot") {
+      p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+        geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+        coord_cartesian(ylim = c(y1, y2)) + 
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Last ", use.n.years, " Years")) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        theme_bw()
+    } else if (plot.style == "median_iqr") {
+      # Compute summary statistics with 1.5x IQR whiskers
+      res_summary <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          q1 = quantile(!!sym(var), 0.25),
+          med = median(!!sym(var)),
+          q3 = quantile(!!sym(var), 0.75),
+          iqr = q3 - q1,
+          .groups = "drop"
+        ) %>%
+        mutate(
+          x = as.numeric(factor(Model)),
+          ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+          ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+        )
+      
+      # Clip whiskers to the observed range
+      res_limits <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          min_val = min(!!sym(var), na.rm = TRUE),
+          max_val = max(!!sym(var), na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+        mutate(
+          ymin = pmax(ymin, min_val),
+          ymax = pmin(ymax, max_val)
+        )
+      
+      p <- ggplot(res_summary, aes(x = x, color = Model)) +
+        # Whiskers (1.5 x IQR, clipped to observed range)
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+        
+        # IQR box (no fill)
+        geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                  fill = NA, linewidth = 0.8) +
+        
+        # Median line
+        geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                     linewidth = 0.8) +
+        
+        scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Last ", use.n.years, " Years")) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        theme_bw()
+    } else {
+      stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+    }
     
     plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
     ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
@@ -567,15 +749,20 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
   return(list(fleet = p_fleet, region = p_region, global = p_global))
 }
 
+
 plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
                                    width = 10, height = 7, dpi = 300, col.opt = "D",
                                    method = NULL,
                                    outlier.opt = NA,
-                                   f.ymin = NULL, f.ymax = NULL, 
-                                   new_model_names = NULL,
+                                   plot.style = "median_iqr", 
+                                   show.whisker = TRUE,
+                                   f.ymin = NULL, 
+                                   f.ymax = NULL, 
                                    use.n.years = NULL,
                                    start.years = NULL,
-                                   base.model = NULL) {
+                                   new_model_names = NULL,
+                                   base.model = NULL
+                                   ) {
   
   library(dplyr)
   library(tidyr)
@@ -686,15 +873,72 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
                   .groups = "drop")
     }
     
-    p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
-      coord_cartesian(ylim = c(y1, y2)) + 
-      facet_grid(Label ~ ., scales = "free") +
-      scale_color_viridis_d(option = col.opt) +
-      ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
-                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
-      ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
-      theme_bw()
+    # Plot
+    if (plot.style == "boxplot") {
+      p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+        geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+        coord_cartesian(ylim = c(y1, y2)) + 
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        theme_bw()
+    } else if (plot.style == "median_iqr") {
+      # Compute summary statistics with 1.5x IQR whiskers
+      res_summary <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          q1 = quantile(!!sym(var), 0.25),
+          med = median(!!sym(var)),
+          q3 = quantile(!!sym(var), 0.75),
+          iqr = q3 - q1,
+          .groups = "drop"
+        ) %>%
+        mutate(
+          x = as.numeric(factor(Model)),
+          ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+          ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+        )
+      
+      # Clip whiskers to the observed range
+      res_limits <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          min_val = min(!!sym(var), na.rm = TRUE),
+          max_val = max(!!sym(var), na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+        mutate(
+          ymin = pmax(ymin, min_val),
+          ymax = pmin(ymax, max_val)
+        )
+      
+      p <- ggplot(res_summary, aes(x = x, color = Model)) +
+        # Whiskers (1.5 x IQR, clipped to observed range)
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+        
+        # IQR box (no fill)
+        geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                  fill = NA, linewidth = 0.8) +
+        
+        # Median line
+        geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                     linewidth = 0.8) +
+        
+        scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        theme_bw()
+    } else {
+      stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+    }
     
     plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
     ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
@@ -709,13 +953,17 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
   return(list(fleet = p_fleet, region = p_region, global = p_global))
 }
 
+
 plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
                                    width = 10, height = 7, dpi = 300, col.opt = "D",
                                    method = NULL,
                                    outlier.opt = NA,
-                                   new_model_names = NULL,
+                                   plot.style = "median_iqr", 
+                                   show.whisker = TRUE,
                                    use.n.years = NULL,
-                                   base.model = NULL) {
+                                   new_model_names = NULL,
+                                   base.model = NULL
+                                   ) {
   
   library(dplyr)
   library(tidyr)
@@ -792,19 +1040,75 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   }
   
   # Plot
-  p1 <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
-                   ": Last ", use.n.years, " Years")) +
-    ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"), "_last_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
   
-  return(p1)
+  return(p)
 }
 
 
@@ -812,10 +1116,13 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
                                     width = 10, height = 7, dpi = 300, col.opt = "D",
                                     method = NULL,
                                     outlier.opt = NA,
-                                    new_model_names = NULL,
+                                    plot.style = "median_iqr", 
+                                    show.whisker = TRUE,
                                     use.n.years = NULL,
                                     start.years = NULL,
-                                    base.model = NULL) {
+                                    new_model_names = NULL,
+                                    base.model = NULL
+                                    ) {
   
   library(dplyr)
   library(tidyr)
@@ -902,31 +1209,90 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
   }
   
   # Plot
-  p1 <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
-                   ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
-    ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   # Save the plot
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_first_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
   
-  return(p1)
+  return(p)
 }
 
 plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status",
                             width = 10, height = 7, dpi = 300, col.opt = "D",
                             method = NULL,
                             outlier.opt = NA,
-                            new_model_names = NULL,
+                            plot.style = "median_iqr", 
+                            show.whisker = TRUE,
                             use.n.years = NULL,
+                            new_model_names = NULL,
                             base.model = NULL,
-                            plot_prob = TRUE) {
+                            plot_prob = TRUE
+                            ) {
   
   library(dplyr)
   library(tidyr)
@@ -1048,17 +1414,73 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
   }
   
   # Plot
-  p1 <- ggplot(res_long, aes(x = Model, y = value, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(ifelse(is.null(base.model),
-                   paste0(var_name, ": Last ", use.n.years, " Years"),
-                   paste0("Relative ", var_name, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
-    ylab(ifelse(is.null(base.model),
-                var_name,
-                paste0("Relative ", var_name, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p1 <- ggplot(res_long, aes(x = Model, y = value, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(ifelse(is.null(base.model),
+                     paste0(var_name, ": Last ", use.n.years, " Years"),
+                     paste0("Relative ", var_name, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
+      ylab(ifelse(is.null(base.model),
+                  var_name,
+                  paste0("Relative ", var_name, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res_long %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(value, 0.25),
+        med = median(value),
+        q3 = quantile(value, 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to observed range
+    res_limits <- res_long %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(value, na.rm = TRUE),
+        max_val = max(value, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    # Plot
+    p1 <- ggplot(res_summary, aes(x = x, color = Model)) +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1))} +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax))} +
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(ifelse(is.null(base.model),
+                     paste0(var_name, ": Last ", use.n.years, " Years"),
+                     paste0("Relative ", var_name, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
+      ylab(ifelse(is.null(base.model),
+                  var_name,
+                  paste0("Relative ", var_name, " Difference"))) +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   # Save plot
   ggsave(file.path(main.dir, sub.dir, paste0(
@@ -1073,7 +1495,7 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
   
   if(plot_prob) {
     p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title_main) +
@@ -1097,11 +1519,14 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
                              width = 10, height = 7, dpi = 300, col.opt = "D",
                              method = NULL,
                              outlier.opt = NA,
-                             new_model_names = NULL,
+                             plot.style = "median_iqr", 
+                             show.whisker = TRUE,
                              use.n.years = NULL,
                              start.years = NULL,
+                             new_model_names = NULL,
                              base.model = NULL,
-                             plot_prob = TRUE) {
+                             plot_prob = TRUE
+                             ) {
   
   library(dplyr)
   library(tidyr)
@@ -1226,16 +1651,71 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   }
   
   # Plot
-  p1 <- ggplot(res_long, aes(x = Model, y = value, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    facet_grid(Label ~ ., scales = "free") +
-    scale_color_viridis_d(option = col.opt) +
-    ggtitle(paste0(ifelse(is.null(base.model), var_name, paste0("Relative ", var_name, " vs ", base.model)),
-                   ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
-    ylab(ifelse(is.null(base.model),
-                var_name,
-                paste0("Relative ", var_name, " Difference"))) +
-    theme_bw()
+  if (plot.style == "boxplot") {
+    p1 <- ggplot(res_long, aes(x = Model, y = value, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var_name, paste0("Relative ", var_name, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model),
+                  var_name,
+                  paste0("Relative ", var_name, " Difference"))) +
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res_long %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(value, 0.25),
+        med = median(value),
+        q3 = quantile(value, 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to observed range
+    res_limits <- res_long %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(value, na.rm = TRUE),
+        max_val = max(value, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    # Plot
+    p1 <- ggplot(res_summary, aes(x = x, color = Model)) +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1))} +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax))} +
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), var_name, paste0("Relative ", var_name, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model),
+                  var_name,
+                  paste0("Relative ", var_name, " Difference"))) +
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
   
   # Save plot
   
@@ -1249,7 +1729,7 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   
   if(plot_prob) {
     p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title_main) +
@@ -1273,11 +1753,15 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
                              width = 10, height = 7, dpi = 300, col.opt = "D",
                              method = NULL,
                              outlier.opt = NA,
-                             f.ymin = NULL, f.ymax = NULL, 
-                             new_model_names = NULL,
+                             plot.style = "median_iqr", 
+                             show.whisker = TRUE,
+                             f.ymin = NULL, 
+                             f.ymax = NULL, 
                              use.n.years = NULL,
+                             new_model_names = NULL,
                              base.model = NULL,
-                             plot_prob = TRUE) {
+                             plot_prob = TRUE
+                             ) {
   
   library(dplyr)
   library(tidyr)
@@ -1410,33 +1894,90 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
                   .groups = "drop")
     }
     
-    p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
-      coord_cartesian(ylim = c(y1, y2)) + 
-      facet_grid(Label ~ ., scales = "free") +
-      scale_color_viridis_d(option = col.opt) +
-      ggtitle(ifelse(is.null(base.model),
-                     paste0(title, ": Last ", use.n.years, " Years"),
-                     paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
-      ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
-      theme_bw()
+    # Plot
+    if (plot.style == "boxplot") {
+      p1 <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+        geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+        coord_cartesian(ylim = c(y1, y2)) + 
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(ifelse(is.null(base.model),
+                       paste0(title, ": Last ", use.n.years, " Years"),
+                       paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        theme_bw()
+    } else if (plot.style == "median_iqr") {
+      # Compute summary statistics with 1.5x IQR whiskers
+      res_long$value <- res_long$Fbar 
+      res_summary <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          q1 = quantile(value, 0.25),
+          med = median(value),
+          q3 = quantile(value, 0.75),
+          iqr = q3 - q1,
+          .groups = "drop"
+        ) %>%
+        mutate(
+          x = as.numeric(factor(Model)),
+          ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+          ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+        )
+      
+      # Clip whiskers to observed range
+      res_limits <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          min_val = min(value, na.rm = TRUE),
+          max_val = max(value, na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+        mutate(
+          ymin = pmax(ymin, min_val),
+          ymax = pmin(ymax, max_val)
+        )
+      
+      # Plot
+      p1 <- ggplot(res_summary, aes(x = x, color = Model)) +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1))} +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax))} +
+        # IQR box (no fill)
+        geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                  fill = NA, linewidth = 0.8) +
+        # Median line
+        geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                     linewidth = 0.8) +
+        scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(ifelse(is.null(base.model),
+                       paste0(title, ": Last ", use.n.years, " Years"),
+                       paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        theme_bw()
+      } else {
+        stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+      }
+
     ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
-           p, width = width, height = height, dpi = dpi)
-    return(p)
+           p1, width = width, height = height, dpi = dpi)
+    return(p1)
   }
   
   plot_pointplot <- function(prob, title, ylab_text, filename) {
     prob_long <- pivot_longer(prob, cols = starts_with(c("Fleet_", "Region_", "Global")),
                               names_to = "Label", values_to = "Prob")
-    p <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
+    p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title) +
       ylab(ylab_text) +
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
-    return(p)
+    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
+    return(p2)
   }
   
   p_fleet_box <- plot_boxplot(res_fleet, paste(title_main, "by Fleet"), title_main, paste0(var, "_fleet_last_", use.n.years, "_years"))
@@ -1467,12 +2008,16 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
                               width = 10, height = 7, dpi = 300, col.opt = "D",
                               method = NULL,
                               outlier.opt = NA,
-                              f.ymin = NULL, f.ymax = NULL, 
-                              new_model_names = NULL,
+                              plot.style = "median_iqr", 
+                              show.whisker = TRUE,
+                              f.ymin = NULL, 
+                              f.ymax = NULL, 
                               use.n.years = NULL,
                               start.years = NULL,
+                              new_model_names = NULL,
                               base.model = NULL,
-                              plot_prob = TRUE) {
+                              plot_prob = TRUE
+                              ) {
   
   library(dplyr)
   library(tidyr)
@@ -1611,32 +2156,88 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
                   .groups = "drop")
     }
     
-    p <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
-      coord_cartesian(ylim = c(y1, y2)) + 
-      facet_grid(Label ~ ., scales = "free") +
-      scale_color_viridis_d(option = col.opt) +
-      ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
-                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
-      ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
-      theme_bw()
+    # Plot
+    if (plot.style == "boxplot") {
+      p1 <- ggplot(res_long, aes(x = Model, y = Fbar, color = Model)) +
+        geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+        coord_cartesian(ylim = c(y1, y2)) + 
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        theme_bw()
+    } else if (plot.style == "median_iqr") {
+      # Compute summary statistics with 1.5x IQR whiskers
+      res_long$value <- res_long$Fbar 
+      res_summary <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          q1 = quantile(value, 0.25),
+          med = median(value),
+          q3 = quantile(value, 0.75),
+          iqr = q3 - q1,
+          .groups = "drop"
+        ) %>%
+        mutate(
+          x = as.numeric(factor(Model)),
+          ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+          ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+        )
+      
+      # Clip whiskers to observed range
+      res_limits <- res_long %>%
+        group_by(Model, Label) %>%
+        summarise(
+          min_val = min(value, na.rm = TRUE),
+          max_val = max(value, na.rm = TRUE),
+          .groups = "drop"
+        )
+      
+      res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+        mutate(
+          ymin = pmax(ymin, min_val),
+          ymax = pmin(ymax, max_val)
+        )
+      
+      # Plot
+      p1 <- ggplot(res_summary, aes(x = x, color = Model)) +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1))} +
+        {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax))} +
+        # IQR box (no fill)
+        geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                  fill = NA, linewidth = 0.8) +
+        # Median line
+        geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                     linewidth = 0.8) +
+        scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+        facet_grid(Label ~ ., scales = "free") +
+        scale_color_viridis_d(option = col.opt) +
+        ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
+                       ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+        ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        theme_bw()
+    } else {
+      stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+    }
+    
     ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
-           p, width = width, height = height, dpi = dpi)
-    return(p)
+           p1, width = width, height = height, dpi = dpi)
+    return(p1)
   }
   
   plot_pointplot <- function(prob, title, ylab_text, filename) {
     prob_long <- pivot_longer(prob, cols = starts_with(c("Fleet_", "Region_", "Global")),
                               names_to = "Label", values_to = "Prob")
-    p <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
-      geom_boxplot(outlier.shape = outlier.opt) +
+    p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title) +
       ylab(ylab_text) +
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
-    return(p)
+    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
+    return(p2)
   }
   
   if (!is.nsim) {
@@ -2184,7 +2785,7 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
   
   
   p1 <- ggplot(res, aes(x = Model, y = Value, col = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
+    geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
     geom_hline(aes(yintercept = True_Value), col = "red", linetype = "dashed") +
     facet_grid(Var ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
@@ -2299,19 +2900,23 @@ plot_NAA_sigma_par <- function(mods, is.nsim, main.dir, sub.dir,
   
   res$True_Value <- NA
   
-  if (length(unique(res$Var)) == 2) {
-    # Simple case: one Rec_sigma and one NAA_sigma
-    res$True_Value[res$Var == "Rec_sigma"] <- rec_sig_true
-    res$True_Value[res$Var == "NAA_sigma"] <- naa_sig_true
-  } else {
-    # Multiple sigmas, match by index
-    res$True_Value[grepl("Rec_sigma", res$Var)] <- rec_sig_true[as.numeric(gsub("Rec_sigma", "", res$Var[grepl("Rec_sigma", res$Var)]))]
-    res$True_Value[grepl("NAA_sigma", res$Var)] <- naa_sig_true[as.numeric(gsub("NAA_sigma", "", res$Var[grepl("NAA_sigma", res$Var)]))]
+  is.n.regions <- if(om_tmp$om$input$data$n_regions>1) TRUE else FALSE
+  
+  if (!is.n.regions) {
+    if (length(unique(res$Var)) == 2) {
+      # Simple case: one Rec_sigma and one NAA_sigma
+      res$True_Value[res$Var == "Rec_sigma"] <- rec_sig_true
+      res$True_Value[res$Var == "NAA_sigma"] <- naa_sig_true
+    } else {
+      # Multiple sigmas, match by index
+      res$True_Value[grepl("Rec_sigma", res$Var)] <- rec_sig_true[as.numeric(gsub("Rec_sigma", "", res$Var[grepl("Rec_sigma", res$Var)]))]
+      res$True_Value[grepl("NAA_sigma", res$Var)] <- naa_sig_true[as.numeric(gsub("NAA_sigma", "", res$Var[grepl("NAA_sigma", res$Var)]))]
+    }
   }
   
   p2 <- ggplot(res, aes(x = Model, y = Value, col = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
-    geom_hline(aes(yintercept = True_Value), col = "red", linetype = "dashed") +
+    geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+    {if (!is.n.regions) geom_hline(aes(yintercept = True_Value), col = "red", linetype = "dashed")} +
     facet_grid(Var ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle("Standard Deviation of NAA from the Last EM") +
@@ -2886,7 +3491,7 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
   
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = AACV, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
+    geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle(paste0("Average Annual Catch Variation",
@@ -3435,7 +4040,7 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   
   # Plot
   p1 <- ggplot(res, aes(x = Model, y = AACV, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
+    geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle(paste0("Average Annual SSB Variation",
@@ -3578,7 +4183,7 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
   }
   
   p1 <- ggplot(res, aes(x = Model, y = AACV, color = Model)) +
-    geom_boxplot(outlier.shape = outlier.opt) +
+    geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle(paste0("Average Annual Fbar Variation",

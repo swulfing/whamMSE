@@ -15,13 +15,15 @@ plot_mse_output(
   col.opt = "D",
   method = "mean",
   outlier.opt = NA,
+  plot.style = "median_iqr",
+  show.whisker = TRUE,
   f.ymin = NULL,
   f.ymax = NULL,
-  new_model_names = NULL,
-  base.model = "Model1",
   start.years = 1,
   use.n.years.first = 5,
-  use.n.years.last = 5
+  use.n.years.last = 5,
+  new_model_names = NULL,
+  base.model = "Model1"
 )
 }
 \arguments{
@@ -45,19 +47,23 @@ plot_mse_output(
 
 \item{outlier.opt}{outlier.opt = NA (default): no outliers will be shown, outlier.opt = 0 - 25 (26 different shapes to use)}
 
+\item{plot.style}{plot.style = "median_iqr" (Default): only median, IQR will be displayed in the boxplot (no outliers will be displayed), method = "boxplot": boxplot including median, IQR, and outliers}
+
+\item{show.whisker}{Logical, Whether to show 1.5IQR as a whisker}
+
 \item{f.ymin}{Numeric value specifying the lower limit of the y-axis for F-based performance plots (Default = NULL)}
 
 \item{f.ymax}{Numeric value specifying the upper limit of the y-axis for F-based performance plots. (Default = NULL)}
-
-\item{new_model_names}{Optional character vector of custom model names.}
-
-\item{base.model}{Model name used as a baseline for relative difference plots.}
 
 \item{start.years}{The first year used in short-term performance summaries.}
 
 \item{use.n.years.first}{Number of years to summarize at the beginning of the time series.}
 
 \item{use.n.years.last}{Number of years to summarize at the end of the time series.}
+
+\item{new_model_names}{Optional character vector of custom model names.}
+
+\item{base.model}{Model name used as a baseline for relative difference plots.}
 }
 \value{
 Saves output plots/reports to disk; returns nothing explicitly.
