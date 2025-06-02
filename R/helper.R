@@ -316,7 +316,8 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Last ", use.n.years, " Years")) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
-      theme_bw()
+      xlab("Model") +
+      theme_bw() 
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
     res_summary <- res %>%
@@ -489,6 +490,7 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
@@ -541,6 +543,7 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else {
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -679,6 +682,7 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
         ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
                        ": Last ", use.n.years, " Years")) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        xlab("Model") + 
         theme_bw()
     } else if (plot.style == "median_iqr") {
       # Compute summary statistics with 1.5x IQR whiskers
@@ -731,6 +735,7 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
         ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
                        ": Last ", use.n.years, " Years")) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        xlab("Model") + 
         theme_bw()
     } else {
       stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -883,6 +888,7 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
         ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
                        ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        xlab("Model") + 
         theme_bw()
     } else if (plot.style == "median_iqr") {
       # Compute summary statistics with 1.5x IQR whiskers
@@ -935,6 +941,7 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
         ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
                        ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference in Fbar")) +
+        xlab("Model") + 
         theme_bw()
     } else {
       stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1048,6 +1055,7 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Last ", use.n.years, " Years")) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
@@ -1100,6 +1108,7 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Last ", use.n.years, " Years")) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else {
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1217,6 +1226,7 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
@@ -1269,6 +1279,7 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
       ggtitle(paste0(ifelse(is.null(base.model), var, paste0("Relative ", var, " vs ", base.model)),
                      ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
       ylab(ifelse(is.null(base.model), var, paste0("Relative ", var, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else {
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1425,6 +1436,7 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
       ylab(ifelse(is.null(base.model),
                   var_name,
                   paste0("Relative ", var_name, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
@@ -1477,6 +1489,7 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
       ylab(ifelse(is.null(base.model),
                   var_name,
                   paste0("Relative ", var_name, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else {
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1661,6 +1674,7 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
       ylab(ifelse(is.null(base.model),
                   var_name,
                   paste0("Relative ", var_name, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else if (plot.style == "median_iqr") {
     # Compute summary statistics with 1.5x IQR whiskers
@@ -1712,6 +1726,7 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
       ylab(ifelse(is.null(base.model),
                   var_name,
                   paste0("Relative ", var_name, " Difference"))) +
+      xlab("Model") + 
       theme_bw()
   } else {
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1905,6 +1920,7 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
                        paste0(title, ": Last ", use.n.years, " Years"),
                        paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        xlab("Model") + 
         theme_bw()
     } else if (plot.style == "median_iqr") {
       # Compute summary statistics with 1.5x IQR whiskers
@@ -1956,6 +1972,7 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
                        paste0(title, ": Last ", use.n.years, " Years"),
                        paste0("Relative ", title, " vs ", base.model, ": Last ", use.n.years, " Years"))) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        xlab("Model") + 
         theme_bw()
       } else {
         stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -1975,6 +1992,7 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title) +
       ylab(ylab_text) +
+      xlab("Model") + 
       theme_bw()
     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
     return(p2)
@@ -2216,6 +2234,7 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
         ggtitle(paste0(ifelse(is.null(base.model), title, paste0("Relative ", title, " vs ", base.model)),
                        ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
         ylab(ifelse(is.null(base.model), ylab_text, "Relative Difference")) +
+        xlab("Model") + 
         theme_bw()
     } else {
       stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
@@ -2235,6 +2254,7 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title) +
       ylab(ylab_text) +
+      xlab("Model") + 
       theme_bw()
     ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
     return(p2)
