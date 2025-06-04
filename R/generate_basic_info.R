@@ -492,6 +492,8 @@ generate_basic_info <- function(n_stocks = 2,
   index_info$q <- q.input
   index_info$index_cv <- index_cv.input
   
+  basic_info$q <- index_info$q # Pass q to basic_info
+  
   if (is.null(index_info$use_indices)) {
     use_indices <- matrix(1, ny, n_indices)
   } else {
