@@ -128,6 +128,7 @@ generate_basic_info <- function(n_stocks = 2,
                                 index_info = list(index_cv = 0.1, index_Neff = 100, fracyr_indices = 0.5, q = 0.2,
                                                   use_indices = 1, use_index_paa = 1, units_indices = 2, units_index_paa = 2),
                                 user_waa = NULL, 
+                                
                                 fracyr_spawn = 0.5,
                                 fracyr_seasons = NULL,
                                 fleet_regions = NULL,

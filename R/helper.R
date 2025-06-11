@@ -4358,6 +4358,16 @@ plot_AAV_performance <- function(mods, is.nsim,
     }
   }
   
+  # Rename models if user provided new names
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res_all$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    res_all$Model <- factor(res_all$Model,
+                           levels = paste0("Model", seq_along(new_model_names)),
+                           labels = new_model_names)
+  }
+  
   p2 <- ggtern(res_all, aes(x = Catch_score, y = SSB_score, z = Fbar_score, color = Model)) +
     geom_point(size = 1) +
     scale_color_manual(values = colors) +
