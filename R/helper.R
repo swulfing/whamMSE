@@ -4384,7 +4384,352 @@ plot_AAV_performance <- function(mods, is.nsim,
   ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_raw.png"),
          plot = p2, width = width, height = height, dpi = dpi)
   
+  # Raw values
+  res_long <- res_all %>%
+    pivot_longer(cols = c(Catch, SSB, Fbar),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  # if (!is.null(new_model_names)) {
+  #   if (length(new_model_names) != length(unique(res_long$Model))) {
+  #     stop("Length of new_model_names must match the number of models.")
+  #   }
+  #   res_long$Model <- factor(res_long$Model,
+  #                            levels = paste0("Model", seq_along(new_model_names)),
+  #                            labels = new_model_names)
+  # }
+  
+  p3 <- ggplot(res_long, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = "Average Annual Variation (Raw) Distributions (Lower = Better)",
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p3)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_raw_distribution.png"),
+         plot = p3, width = width, height = height, dpi = dpi)
+  
+  # Normalized
+  res_norm <- res_all
+  
+  # Normalize and invert across all realizations
+  for (v in c("Catch", "SSB", "Fbar")) {
+    range_v <- max(res_norm[[v]]) - min(res_norm[[v]])
+    if (range_v == 0) {
+      res_norm[[paste0(v, "_score")]] <- 100
+    } else {
+      norm_v <- (res_norm[[v]] - min(res_norm[[v]])) / range_v
+      res_norm[[paste0(v, "_score")]] <- 100 * (1 - norm_v)
+    }
+  }
+  
+  library(tidyr)
+  library(ggridges)
+  library(ggplot2)
+  
+  # Reshape normalized data
+  res_long <- res_norm %>%
+    pivot_longer(cols = c(Catch_score, SSB_score, Fbar_score),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  # Optional relabeling
+  # if (!is.null(new_model_names)) {
+  #   if (length(new_model_names) != length(unique(res_long$Model))) {
+  #     stop("Length of new_model_names must match the number of models.")
+  #   }
+  #   res_long$Model <- factor(res_long$Model,
+  #                            levels = paste0("Model", seq_along(new_model_names)),
+  #                            labels = new_model_names)
+  # }
+  
+  # Plot ridge
+  # ggplot(res_long, aes(x = Score, y = Variable, fill = Variable)) +
+  #   geom_density_ridges(alpha = 0.8, scale = 1.0) +
+  #   theme_bw() +
+  #   scale_fill_viridis_d(option = "plasma") +
+  #   labs(
+  #     title = "Performance Score Distributions (Higher = Better)",
+  #     x = "Score (Normalized, Inverted)",
+  #     y = "Metric"
+  #   ) +
+  #   facet_wrap(~ Model)
+  
+  p4 <- ggplot(res_long, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    # geom_vline(data = medians, aes(xintercept = Median, color = Variable), linetype = "dashed",
+    #            linewidth = 0.8, show.legend = FALSE) + 
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = "Average Annual Variation (Normalized) Distributions (Higher = Better)",
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p4)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_normalized_distribution.png"),
+         plot = p4, width = width, height = height, dpi = dpi)
 }
+
+
+# plot_status_triangle <- function(mods, is.nsim,
+#                                  main.dir, sub.dir,
+#                                  width = 8, height = 7, dpi = 300,
+#                                  col.opt = "D",
+#                                  method = NULL,
+#                                  new_model_names = NULL,
+#                                  use.n.years.first = 5,
+#                                  use.n.years.last = 5,
+#                                  start.years = 1) {
+#   library(dplyr)
+#   library(ggtern)
+#   library(viridisLite)
+#   
+#   # Safer warning
+#   if (missing(start.years)) {
+#     warning("start.years not provided; defaulting to 1 (first historical year).")
+#   }
+#   
+#   # Function to extract mean Catch, SSB, and Fbar
+#   process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
+#     catch_ts <- rowSums(rep$pred_catch)
+#     catch_ts_brp <- exp(rep$log_Y_FXSPR[, ncol(rep$Fbar)])
+#     catch_ts <- catch_ts/catch_ts_brp
+#     
+#     ssb_ts <- rowSums(rep$SSB)
+#     ssb_ts_brp <- exp(rep$log_SSB_FXSPR[,n_regions+1])
+#     ssb_ts <- ssb_ts/ssb_ts_brp
+#     
+#     fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] # SAFER: use last column (global Fbar)
+#     fbar_ts_brp <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+#     fbar_ts <- fbar_ts/fbar_ts_brp
+#     
+#     if (type == "short") {
+#       idx <- start.years:(start.years + use.n.years - 1)
+#     } else {
+#       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
+#     }
+#     
+#     if(is.null(method)) method = "median"
+#     if(method == "median") {
+#       return(c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx])))
+#     }
+#     if(method == "mean") {
+#       return(c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx])))
+#     }
+#   }
+#   
+#   results_short <- list()
+#   results_long <- list()
+#   
+#   if (is.nsim) {
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     
+#     for (r in seq_len(n_reps)) {
+#       df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         input <- mods[[r]][[m]]$om$input$data
+#         n_fleets <- input$n_fleets[1]
+#         n_regions <- input$n_regions[1]
+#         
+#         short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#         long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#         
+#         df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#         df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#       }
+#       
+#       # Normalize within realization (Catch & SSB up, Fbar inverted)
+#       for (v in c("Catch", "SSB")) {
+#         range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#         df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#         
+#         range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#         df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#       }
+#       for (v in c("Fbar")) {
+#         range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#         norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#         df_short[[v]] <- 1 - norm_f # inverted
+#         
+#         range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#         norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#         df_long[[v]] <- 1 - norm_f_long
+#       }
+#       
+#       # Now we already have values 0–1: just renormalize to sum = 1
+#       df_short <- df_short %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = ifelse(total == 0, 0, Catch / total),
+#                SSB = ifelse(total == 0, 0, SSB / total),
+#                Fbar = ifelse(total == 0, 0, Fbar / total),
+#                Realization = r)
+#       
+#       df_long <- df_long %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = ifelse(total == 0, 0, Catch / total),
+#                SSB = ifelse(total == 0, 0, SSB / total),
+#                Fbar = ifelse(total == 0, 0, Fbar / total),
+#                Realization = r)
+#       
+#       results_short[[r]] <- df_short
+#       results_long[[r]] <- df_long
+#     }
+#   } else {
+#     n_models <- length(mods)
+#     df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       rep <- mods[[m]]$om$rep
+#       input <- mods[[m]]$om$input$data
+#       n_fleets <- input$n_fleets[1]
+#       n_regions <- input$n_regions[1]
+#       
+#       short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#       long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#       
+#       df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#       df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#     }
+#     
+#     for (v in c("Catch", "SSB")) {
+#       range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#       df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#       
+#       range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#     }
+#     for (v in c("Fbar")) {
+#       range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#       norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#       df_short[[v]] <- 1 - norm_f
+#       
+#       range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#       df_long[[v]] <- 1 - norm_f_long
+#     }
+#     
+#     df_short <- df_short %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = ifelse(total == 0, 0, Catch / total),
+#              SSB = ifelse(total == 0, 0, SSB / total),
+#              Fbar = ifelse(total == 0, 0, Fbar / total),
+#              Realization = 1)
+#     
+#     df_long <- df_long %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = ifelse(total == 0, 0, Catch / total),
+#              SSB = ifelse(total == 0, 0, SSB / total),
+#              Fbar = ifelse(total == 0, 0, Fbar / total),
+#              Realization = 1)
+#     
+#     results_short[[1]] <- df_short
+#     results_long[[1]] <- df_long
+#   }
+#   
+#   df_short_all <- bind_rows(results_short)
+#   df_long_all <- bind_rows(results_long)
+#   
+#   df_short_all <- bind_rows(results_short) %>%
+#     group_by(Model) %>%
+#     summarise(
+#       Catch = median(Catch),
+#       SSB = median(SSB),
+#       Fbar = median(Fbar),
+#       .groups = "drop"
+#     )
+#   
+#   df_long_all <- bind_rows(results_long) %>%
+#     group_by(Model) %>%
+#     summarise(
+#       Catch = median(Catch),
+#       SSB = median(SSB),
+#       Fbar = median(Fbar),
+#       .groups = "drop"
+#     )
+#   
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(df_short_all$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     df_short_all$Model <- factor(df_short_all$Model,
+#                                  levels = paste0("Model", seq_along(new_model_names)),
+#                                  labels = new_model_names)
+#     df_long_all$Model <- factor(df_long_all$Model,
+#                                 levels = paste0("Model", seq_along(new_model_names)),
+#                                 labels = new_model_names)
+#   }
+#   
+#   # === Plot function ===
+#   plot_and_save <- function(df, title, file) {
+#     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+#     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+#       geom_point(alpha = 0.8, size = 8) +
+#       scale_color_manual(values = colors) +
+#       labs(title = title, T = "Fbar\nstatus", L = "SSB\nstatus", R = "Catch\nstatus") +
+#       theme_rgbw() +
+#       theme(plot.title = element_text(hjust = 0.5))
+#     
+#     ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+#            width = width, height = height, dpi = dpi)
+#     
+#     print(p)
+#   }
+#   
+#   plot_and_save2 <- function(df, title, file) {
+#     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+#     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+#       geom_point(size = 1) +
+#       scale_color_manual(values = colors) +
+#       labs(title = title, T = "Fbar\nstatus", L = "SSB\nstatus", R = "Catch\nstatus") +
+#       theme_rgbw() +
+#       theme(plot.title = element_text(hjust = 0.5)) +
+#       geom_confidence_tern(breaks = 0.95)
+#     
+#     ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+#            width = width, height = height, dpi = dpi)
+#     
+#     print(p)
+#   }
+#   
+#   plot_and_save(df_short_all, paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short.png")
+#   plot_and_save(df_long_all, paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), "Relative_status_triangle_long.png")
+#   
+#   results_short2 <- bind_rows(results_short)
+#   results_long2 <- bind_rows(results_long)
+#   
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(results_short2$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     results_short2$Model <- factor(results_short2$Model,
+#                                  levels = paste0("Model", seq_along(new_model_names)),
+#                                  labels = new_model_names)
+#     results_long2$Model <- factor(results_long2$Model,
+#                                 levels = paste0("Model", seq_along(new_model_names)),
+#                                 labels = new_model_names)
+#   }
+#   
+#   plot_and_save2(results_short2, paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short_raw.png")
+#   plot_and_save2(results_long2, paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
+# }
 
 
 plot_status_triangle <- function(mods, is.nsim,
@@ -4434,6 +4779,10 @@ plot_status_triangle <- function(mods, is.nsim,
     }
   }
   
+  res_short_raw <- list()
+  res_long_raw <- list()
+  res_short <- list()
+  res_long <- list()
   results_short <- list()
   results_long <- list()
   
@@ -4456,6 +4805,9 @@ plot_status_triangle <- function(mods, is.nsim,
         df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
       }
       
+      res_short_raw[[r]] <- df_short
+      res_long_raw[[r]] <- df_long
+      
       # Normalize within realization (Catch & SSB up, Fbar inverted)
       for (v in c("Catch", "SSB")) {
         range_v <- max(df_short[[v]]) - min(df_short[[v]])
@@ -4474,6 +4826,9 @@ plot_status_triangle <- function(mods, is.nsim,
         df_long[[v]] <- 1 - norm_f_long
       }
       
+      res_short[[r]] <- df_short
+      res_long[[r]] <- df_long
+      
       # Now we already have values 0–1: just renormalize to sum = 1
       df_short <- df_short %>%
         mutate(total = Catch + SSB + Fbar,
@@ -4491,6 +4846,7 @@ plot_status_triangle <- function(mods, is.nsim,
       
       results_short[[r]] <- df_short
       results_long[[r]] <- df_long
+      
     }
   } else {
     n_models <- length(mods)
@@ -4509,6 +4865,9 @@ plot_status_triangle <- function(mods, is.nsim,
       df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
     }
     
+    res_short_raw[[1]] <- df_short
+    res_long_raw[[1]] <- df_long
+    
     for (v in c("Catch", "SSB")) {
       range_v <- max(df_short[[v]]) - min(df_short[[v]])
       df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
@@ -4525,6 +4884,9 @@ plot_status_triangle <- function(mods, is.nsim,
       norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
       df_long[[v]] <- 1 - norm_f_long
     }
+    
+    res_short[[1]] <- df_short
+    res_long[[1]] <- df_long
     
     df_short <- df_short %>%
       mutate(total = Catch + SSB + Fbar,
@@ -4620,17 +4982,397 @@ plot_status_triangle <- function(mods, is.nsim,
       stop("Length of new_model_names must match number of models.")
     }
     results_short2$Model <- factor(results_short2$Model,
-                                 levels = paste0("Model", seq_along(new_model_names)),
-                                 labels = new_model_names)
+                                   levels = paste0("Model", seq_along(new_model_names)),
+                                   labels = new_model_names)
     results_long2$Model <- factor(results_long2$Model,
-                                levels = paste0("Model", seq_along(new_model_names)),
-                                labels = new_model_names)
+                                  levels = paste0("Model", seq_along(new_model_names)),
+                                  labels = new_model_names)
   }
   
   plot_and_save2(results_short2, paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short_raw.png")
   plot_and_save2(results_long2, paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
+  
+  res_short_all_raw <- bind_rows(res_short_raw)
+  res_long_all_raw <- bind_rows(res_long_raw)
+  res_short_all <- bind_rows(res_short)
+  res_long_all <- bind_rows(res_long)
+  
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res_short_all$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    res_short_all$Model <- factor(res_short_all$Model,
+                                  levels = paste0("Model", seq_along(new_model_names)),
+                                  labels = new_model_names)
+    res_long_all$Model <- factor(res_long_all$Model,
+                                 levels = paste0("Model", seq_along(new_model_names)),
+                                 labels = new_model_names)
+    res_short_all_raw$Model <- factor(res_short_all_raw$Model,
+                                      levels = paste0("Model", seq_along(new_model_names)),
+                                      labels = new_model_names)
+    res_long_all_raw$Model <- factor(res_long_all_raw$Model,
+                                     levels = paste0("Model", seq_along(new_model_names)),
+                                     labels = new_model_names)
+  }
+  
+  # Raw values
+  res_short_all2 <- res_short_all %>%
+    pivot_longer(cols = c(Catch, SSB, Fbar),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p3)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_short_density_plot.png"),
+         plot = p3, width = width, height = height, dpi = dpi)
+  
+  # Normalized
+  library(tidyr)
+  library(ggridges)
+  library(ggplot2)
+  
+  # Raw values
+  res_long_all2 <- res_long_all %>%
+    pivot_longer(cols = c(Catch, SSB, Fbar),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p4)
+  
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_long_density_plot.png"),
+         plot = p4, width = width, height = height, dpi = dpi)
+  
+  # Raw values
+  res_short_all_raw2 <- res_short_all_raw %>%
+    pivot_longer(cols = c(Catch, SSB, Fbar),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  # Raw values
+  res_long_all_raw2 <- res_long_all_raw %>%
+    pivot_longer(cols = c(Catch, SSB, Fbar),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Short-term Relative Status (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p5)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_short_raw_density_plot.png"),
+         plot = p5, width = width, height = height, dpi = dpi)
+  
+  
+  p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Long-term Relative Status (Raw): Last ", use.n.years.last, " Years"), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p6)
+  
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_long_raw_density_plot.png"),
+         plot = p6, width = width, height = height, dpi = dpi)
+  
 }
 
+# plot_model_performance_triangle2 <- function(mods, is.nsim,
+#                                              main.dir, sub.dir,
+#                                              width = 8, height = 7, dpi = 300,
+#                                              col.opt = "D",
+#                                              method = NULL,
+#                                              new_model_names = NULL,
+#                                              use.n.years.first = 5,
+#                                              use.n.years.last = 5,
+#                                              start.years = 1) {
+#   library(dplyr)
+#   library(ggtern)
+#   library(viridisLite)
+#   library(tidyr)
+#   library(ggplot2)
+#   library(rlang)
+#   
+#   # Helper to calculate AACV (Average Annual Catch Variation)
+#   calculate_aacv <- function(catch_values) {
+#     if (!is.numeric(catch_values)) {
+#       stop("Input catch_values must be a numeric vector.")
+#     }
+#     catch_diff <- abs(diff(catch_values))
+#     aacv <- sum(catch_diff) / sum(catch_values[-length(catch_values)])
+#     return(aacv)
+#   }
+#   
+#   # Safer warning
+#   if (missing(start.years)) {
+#     warning("start.years not provided; defaulting to 1 (first historical year).")
+#   }
+#   
+#   # Function to extract mean Catch, SSB, and Fbar
+#   process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
+#     catch_ts <- rowSums(rep$pred_catch)
+#     ssb_ts <- rowSums(rep$SSB)
+#     fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] # SAFER: use last column (global Fbar)
+#     
+#     if (type == "short") {
+#       idx <- start.years:(start.years + use.n.years - 1)
+#     } else {
+#       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
+#     }
+#     
+#     if(is.null(method)) method = "median"
+#     if(method == "median") {
+#       return(c(calculate_aacv(catch_ts[idx]), median(ssb_ts[idx]), median(catch_ts[idx])))
+#     }
+#     if(method == "mean") {
+#       return(c(calculate_aacv(catch_ts[idx]), mean(ssb_ts[idx]), mean(catch_ts[idx])))
+#     }
+#   }
+#   
+#   results_short <- list()
+#   results_long <- list()
+#   
+#   if (is.nsim) {
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     
+#     for (r in seq_len(n_reps)) {
+#       df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         input <- mods[[r]][[m]]$om$input$data
+#         n_fleets <- input$n_fleets[1]
+#         n_regions <- input$n_regions[1]
+#         
+#         short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#         long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#         
+#         df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#         df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#       }
+#       
+#       # Normalize within realization (Catch & SSB up, Fbar inverted)
+#       for (v in c("Catch", "SSB")) {
+#         range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#         df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#         
+#         range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#         df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#       }
+#       for (v in c("Fbar")) {
+#         range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#         norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#         df_short[[v]] <- 1 - norm_f # inverted
+#         
+#         range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#         norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#         df_long[[v]] <- 1 - norm_f_long
+#       }
+#       
+#       # Now we already have values 0–1: just renormalize to sum = 1
+#       df_short <- df_short %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = ifelse(total == 0, 0, Catch / total),
+#                SSB = ifelse(total == 0, 0, SSB / total),
+#                Fbar = ifelse(total == 0, 0, Fbar / total),
+#                Realization = r)
+#       
+#       df_long <- df_long %>%
+#         mutate(total = Catch + SSB + Fbar,
+#                Catch = ifelse(total == 0, 0, Catch / total),
+#                SSB = ifelse(total == 0, 0, SSB / total),
+#                Fbar = ifelse(total == 0, 0, Fbar / total),
+#                Realization = r)
+#       
+#       results_short[[r]] <- df_short
+#       results_long[[r]] <- df_long
+#     }
+#   } else {
+#     n_models <- length(mods)
+#     df_short <- df_long <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       rep <- mods[[m]]$om$rep
+#       input <- mods[[m]]$om$input$data
+#       n_fleets <- input$n_fleets[1]
+#       n_regions <- input$n_regions[1]
+#       
+#       short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
+#       long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
+#       
+#       df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
+#       df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+#     }
+#     
+#     for (v in c("Catch", "SSB")) {
+#       range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#       df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#       
+#       range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#     }
+#     for (v in c("Fbar")) {
+#       range_v <- max(df_short[[v]]) - min(df_short[[v]])
+#       norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
+#       df_short[[v]] <- 1 - norm_f
+#       
+#       range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
+#       norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
+#       df_long[[v]] <- 1 - norm_f_long
+#     }
+#     
+#     df_short <- df_short %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = ifelse(total == 0, 0, Catch / total),
+#              SSB = ifelse(total == 0, 0, SSB / total),
+#              Fbar = ifelse(total == 0, 0, Fbar / total),
+#              Realization = 1)
+#     
+#     df_long <- df_long %>%
+#       mutate(total = Catch + SSB + Fbar,
+#              Catch = ifelse(total == 0, 0, Catch / total),
+#              SSB = ifelse(total == 0, 0, SSB / total),
+#              Fbar = ifelse(total == 0, 0, Fbar / total),
+#              Realization = 1)
+#     
+#     results_short[[1]] <- df_short
+#     results_long[[1]] <- df_long
+#   }
+#   
+#   df_short_all <- bind_rows(results_short)
+#   df_long_all <- bind_rows(results_long)
+#   
+#   df_short_all <- bind_rows(results_short) %>%
+#     group_by(Model) %>%
+#     summarise(
+#       Catch = median(Catch),
+#       SSB = median(SSB),
+#       Fbar = median(Fbar),
+#       .groups = "drop"
+#     )
+#   
+#   df_long_all <- bind_rows(results_long) %>%
+#     group_by(Model) %>%
+#     summarise(
+#       Catch = median(Catch),
+#       SSB = median(SSB),
+#       Fbar = median(Fbar),
+#       .groups = "drop"
+#     )
+#   
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(df_short_all$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     df_short_all$Model <- factor(df_short_all$Model,
+#                                  levels = paste0("Model", seq_along(new_model_names)),
+#                                  labels = new_model_names)
+#     df_long_all$Model <- factor(df_long_all$Model,
+#                                 levels = paste0("Model", seq_along(new_model_names)),
+#                                 labels = new_model_names)
+#   }
+#   
+#   # === Plot function ===
+#   plot_and_save <- function(df, title, file) {
+#     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+#     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+#       geom_point(alpha = 0.8, size = 8) +
+#       scale_color_manual(values = colors) +
+#       labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
+#       theme_rgbw() +
+#       theme(plot.title = element_text(hjust = 0.5))
+#     
+#     ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+#            width = width, height = height, dpi = dpi)
+#     
+#     print(p)
+#   }
+#   
+#   plot_and_save2 <- function(df, title, file) {
+#     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
+#     p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+#       geom_point(size = 1) +
+#       scale_color_manual(values = colors) +
+#       labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
+#       theme_rgbw() +
+#       theme(plot.title = element_text(hjust = 0.5)) +
+#       geom_confidence_tern(breaks = 0.95)
+#     
+#     ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+#            width = width, height = height, dpi = dpi)
+#     
+#     print(p)
+#   }
+#   
+#   plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short2.png")
+#   plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long2.png")
+#   
+#   results_short2 <- bind_rows(results_short)
+#   results_long2 <- bind_rows(results_long)
+#   
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(results_short2$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     results_short2$Model <- factor(results_short2$Model,
+#                                    levels = paste0("Model", seq_along(new_model_names)),
+#                                    labels = new_model_names)
+#     results_long2$Model <- factor(results_long2$Model,
+#                                   levels = paste0("Model", seq_along(new_model_names)),
+#                                   labels = new_model_names)
+#   }
+#   
+#   plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
+#   plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
+# }
 plot_model_performance_triangle2 <- function(mods, is.nsim,
                                              main.dir, sub.dir,
                                              width = 8, height = 7, dpi = 300,
@@ -4686,6 +5428,13 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   results_short <- list()
   results_long <- list()
   
+  res_short_raw <- list()
+  res_long_raw <- list()
+  res_short <- list()
+  res_long <- list()
+  results_short <- list()
+  results_long <- list()
+  
   if (is.nsim) {
     n_models <- length(mods[[1]])
     n_reps <- length(mods)
@@ -4705,6 +5454,9 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
         df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
       }
       
+      res_short_raw[[r]] <- df_short
+      res_long_raw[[r]] <- df_long
+      
       # Normalize within realization (Catch & SSB up, Fbar inverted)
       for (v in c("Catch", "SSB")) {
         range_v <- max(df_short[[v]]) - min(df_short[[v]])
@@ -4722,6 +5474,9 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
         norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
         df_long[[v]] <- 1 - norm_f_long
       }
+      
+      res_short[[r]] <- df_short
+      res_long[[r]] <- df_long
       
       # Now we already have values 0–1: just renormalize to sum = 1
       df_short <- df_short %>%
@@ -4758,6 +5513,9 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
     }
     
+    res_short_raw[[1]] <- df_short
+    res_long_raw[[1]] <- df_long
+    
     for (v in c("Catch", "SSB")) {
       range_v <- max(df_short[[v]]) - min(df_short[[v]])
       df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
@@ -4774,6 +5532,9 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       norm_f_long <- if (range_v_long == 0) 0 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
       df_long[[v]] <- 1 - norm_f_long
     }
+    
+    res_short[[1]] <- df_short
+    res_long[[1]] <- df_long
     
     df_short <- df_short %>%
       mutate(total = Catch + SSB + Fbar,
@@ -4878,4 +5639,140 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
   plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
+  
+  res_short_all_raw <- bind_rows(res_short_raw)
+  res_long_all_raw <- bind_rows(res_long_raw)
+  res_short_all <- bind_rows(res_short)
+  res_long_all <- bind_rows(res_long)
+  
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res_short_all$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    res_short_all$Model <- factor(res_short_all$Model,
+                                  levels = paste0("Model", seq_along(new_model_names)),
+                                  labels = new_model_names)
+    res_long_all$Model <- factor(res_long_all$Model,
+                                 levels = paste0("Model", seq_along(new_model_names)),
+                                 labels = new_model_names)
+    res_short_all_raw$Model <- factor(res_short_all_raw$Model,
+                                      levels = paste0("Model", seq_along(new_model_names)),
+                                      labels = new_model_names)
+    res_long_all_raw$Model <- factor(res_long_all_raw$Model,
+                                     levels = paste0("Model", seq_along(new_model_names)),
+                                     labels = new_model_names)
+  }
+  
+  names(res_short_all)[4] = "AACV"
+  # Raw values
+  res_short_all2 <- res_short_all %>%
+    pivot_longer(cols = c(Catch, SSB, AACV),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p3)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_short2_density_plot.png"),
+         plot = p3, width = width, height = height, dpi = dpi)
+  
+  # Normalized
+  library(tidyr)
+  library(ggridges)
+  library(ggplot2)
+  
+  names(res_long_all)[4] = "AACV"
+  # Raw values
+  res_long_all2 <- res_long_all %>%
+    pivot_longer(cols = c(Catch, SSB, AACV),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p4)
+  
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_long2_density_plot.png"),
+         plot = p4, width = width, height = height, dpi = dpi)
+  
+  # Raw values
+  names(res_short_all_raw)[4] = "AACV"
+  res_short_all_raw2 <- res_short_all_raw %>%
+    pivot_longer(cols = c(Catch, SSB, AACV),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  # Raw values
+  names(res_long_all_raw)[4] = "AACV"
+  res_long_all_raw2 <- res_long_all_raw %>%
+    pivot_longer(cols = c(Catch, SSB, AACV),
+                 names_to = "Variable", values_to = "Score") %>%
+    mutate(Variable = gsub("_score", "", Variable))  # clean name
+  
+  p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Short-term Performance (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p5)
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_short2_raw_density_plot.png"),
+         plot = p5, width = width, height = height, dpi = dpi)
+  
+  
+  p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                        quantile_lines = TRUE, 
+                        quantiles = 0.5,
+                        linetype = 2) +
+    theme_bw() +
+    scale_fill_viridis_d(option = col.opt) +
+    labs(
+      title = paste0("Long-term Performance (Raw): Last ", use.n.years.last, " Years"), 
+      x = "Value",
+      y = "Model"
+    ) +
+    facet_wrap(~ Variable)
+  
+  print(p6)
+  
+  # Save & print
+  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_long2_raw_density_plot.png"),
+         plot = p6, width = width, height = height, dpi = dpi)
+  
 }
