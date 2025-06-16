@@ -4740,7 +4740,9 @@ plot_status_triangle <- function(mods, is.nsim,
                                  new_model_names = NULL,
                                  use.n.years.first = 5,
                                  use.n.years.last = 5,
-                                 start.years = 1) {
+                                 start.years = 1,
+                                 density_ridges = FALSE,
+                                 show.whisker = FALSE) {
   library(dplyr)
   library(ggtern)
   library(viridisLite)
@@ -5021,19 +5023,34 @@ plot_status_triangle <- function(mods, is.nsim,
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_boxplot(width = 0.6, col = "red") +
+      stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  }
+
   
   print(p3)
   # Save & print
@@ -5051,19 +5068,33 @@ plot_status_triangle <- function(mods, is.nsim,
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_boxplot(width = 0.6, col = "red") +
+      stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  }
   
   print(p4)
   
@@ -5083,39 +5114,115 @@ plot_status_triangle <- function(mods, is.nsim,
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Short-term Relative Status (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Relative Status (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    # Step 1: Summarize data
+    res_summary <- res_short_all_raw2 %>%
+      group_by(Model, Variable) %>%
+      summarise(
+        q1 = quantile(Score, 0.25, na.rm = TRUE),
+        med = median(Score, na.rm = TRUE),
+        q3 = quantile(Score, 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        y = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    p5 <- ggplot(res_summary, aes(y = y, x = med, fill = Model)) +
+      # Box body from Q1 to Q3
+      geom_rect(aes(xmin = q1, xmax = q3, ymin = y - 0.3, ymax = y + 0.3, color = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = med, xend = med, y = y - 0.3, yend = y + 0.3, color = Model),
+                   linewidth = 0.8) +
+      # Optional whiskers
+      {if (show.whisker) geom_segment(aes(x = ymin, xend = q1, y = y, yend = y), linetype = "dashed")} +
+      {if (show.whisker) geom_segment(aes(x = q3, xend = ymax, y = y, yend = y), linetype = "dashed")} +
+      scale_y_continuous(breaks = res_summary$y, labels = res_summary$Model) +
+      scale_color_viridis_d(option = col.opt) +
+      theme_bw() +
+      labs(
+        title = paste0("Short-term Performance (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable, scales = "free_x")
+  }
   
   print(p5)
   # Save & print
   ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_short_raw_density_plot.png"),
          plot = p5, width = width, height = height, dpi = dpi)
   
-  
-  p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Long-term Relative Status (Raw): Last ", use.n.years.last, " Years"), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Relative Status (Raw): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    # Step 1: Summarize data
+    res_summary <- res_long_all_raw2 %>%
+      group_by(Model, Variable) %>%
+      summarise(
+        q1 = quantile(Score, 0.25, na.rm = TRUE),
+        med = median(Score, na.rm = TRUE),
+        q3 = quantile(Score, 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        y = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Step 2: Plot
+    p6 <- ggplot(res_summary, aes(y = y, x = med, fill = Model)) +
+      # Box body from Q1 to Q3
+      geom_rect(aes(xmin = q1, xmax = q3, ymin = y - 0.3, ymax = y + 0.3, color = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = med, xend = med, y = y - 0.3, yend = y + 0.3, color = Model),
+                   linewidth = 0.8) +
+      # Optional whiskers
+      {if (show.whisker) geom_segment(aes(x = ymin, xend = q1, y = y, yend = y), linetype = "dashed")} +
+      {if (show.whisker) geom_segment(aes(x = q3, xend = ymax, y = y, yend = y), linetype = "dashed")} +
+      scale_y_continuous(breaks = res_summary$y, labels = res_summary$Model) +
+      scale_color_viridis_d(option = col.opt) +
+      theme_bw() +
+      labs(
+        title = paste0("Long-term Performance (Raw): Last ", use.n.years.last, " Years"),
+        x = "Score",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable, scales = "free_x")
+  }
   
   print(p6)
   
@@ -5381,7 +5488,9 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
                                              new_model_names = NULL,
                                              use.n.years.first = 5,
                                              use.n.years.last = 5,
-                                             start.years = 1) {
+                                             start.years = 1,
+                                             density_ridges = FALSE,
+                                             show.whisker = FALSE) {
   library(dplyr)
   library(ggtern)
   library(viridisLite)
@@ -5408,7 +5517,6 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
     catch_ts <- rowSums(rep$pred_catch)
     ssb_ts <- rowSums(rep$SSB)
-    fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] # SAFER: use last column (global Fbar)
     
     if (type == "short") {
       idx <- start.years:(start.years + use.n.years - 1)
@@ -5427,7 +5535,6 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   results_short <- list()
   results_long <- list()
-  
   res_short_raw <- list()
   res_long_raw <- list()
   res_short <- list()
@@ -5450,22 +5557,22 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
         short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
         long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
         
-        df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
-        df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+        df_short[m, c("AACV", "SSB", "Catch")] <- short_vals
+        df_long[m, c("AACV", "SSB", "Catch")] <- long_vals
       }
       
       res_short_raw[[r]] <- df_short
       res_long_raw[[r]] <- df_long
       
-      # Normalize within realization (Catch & SSB up, Fbar inverted)
-      for (v in c("Catch", "SSB")) {
+      # Normalize
+      for (v in c("SSB", "Catch")) {
         range_v <- max(df_short[[v]]) - min(df_short[[v]])
         df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
         
         range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
         df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
       }
-      for (v in c("Fbar")) {
+      for (v in c("AACV")) {
         range_v <- max(df_short[[v]]) - min(df_short[[v]])
         norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
         df_short[[v]] <- 1 - norm_f # inverted
@@ -5480,17 +5587,17 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       
       # Now we already have values 0–1: just renormalize to sum = 1
       df_short <- df_short %>%
-        mutate(total = Catch + SSB + Fbar,
-               Catch = ifelse(total == 0, 0, Catch / total),
+        mutate(total = AACV + SSB + Catch,
+               AACV = ifelse(total == 0, 0, AACV / total),
                SSB = ifelse(total == 0, 0, SSB / total),
-               Fbar = ifelse(total == 0, 0, Fbar / total),
+               Catch = ifelse(total == 0, 0, Catch / total),
                Realization = r)
       
       df_long <- df_long %>%
-        mutate(total = Catch + SSB + Fbar,
-               Catch = ifelse(total == 0, 0, Catch / total),
+        mutate(total = AACV + SSB + Catch,
+               AACV = ifelse(total == 0, 0, AACV / total),
                SSB = ifelse(total == 0, 0, SSB / total),
-               Fbar = ifelse(total == 0, 0, Fbar / total),
+               Catch = ifelse(total == 0, 0, Catch / total),
                Realization = r)
       
       results_short[[r]] <- df_short
@@ -5509,21 +5616,21 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       short_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.first, start.years, "short")
       long_vals <- process_scores(rep, n_fleets, n_regions, use.n.years.last, NULL, "long")
       
-      df_short[m, c("Catch", "SSB", "Fbar")] <- short_vals
-      df_long[m, c("Catch", "SSB", "Fbar")] <- long_vals
+      df_short[m, c("AACV", "SSB", "Catch")] <- short_vals
+      df_long[m, c("AACV", "SSB", "Catch")] <- long_vals
     }
     
     res_short_raw[[1]] <- df_short
     res_long_raw[[1]] <- df_long
     
-    for (v in c("Catch", "SSB")) {
+    for (v in c("SSB", "Catch")) {
       range_v <- max(df_short[[v]]) - min(df_short[[v]])
       df_short[[v]] <- if (range_v == 0) 1 else (df_short[[v]] - min(df_short[[v]])) / range_v
       
       range_v_long <- max(df_long[[v]]) - min(df_long[[v]])
       df_long[[v]] <- if (range_v_long == 0) 1 else (df_long[[v]] - min(df_long[[v]])) / range_v_long
     }
-    for (v in c("Fbar")) {
+    for (v in c("AACV")) {
       range_v <- max(df_short[[v]]) - min(df_short[[v]])
       norm_f <- if (range_v == 0) 0 else (df_short[[v]] - min(df_short[[v]])) / range_v
       df_short[[v]] <- 1 - norm_f
@@ -5537,17 +5644,17 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     res_long[[1]] <- df_long
     
     df_short <- df_short %>%
-      mutate(total = Catch + SSB + Fbar,
-             Catch = ifelse(total == 0, 0, Catch / total),
+      mutate(total = AACV + SSB + Catch,
+             AACV = ifelse(total == 0, 0, AACV / total),
              SSB = ifelse(total == 0, 0, SSB / total),
-             Fbar = ifelse(total == 0, 0, Fbar / total),
+             Catch = ifelse(total == 0, 0, Catch / total),
              Realization = 1)
     
     df_long <- df_long %>%
-      mutate(total = Catch + SSB + Fbar,
-             Catch = ifelse(total == 0, 0, Catch / total),
+      mutate(total = AACV + SSB + Catch,
+             AACV = ifelse(total == 0, 0, AACV / total),
              SSB = ifelse(total == 0, 0, SSB / total),
-             Fbar = ifelse(total == 0, 0, Fbar / total),
+             Catch = ifelse(total == 0, 0, Catch / total),
              Realization = 1)
     
     results_short[[1]] <- df_short
@@ -5560,18 +5667,18 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   df_short_all <- bind_rows(results_short) %>%
     group_by(Model) %>%
     summarise(
-      Catch = median(Catch),
+      AACV = median(AACV),
       SSB = median(SSB),
-      Fbar = median(Fbar),
+      Catch = median(Catch),
       .groups = "drop"
     )
   
   df_long_all <- bind_rows(results_long) %>%
     group_by(Model) %>%
     summarise(
-      Catch = median(Catch),
+      AACV = median(AACV),
       SSB = median(SSB),
-      Fbar = median(Fbar),
+      Catch = median(Catch),
       .groups = "drop"
     )
   
@@ -5590,7 +5697,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   # === Plot function ===
   plot_and_save <- function(df, title, file) {
     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
-    p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+    p <- ggtern(df, aes(x = AACV, y = SSB, z = Catch, color = Model)) +
       geom_point(alpha = 0.8, size = 8) +
       scale_color_manual(values = colors) +
       labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
@@ -5605,7 +5712,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   plot_and_save2 <- function(df, title, file) {
     colors <- viridisLite::viridis(n = length(unique(df$Model)), option = col.opt)
-    p <- ggtern(df, aes(x = Catch, y = SSB, z = Fbar, color = Model)) +
+    p <- ggtern(df, aes(x = AACV, y = SSB, z = Catch, color = Model)) +
       geom_point(size = 1) +
       scale_color_manual(values = colors) +
       labs(title = title, T = "AACV", L = "SSB", R = "Catch") +
@@ -5663,26 +5770,40 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
                                      labels = new_model_names)
   }
   
-  names(res_short_all)[4] = "AACV"
   # Raw values
   res_short_all2 <- res_short_all %>%
-    pivot_longer(cols = c(Catch, SSB, AACV),
+    pivot_longer(cols = c(AACV, SSB, Catch),
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2,
+                          bandwidth = 0.03) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_boxplot(width = 0.6, col = "red") +
+      stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  }
   
   print(p3)
   # Save & print
@@ -5694,26 +5815,40 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   library(ggridges)
   library(ggplot2)
   
-  names(res_long_all)[4] = "AACV"
   # Raw values
   res_long_all2 <- res_long_all %>%
-    pivot_longer(cols = c(Catch, SSB, AACV),
+    pivot_longer(cols = c(AACV, SSB, Catch),
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2,
+                          bandwidth = 0.03) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  } else {
+    p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
+      geom_boxplot(width = 0.6, col = "red") +
+      stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+  }
   
   print(p4)
   
@@ -5722,52 +5857,135 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
          plot = p4, width = width, height = height, dpi = dpi)
   
   # Raw values
-  names(res_short_all_raw)[4] = "AACV"
   res_short_all_raw2 <- res_short_all_raw %>%
-    pivot_longer(cols = c(Catch, SSB, AACV),
+    pivot_longer(cols = c(AACV, SSB, Catch),
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   # Raw values
-  names(res_long_all_raw)[4] = "AACV"
   res_long_all_raw2 <- res_long_all_raw %>%
-    pivot_longer(cols = c(Catch, SSB, AACV),
+    pivot_longer(cols = c(AACV, SSB, Catch),
                  names_to = "Variable", values_to = "Score") %>%
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
-  p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Short-term Performance (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    
+    p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2,
+                          bandwidth = 0.03) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Short-term Performance (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+    
+  } else {
+    
+    # Step 1: Summarize data
+    res_summary <- res_short_all_raw2 %>%
+      group_by(Model, Variable) %>%
+      summarise(
+        q1 = quantile(Score, 0.25, na.rm = TRUE),
+        med = median(Score, na.rm = TRUE),
+        q3 = quantile(Score, 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        y = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    p5 <- ggplot(res_summary, aes(y = y, x = med, fill = Model)) +
+      # Box body from Q1 to Q3
+      geom_rect(aes(xmin = q1, xmax = q3, ymin = y - 0.3, ymax = y + 0.3, color = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = med, xend = med, y = y - 0.3, yend = y + 0.3, color = Model),
+                   linewidth = 0.8) +
+      # Optional whiskers
+      {if (show.whisker) geom_segment(aes(x = ymin, xend = q1, y = y, yend = y), linetype = "dashed")} +
+      {if (show.whisker) geom_segment(aes(x = q3, xend = ymax, y = y, yend = y), linetype = "dashed")} +
+      scale_y_continuous(breaks = res_summary$y, labels = res_summary$Model) +
+      scale_color_viridis_d(option = col.opt) +
+      theme_bw() +
+      labs(
+        title = paste0("Short-term Performance (Raw): Years ", start.years, " to ", start.years + use.n.years.first - 1), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable, scales = "free_x")
+  }
   
   print(p5)
   # Save & print
   ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_short2_raw_density_plot.png"),
          plot = p5, width = width, height = height, dpi = dpi)
   
-  
-  p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
-                        quantile_lines = TRUE, 
-                        quantiles = 0.5,
-                        linetype = 2) +
-    theme_bw() +
-    scale_fill_viridis_d(option = col.opt) +
-    labs(
-      title = paste0("Long-term Performance (Raw): Last ", use.n.years.last, " Years"), 
-      x = "Value",
-      y = "Model"
-    ) +
-    facet_wrap(~ Variable)
+  if (density_ridges) {
+    
+    p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
+      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+                          quantile_lines = TRUE, 
+                          quantiles = 0.5,
+                          linetype = 2,
+                          bandwidth = 0.03) +
+      theme_bw() +
+      scale_fill_viridis_d(option = col.opt) +
+      labs(
+        title = paste0("Long-term Performance (Raw): Last ", use.n.years.last, " Years"), 
+        x = "Value",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable)
+    
+  } else {
+    
+    # Step 1: Summarize data
+    res_summary <- res_long_all_raw2 %>%
+      group_by(Model, Variable) %>%
+      summarise(
+        q1 = quantile(Score, 0.25, na.rm = TRUE),
+        med = median(Score, na.rm = TRUE),
+        q3 = quantile(Score, 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        y = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Step 2: Plot
+    p6 <- ggplot(res_summary, aes(y = y, x = med, fill = Model)) +
+      # Box body from Q1 to Q3
+      geom_rect(aes(xmin = q1, xmax = q3, ymin = y - 0.3, ymax = y + 0.3, color = Model),
+                fill = NA, linewidth = 0.8) +
+      # Median line
+      geom_segment(aes(x = med, xend = med, y = y - 0.3, yend = y + 0.3, color = Model),
+                   linewidth = 0.8) +
+      # Optional whiskers
+      {if (show.whisker) geom_segment(aes(x = ymin, xend = q1, y = y, yend = y), linetype = "dashed")} +
+      {if (show.whisker) geom_segment(aes(x = q3, xend = ymax, y = y, yend = y), linetype = "dashed")} +
+      scale_y_continuous(breaks = res_summary$y, labels = res_summary$Model) +
+      scale_color_viridis_d(option = col.opt) +
+      theme_bw() +
+      labs(
+        title = paste0("Long-term Performance (Raw): Last ", use.n.years.last, " Years"),
+        x = "Score",
+        y = "Model"
+      ) +
+      facet_wrap(~ Variable, scales = "free_x")
+    
+  }
   
   print(p6)
   
