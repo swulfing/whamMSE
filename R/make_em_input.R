@@ -207,11 +207,15 @@ make_em_input <- function(om,
       # Ecov Effect 
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
-        ecov_em_new$year <- ecov_em_new$year[ind_em]
-        ecov_em_new$year <- 1:length(ecov_em_new$year)
-        ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-        ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-        ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
+        ecov_em_new$year <- ecov_em_new$year
+        ecov_mean <- om$input$data$Ecov_obs
+        ecov_em_new$mean <- ecov_mean
+        if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
+          ecov_em_new$logsigma = ecov_em_new$logsigma
+        } else {
+          ecov_em_new$logsigma <- ecov_em_new$logsigma
+        }
+        ecov_em_new$use_obs <- ecov_em_new$use_obs
       } else {
         ecov_em_new <- NULL
       }
@@ -301,11 +305,15 @@ make_em_input <- function(om,
       # Ecov Effect 
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
-        ecov_em_new$year <- ecov_em_new$year[ind_em]
-        ecov_em_new$year <- 1:length(ecov_em_new$year)
-        ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-        ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-        ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
+        ecov_em_new$year <- ecov_em_new$year
+        ecov_mean <- om$input$data$Ecov_obs
+        ecov_em_new$mean <- ecov_mean
+        if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
+          ecov_em_new$logsigma = ecov_em_new$logsigma
+        } else {
+          ecov_em_new$logsigma <- ecov_em_new$logsigma
+        }
+        ecov_em_new$use_obs <- ecov_em_new$use_obs
       } else {
         ecov_em_new <- NULL
       }
@@ -381,12 +389,16 @@ make_em_input <- function(om,
         
         # Ecov Effect 
         if(!is.null(ecov_em)) {
-          ecov_em_new <- ecov_em[[s]]
-          ecov_em_new$year <- ecov_em_new$year[ind_em]
-          ecov_em_new$year <- 1:length(ecov_em_new$year)
-          ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-          ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-          ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
+          ecov_em_new <- ecov_em
+          ecov_em_new$year <- ecov_em_new$year
+          ecov_mean <- om$input$data$Ecov_obs
+          ecov_em_new$mean <- ecov_mean
+          if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
+            ecov_em_new$logsigma = ecov_em_new$logsigma
+          } else {
+            ecov_em_new$logsigma <- ecov_em_new$logsigma
+          }
+          ecov_em_new$use_obs <- ecov_em_new$use_obs
         } else {
           ecov_em_new <- NULL
         }
@@ -481,11 +493,15 @@ make_em_input <- function(om,
       # Ecov Effect 
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
-        ecov_em_new$year <- ecov_em_new$year[ind_em]
-        ecov_em_new$year <- 1:length(ecov_em_new$year)
-        ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-        ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-        ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
+        ecov_em_new$year <- ecov_em_new$year
+        ecov_mean <- om$input$data$Ecov_obs
+        ecov_em_new$mean <- ecov_mean
+        if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
+          ecov_em_new$logsigma = ecov_em_new$logsigma
+        } else {
+          ecov_em_new$logsigma <- ecov_em_new$logsigma
+        }
+        ecov_em_new$use_obs <- ecov_em_new$use_obs
       } else {
         ecov_em_new <- NULL
       }
@@ -561,18 +577,6 @@ make_em_input <- function(om,
         basic_info$apply_mu_trend <- 0
         
         basic_info$NAA_where = NULL
-        
-        # Ecov Effect 
-        if(!is.null(ecov_em)) {
-          ecov_em_new <- ecov_em
-          ecov_em_new$year <- ecov_em_new$year[ind_em]
-          ecov_em_new$year <- 1:length(ecov_em_new$year)
-          ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-          ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-          ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
-        } else {
-          ecov_em_new <- NULL
-        }
         
         # No movement
         em_input <- prepare_wham_input(
@@ -718,11 +722,15 @@ make_em_input <- function(om,
         # Ecov Effect 
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
-          ecov_em_new$year <- ecov_em_new$year[ind_em]
-          ecov_em_new$year <- 1:length(ecov_em_new$year)
-          ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-          ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-          ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
+          ecov_em_new$year <- ecov_em_new$year
+          ecov_mean <- om$input$data$Ecov_obs
+          ecov_em_new$mean <- ecov_mean
+          if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
+            ecov_em_new$logsigma = ecov_em_new$logsigma
+          } else {
+            ecov_em_new$logsigma <- ecov_em_new$logsigma
+          }
+          ecov_em_new$use_obs <- ecov_em_new$use_obs
         } else {
           ecov_em_new <- NULL
         }
@@ -795,18 +803,6 @@ make_em_input <- function(om,
         basic_info$apply_mu_trend <- 0
         
         basic_info$NAA_where = NULL
-        
-        # Ecov Effect 
-        if(!is.null(ecov_em)) {
-          ecov_em_new <- ecov_em
-          ecov_em_new$year <- ecov_em_new$year[ind_em]
-          ecov_em_new$year <- 1:length(ecov_em_new$year)
-          ecov_em_new$mean <- ecov_em_new$mean[ind_em,,drop = FALSE]
-          ecov_em_new$logsigma <- ecov_em_new$logsigma[ind_em,,drop = FALSE]
-          ecov_em_new$use_obs <- ecov_em_new$use_obs[ind_em,,drop = FALSE]
-        } else {
-          ecov_em_new <- NULL
-        }
         
         # No movement
         em_input <- prepare_wham_input(
