@@ -123,46 +123,45 @@ generate_basic_info(
 
 \item{mig_type}{Integer. Migration type:
 \itemize{
-  \item `0` - Movement occurs after survival.
-  \item `1` - Movement and mortality occur simultaneously.
+  \item `0` – Movement occurs after survival.
+  \item `1` – Movement and mortality occur simultaneously.
 }}
 
-\item{XSPR_R_opt}{Integer. Recruitment that will be used to calculate SPR-based reference points:
+\item{XSPR_R_opt}{Integer. Recruitment used to calculate SPR-based reference points:
 \itemize{
-  \item `1` - Annual recruitment estimates.
-  \item `2` - Average recruitment estimates (Default).
-  \item `3` - Annual expected recruitment.
-  \item `4` - Average expected recruitment.
-  \item `5` - Bias-corrected expected recruitment.
+  \item `1` – Annual recruitment estimates.
+  \item `2` – Average recruitment estimates (Default).
+  \item `3` – Annual expected recruitment.
+  \item `4` – Average expected recruitment.
+  \item `5` – Bias-corrected expected recruitment.
 }}
 
 \item{move_dyn}{Integer. Movement dynamics:
 \itemize{
-  \item `0` - Natal homing.
-  \item `1` - Meta-population.
+  \item `0` – Natal homing only.
+  \item `1` – Meta-population or flexible movement dynamics.
 }}
 
 \item{onto_move}{Integer array (`n_stocks x n_regions x (n_regions - 1)`). Age-specific movement type:
 \itemize{
-  \item `0` - Same movement rate across ages (default).
-  \item `1` - Increasing logistic (2 parameters).
-  \item `2` - Decreasing logistic (2 parameters).
-  \item `3` - Double-logistic (4 parameters).
-  \item `4` - Double-normal (4 parameters).
-  \item `5` - User-specified age-specific movement rate.
+  \item `0` – Constant movement rate across ages (default).
+  \item `1` – Increasing logistic (2 parameters: midpoint and slope).
+  \item `2` – Decreasing logistic (2 parameters: midpoint and slope).
+  \item `3` – Double-logistic (4 parameters: increasing + decreasing logistic).
+  \item `4` – Double-normal (4 parameters: peak, width1, width2, and scale).
 }}
 
-\item{onto_move_pars}{Numeric array (`n_stocks x n_regions x (n_regions - 1) x 4`). Parameters controlling age-specific movement patterns.}
+\item{onto_move_pars}{Numeric array (`n_stocks x n_regions x (n_regions - 1) x 4`). Parameters controlling the shape of the age-specific movement curves. Required when `onto_move` is nonzero.}
 
-\item{apply_re_trend}{Logical. Whether to apply a temporal trend to the movement random effects (i.e., year-to-year deviations).}
+\item{apply_re_trend}{Logical. Whether to apply a linear temporal trend to the **random effects** in movement (`mu_re`). Defaults to `FALSE`.}
 
-\item{trend_re_rate}{Numeric. Annual rate of change applied to the random effects when `apply_re_trend = TRUE`.}
+\item{trend_re_rate}{Numeric array (`n_stocks x n_ages x n_seasons x n_regions x (n_regions - 1)`). Annual slope applied to movement random effects when `apply_re_trend = TRUE`.}
 
-\item{apply_mu_trend}{Logical. Whether to apply a temporal trend to the movement mean (`mu`), representing the expected movement rate over time.}
+\item{apply_mu_trend}{Logical. Whether to apply a linear temporal trend to the **mean movement** (`trans_mu`). Defaults to `FALSE`.}
 
-\item{trend_mu_rate}{Numeric. Annual rate of change applied to the movement mean when `apply_mu_trend = TRUE`.}
+\item{trend_mu_rate}{Numeric array (`n_stocks x n_ages x n_seasons x n_regions x (n_regions - 1)`). Annual slope applied to mean movement when `apply_mu_trend = TRUE`.}
 
-\item{age_mu_devs}{Numeric array (`n_stocks x n_regions x (n_regions - 1) x n_ages`). User-specified deviations in mean movement rates across ages.}
+\item{age_mu_devs}{Numeric array (`n_stocks x n_regions x (n_regions - 1) x n_ages`). Optional user-defined deviations for age-specific movement. Required when `onto_move = 4`.}
 }
 \value{
 A list containing:

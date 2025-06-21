@@ -65,37 +65,45 @@
 #' @param bias.correct.BRPs Logical. Whether to apply biological reference point bias correction.
 #' @param mig_type Integer. Migration type:
 #'   \itemize{
-#'     \item `0` - Movement occurs after survival.
-#'     \item `1` - Movement and mortality occur simultaneously.
+#'     \item `0` – Movement occurs after survival.
+#'     \item `1` – Movement and mortality occur simultaneously.
 #'   }
-#' @param XSPR_R_opt Integer. Recruitment that will be used to calculate SPR-based reference points:
+#'
+#' @param XSPR_R_opt Integer. Recruitment used to calculate SPR-based reference points:
 #'   \itemize{
-#'     \item `1` - Annual recruitment estimates.
-#'     \item `2` - Average recruitment estimates (Default).
-#'     \item `3` - Annual expected recruitment.
-#'     \item `4` - Average expected recruitment.
-#'     \item `5` - Bias-corrected expected recruitment.
+#'     \item `1` – Annual recruitment estimates.
+#'     \item `2` – Average recruitment estimates (Default).
+#'     \item `3` – Annual expected recruitment.
+#'     \item `4` – Average expected recruitment.
+#'     \item `5` – Bias-corrected expected recruitment.
 #'   }
+#'
 #' @param move_dyn Integer. Movement dynamics:
 #'   \itemize{
-#'     \item `0` - Natal homing.
-#'     \item `1` - Meta-population.
+#'     \item `0` – Natal homing only.
+#'     \item `1` – Meta-population or flexible movement dynamics.
 #'   }
+#'
 #' @param onto_move Integer array (`n_stocks x n_regions x (n_regions - 1)`). Age-specific movement type:
 #'   \itemize{
-#'     \item `0` - Same movement rate across ages (default).
-#'     \item `1` - Increasing logistic (2 parameters).
-#'     \item `2` - Decreasing logistic (2 parameters).
-#'     \item `3` - Double-logistic (4 parameters).
-#'     \item `4` - Double-normal (4 parameters).
-#'     \item `5` - User-specified age-specific movement rate.
+#'     \item `0` – Constant movement rate across ages (default).
+#'     \item `1` – Increasing logistic (2 parameters: midpoint and slope).
+#'     \item `2` – Decreasing logistic (2 parameters: midpoint and slope).
+#'     \item `3` – Double-logistic (4 parameters: increasing + decreasing logistic).
+#'     \item `4` – Double-normal (4 parameters: peak, width1, width2, and scale).
 #'   }
-#' @param onto_move_pars Numeric array (`n_stocks x n_regions x (n_regions - 1) x 4`). Parameters controlling age-specific movement patterns. 
-#' @param apply_re_trend Logical. Whether to apply a temporal trend to the movement random effects (i.e., year-to-year deviations).
-#' @param trend_re_rate Numeric. Annual rate of change applied to the random effects when `apply_re_trend = TRUE`.
-#' @param apply_mu_trend Logical. Whether to apply a temporal trend to the movement mean (`mu`), representing the expected movement rate over time.
-#' @param trend_mu_rate Numeric. Annual rate of change applied to the movement mean when `apply_mu_trend = TRUE`.
-#' @param age_mu_devs Numeric array (`n_stocks x n_regions x (n_regions - 1) x n_ages`). User-specified deviations in mean movement rates across ages.
+#'
+#' @param onto_move_pars Numeric array (`n_stocks x n_regions x (n_regions - 1) x 4`). Parameters controlling the shape of the age-specific movement curves. Required when `onto_move` is nonzero.
+#'
+#' @param apply_re_trend Logical. Whether to apply a linear temporal trend to the **random effects** in movement (`mu_re`). Defaults to `FALSE`.
+#'
+#' @param trend_re_rate Numeric array (`n_stocks x n_ages x n_seasons x n_regions x (n_regions - 1)`). Annual slope applied to movement random effects when `apply_re_trend = TRUE`.
+#'
+#' @param apply_mu_trend Logical. Whether to apply a linear temporal trend to the **mean movement** (`trans_mu`). Defaults to `FALSE`.
+#'
+#' @param trend_mu_rate Numeric array (`n_stocks x n_ages x n_seasons x n_regions x (n_regions - 1)`). Annual slope applied to mean movement when `apply_mu_trend = TRUE`.
+#'
+#' @param age_mu_devs Numeric array (`n_stocks x n_regions x (n_regions - 1) x n_ages`). Optional user-defined deviations for age-specific movement. Required when `onto_move = 4`.
 #' @return A list containing:
 #'   \itemize{
 #'     \item `$basic_info` - General biological and fishery details.
@@ -625,104 +633,86 @@ generate_basic_info <- function(n_stocks = 2,
     }
   }
   
-  # Handling onto_move
+  # Handle onto_move
   if (is.null(basic_info$onto_move)) {
-    onto_move = array(0, dim = c(n_stocks,n_regions,n_regions-1))
-    # onto_move = NULL
+    onto_move = array(0, dim = c(n_stocks, n_regions, n_regions - 1))
   } else {
     if (sum(basic_info$onto_move) == 0) {
-      onto_move = array(0, dim = c(n_stocks,n_regions,n_regions-1))
+      onto_move = array(0, dim = c(n_stocks, n_regions, n_regions - 1))
     } else {
-      if (all(dim(basic_info$onto_move) == c(n_stocks, n_regions, n_regions-1)) && is.array(basic_info$onto_move)) {
-        if (all(basic_info$onto_move %in% 0:5)) {
+      if (all(dim(basic_info$onto_move) == c(n_stocks, n_regions, n_regions - 1)) && is.array(basic_info$onto_move)) {
+        if (all(basic_info$onto_move %in% 0:4)) {
           onto_move = basic_info$onto_move
         } else {
-          stop("onto_move must only contain integers between 1 and 5.")
+          stop("onto_move must only contain integers between 0 and 4.")
         }
-      } else{
-        if (basic_info$onto_move %in% 0:5) {
-          onto_move = array(basic_info$onto_move, dim = c(n_stocks,n_regions,n_regions-1))
+      } else {
+        if (basic_info$onto_move %in% 0:4) {
+          onto_move = array(basic_info$onto_move, dim = c(n_stocks, n_regions, n_regions - 1))
         } else {
-          stop("\n Dimention is not correct!")
+          stop("onto_move must be 0–4 or an array with dimensions (n_stocks, n_regions, n_regions - 1).")
         }
       }
     }
   }
   
-  # Handling onto_move_pars
-  if(is.null(onto_move_pars)) onto_move_pars = array(1, dim = c(n_stocks, n_regions, n_regions-1, 4))
+  # Handle onto_move_pars
+  if (is.null(onto_move_pars)) {
+    onto_move_pars = array(1, dim = c(n_stocks, n_regions, n_regions - 1, 4))
+  }
   
   if (any(onto_move != 0)) {
     if (is.null(basic_info$onto_move_pars)) {
-      # Default: set to 1 if not provided
-      onto_move_pars = array(1, dim = c(n_stocks, n_regions, n_regions-1, 4))
+      onto_move_pars = array(1, dim = c(n_stocks, n_regions, n_regions - 1, 4))
     } else if (is.array(basic_info$onto_move_pars)) {
-      # Check if the provided array matches the expected dimensions
-      if (dim(basic_info$onto_move_pars) != c(n_stocks, n_regions, n_regions-1, 4)) {
-        stop("onto_move_pars array must have dimensions (n_stocks, n_regions, n_regions-1, 4).")
+      if (!all(dim(basic_info$onto_move_pars) == c(n_stocks, n_regions, n_regions - 1, 4))) {
+        stop("onto_move_pars array must have dimensions (n_stocks, n_regions, n_regions - 1, 4).")
       } else {
         onto_move_pars = basic_info$onto_move_pars
       }
-    } else if (length(basic_info$onto_move_pars) == 1) {
-      onto_move_pars = array(rep(basic_info$onto_move_pars, each = n_stocks * n_regions), dim = c(n_stocks, n_regions, n_regions-1, 4))
-    } else if (length(basic_info$onto_move_pars) == 2) {
-      onto_move_pars = array(rep(basic_info$onto_move_pars, each = n_stocks * n_regions), dim = c(n_stocks, n_regions, n_regions-1, 4))
-    } else if (length(basic_info$onto_move_pars) == 4) {
-      onto_move_pars = array(rep(basic_info$onto_move_pars, each = n_stocks * n_regions), dim = c(n_stocks, n_regions, n_regions-1, 4))
+    } else if (length(basic_info$onto_move_pars) %in% c(1, 2, 4)) {
+      onto_move_pars = array(rep(basic_info$onto_move_pars, each = n_stocks * n_regions), 
+                             dim = c(n_stocks, n_regions, n_regions - 1, 4))
     } else {
-      stop("onto_move_pars must be a vector of length = 1,2,4 or an array with dimensions (n_stocks, n_regions, n_regions-1, 4).")
+      stop("onto_move_pars must be a vector of length 1, 2, or 4, or a full array.")
     }
   }
   
-  age_mu_devs <- array(0, dim = c(n_stocks, n_regions, n_regions-1, n_ages))
+  # Handle age_mu_devs (only needed if onto_move == 4)
+  age_mu_devs <- array(0, dim = c(n_stocks, n_regions, n_regions - 1, n_ages))
   
-  if (any(onto_move == 5)) {
+  if (any(onto_move == 4)) {
     if (!is.null(basic_info$age_mu_devs)) {
-      if (all(dim(basic_info$age_mu_devs) == c(n_stocks, n_regions, n_regions-1, n_ages))) {
-        if (is.array(basic_info$age_mu_devs)) {
-          for (s in 1:n_stocks) {
-            for (r in 1:n_regions) {
-              for (rr in 1:(n_regions - 1)) {
-                if (onto_move[s, r, rr] == 5) {
-                  age_mu_devs[s, r, rr, ] <- basic_info$age_mu_devs[s, r, rr, ]
-                }
-              }
-            }
+      if (is.array(basic_info$age_mu_devs) && all(dim(basic_info$age_mu_devs) == dim(age_mu_devs))) {
+        for (s in 1:n_stocks) for (r in 1:n_regions) for (rr in 1:(n_regions - 1)) {
+          if (onto_move[s, r, rr] == 4) {
+            age_mu_devs[s, r, rr, ] <- basic_info$age_mu_devs[s, r, rr, ]
           }
-        } else if (length(basic_info$age_mu_devs) == n_ages) {
-          for (s in 1:n_stocks) {
-            for (r in 1:n_regions) {
-              for (rr in 1:(n_regions - 1)) {
-                if (onto_move[s, r, rr] == 5) {
-                  age_mu_devs[s, r, rr, ] <- basic_info$age_mu_devs
-                }
-              }
-            }
-          }
-        } else if (length(basic_info$age_mu_devs) == 1) {
-          for (s in 1:n_stocks) {
-            for (r in 1:n_regions) {
-              for (rr in 1:(n_regions - 1)) {
-                if (onto_move[s, r, rr] == 5) {
-                  age_mu_devs[s, r, rr, ] <- rep(basic_info$age_mu_devs, n_ages)
-                }
-              }
-            }
-          }
-        } else {
-          stop("age_mu_devs should be one of the followings:\n 1) an array with dim = n_stocks, n_regions, n_regions-1, n_ages
-               \n 2) a vector with length = n_ages which will apply to all stocks and regions that have onto_move = 5
-               \n 3) a single value which will apply to all ages, stocks, and regions that have onto_move = 5")
         }
+      } else if (length(basic_info$age_mu_devs) == n_ages) {
+        for (s in 1:n_stocks) for (r in 1:n_regions) for (rr in 1:(n_regions - 1)) {
+          if (onto_move[s, r, rr] == 4) {
+            age_mu_devs[s, r, rr, ] <- basic_info$age_mu_devs
+          }
+        }
+      } else if (length(basic_info$age_mu_devs) == 1) {
+        for (s in 1:n_stocks) for (r in 1:n_regions) for (rr in 1:(n_regions - 1)) {
+          if (onto_move[s, r, rr] == 4) {
+            age_mu_devs[s, r, rr, ] <- rep(basic_info$age_mu_devs, n_ages)
+          }
+        }
+      } else {
+        stop("age_mu_devs must be:\n - an array with dim = n_stocks x n_regions x (n_regions - 1) x n_ages\n - or a vector of length n_ages\n - or a single numeric value")
       }
     } else {
-      warning("onto_move = 5 but age_mu_devs is not specified!")
+      warning("onto_move = 4 but age_mu_devs is not specified!")
     }
   }
   
-  basic_info$onto_move = onto_move
-  basic_info$onto_move_pars = onto_move_pars
-  basic_info$age_mu_devs = age_mu_devs
+  # Assign to basic_info
+  basic_info$onto_move <- onto_move
+  basic_info$onto_move_pars <- onto_move_pars
+  basic_info$age_mu_devs <- age_mu_devs
   
   par_inputs <- list(
     n_stocks = n_stocks,
