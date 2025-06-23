@@ -187,7 +187,7 @@ make_em_input <- function(om,
       
       # Override any movement or trend information
       em_info$par_inputs$move_dyn <- 0
-      em_info$par_inputs$onto_move <- matrix(0)
+      em_info$par_inputs$onto_move <-  matrix(0)
       em_info$par_inputs$apply_re_trend <- 0
       em_info$par_inputs$apply_mu_trend <- 0
       
@@ -296,7 +296,7 @@ make_em_input <- function(om,
       
       # Override any movement or trend information
       basic_info$move_dyn <- 0
-      basic_info$onto_move <- NULL
+      basic_info$onto_move <- matrix(0)
       basic_info$apply_re_trend <- 0
       basic_info$apply_mu_trend <- 0
       
@@ -363,7 +363,7 @@ make_em_input <- function(om,
         
         # Override any movement or trend information
         basic_info$move_dyn <- 0
-        basic_info$onto_move <- NULL
+        basic_info$onto_move <- matrix(0)
         basic_info$apply_re_trend <- 0
         basic_info$apply_mu_trend <- 0
         
@@ -572,7 +572,7 @@ make_em_input <- function(om,
         # No movement
         # Override any movement or trend information
         basic_info$move_dyn <- 0
-        basic_info$onto_move <- NULL
+        basic_info$onto_move <- matrix(0)
         basic_info$apply_re_trend <- 0
         basic_info$apply_mu_trend <- 0
         
@@ -712,7 +712,7 @@ make_em_input <- function(om,
       if(n_regions == 1) basic_info$NAA_where = NULL # This must be NULL when n_regions = 1
       if(n_regions == 1) {
         basic_info$move_dyn <- 0
-        basic_info$onto_move <- NULL
+        basic_info$onto_move <- matrix(0)
         basic_info$apply_re_trend <- 0
         basic_info$apply_mu_trend <- 0
       }  
@@ -798,7 +798,7 @@ make_em_input <- function(om,
         # No movement
         # Override any movement or trend information
         basic_info$move_dyn <- 0
-        basic_info$onto_move <- NULL
+        basic_info$onto_move <- matrix(0)
         basic_info$apply_re_trend <- 0
         basic_info$apply_mu_trend <- 0
         

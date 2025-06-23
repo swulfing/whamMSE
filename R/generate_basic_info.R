@@ -641,16 +641,16 @@ generate_basic_info <- function(n_stocks = 2,
       onto_move = array(0, dim = c(n_stocks, n_regions, n_regions - 1))
     } else {
       if (all(dim(basic_info$onto_move) == c(n_stocks, n_regions, n_regions - 1)) && is.array(basic_info$onto_move)) {
-        if (all(basic_info$onto_move %in% 0:4)) {
+        if (all(basic_info$onto_move %in% 1:5)) {
           onto_move = basic_info$onto_move
         } else {
-          stop("onto_move must only contain integers between 0 and 4.")
+          stop("onto_move must only contain integers between 1 and 5.")
         }
       } else {
-        if (basic_info$onto_move %in% 0:4) {
+        if (basic_info$onto_move %in% 1:5) {
           onto_move = array(basic_info$onto_move, dim = c(n_stocks, n_regions, n_regions - 1))
         } else {
-          stop("onto_move must be 0–4 or an array with dimensions (n_stocks, n_regions, n_regions - 1).")
+          stop("onto_move must be 1–5 or an array with dimensions (n_stocks, n_regions, n_regions - 1).")
         }
       }
     }
