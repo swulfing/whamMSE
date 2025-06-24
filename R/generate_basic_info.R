@@ -58,8 +58,8 @@
 #' @param fracyr_seasons Numeric vector. Optional. User-defined seasonal fractions summing to 1.
 #' @param fleet_regions Integer vector. Optional. User-defined region allocation for each fleet.
 #' @param index_regions Integer vector. Optional. User-defined region allocation for each index.
-#' @param user_waa Numeric vector/matrix. Optional. User-defined weight-at-age vector/matrix.
-#' @param user_maturity Numeric vector. Optional. User-defined maturity-at-age vector/matrix.
+#' @param user_waa Numeric vector, matrix, or array. Optional. User-defined weight-at-age data. If a vector of length `n_ages`, the same values are used for all fleets, indices, regions, and stocks. If a matrix of dimension `(n_fleets + n_regions + n_indices + n_stocks) x n_ages`, user must provide pointer vectors. If a 3D array of dimension `(n_fleets + n_regions + n_indices + n_stocks, n_years_model, n_ages)`, values are used as-is and pointer vectors must also be provided.
+#' @param user_maturity Numeric vector, matrix, or array. Optional. User-defined maturity-at-age data. Can be a vector of length `n_ages` (same across stocks and years), a matrix of dimension `n_stocks x n_ages` (same across years), or a 3D array of dimension `n_stocks x n_years_model x n_ages`.
 #' @param bias.correct.process Logical. Whether to apply process error bias correction.
 #' @param bias.correct.observation Logical. Whether to apply observation error bias correction.
 #' @param bias.correct.BRPs Logical. Whether to apply biological reference point bias correction.
@@ -136,12 +136,11 @@ generate_basic_info <- function(n_stocks = 2,
                                 index_info = list(index_cv = 0.1, index_Neff = 100, fracyr_indices = 0.5, q = 0.2,
                                                   use_indices = 1, use_index_paa = 1, units_indices = 2, units_index_paa = 2),
                                 user_waa = NULL, 
-                                
+                                user_maturity = NULL,
                                 fracyr_spawn = 0.5,
                                 fracyr_seasons = NULL,
                                 fleet_regions = NULL,
                                 index_regions = NULL,
-                                user_maturity = NULL,
                                 bias.correct.process = FALSE,
                                 bias.correct.observation = FALSE,
                                 bias.correct.BRPs = FALSE,
@@ -159,11 +158,6 @@ generate_basic_info <- function(n_stocks = 2,
   check_dimensions <- function(...) {
     length(unique(c(...))) == 1
   }
-  
-  cat("n_stocks:",n_stocks,"\n")
-  cat("n_regions:",n_regions,"\n")
-  cat("n_fleets:",n_fleets,"\n")
-  cat("n_indices:",n_indices,"\n")
 
   basic_info = list()
   basic_info$bias_correct_process = bias.correct.process
@@ -284,11 +278,6 @@ generate_basic_info <- function(n_stocks = 2,
   
   F_info = list(F = F_vals, F_config = 2)
   
-  # if (is.null(Fbar_ages)) {
-  #   basic_info$Fbar_ages = as.integer(na)
-  # } else {
-  #   basic_info$Fbar_ages = as.integer(Fbar_ages)
-  # }
   basic_info$Fbar_ages = as.integer(na)
   
   # Maturity at age
@@ -318,57 +307,78 @@ generate_basic_info <- function(n_stocks = 2,
   user_maturity = basic_info$maturity
   
   # Weight at age
-  nwaa <- n_fleets + n_regions + n_indices + n_stocks
+  nwaa <- n_fleets + n_indices + n_stocks
   basic_info$waa <- array(NA, dim = c(nwaa, ny, na))
   
   if (is.null(user_waa)) {
-    
+    # Use default WAA generator
     W <- Generate_WAA(life_history, na)
     for (i in 1:nwaa) basic_info$waa[i, , ] <- t(matrix(W, na, ny))
-    basic_info$waa_pointer_fleets   <- 1:n_fleets
-    basic_info$waa_pointer_totcatch <- (n_fleets + 1):(n_fleets + n_regions)
-    basic_info$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-    basic_info$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + n_stocks)
-    basic_info$waa_pointer_M        <- basic_info$waa_pointer_ssb
     
-    user_waa$waa                  <- basic_info$waa
-    user_waa$waa_pointer_fleets   <- basic_info$waa_pointer_fleets
-    user_waa$waa_pointer_totcatch <- basic_info$waa_pointer_totcatch
-    user_waa$waa_pointer_indices  <- basic_info$waa_pointer_indices
-    user_waa$waa_pointer_ssb      <- basic_info$waa_pointer_ssb 
-    user_waa$waa_pointer_M        <- basic_info$waa_pointer_M 
+    user_waa$waa <- basic_info$waa
+    
+    basic_info$waa_pointer_fleets   <- user_waa$waa_pointer_fleets   <- 1:n_fleets
+    basic_info$waa_pointer_indices  <- user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    basic_info$waa_pointer_ssb      <- user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_stocks)
+    basic_info$waa_pointer_M        <- user_waa$waa_pointer_M        <- basic_info$waa_pointer_ssb
+    
+    
+  } else if (is.vector(user_waa$waa) && length(user_waa$waa) == na) {
+    message("Using same weight-at-age vector for all sources.")
+    
+    for (i in 1:nwaa) {
+      basic_info$waa[i, , ] <- t(matrix(user_waa$waa, na, ny))
+    }
+    
+    user_waa$waa <- basic_info$waa
+    
+    # Set pointers to NULL to signal universal WAA
+    basic_info$waa_pointer_fleets   <- user_waa$waa_pointer_fleets   <- 1:n_fleets
+    basic_info$waa_pointer_indices  <- user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    basic_info$waa_pointer_ssb      <- user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_stocks)
+    basic_info$waa_pointer_M        <- user_waa$waa_pointer_M        <- basic_info$waa_pointer_ssb
+    
+  } else if (is.matrix(user_waa$waa) && nrow(user_waa$waa) == nwaa && ncol(user_waa$waa) == na) {
+    message("Using user-specified WAA matrix. WAA is assumed to be time invariant.")
+    
+    for (i in 1:nwaa) {
+      basic_info$waa[i, , ] <- t(matrix(user_waa$waa[i, ], na, ny))
+    }
+    
+    user_waa$waa <- basic_info$waa
+    # Set pointers to NULL to signal universal WAA
+    basic_info$waa_pointer_fleets   <- user_waa$waa_pointer_fleets   <- 1:n_fleets
+    basic_info$waa_pointer_indices  <- user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    basic_info$waa_pointer_ssb      <- user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_stocks)
+    basic_info$waa_pointer_M        <- user_waa$waa_pointer_M        <- basic_info$waa_pointer_ssb
+    
+  } else if (is.array(user_waa$waa)) {
+    message("Using user-specified WAA array. WAA can time-varying.")
+    
+    basic_info$waa <- user_waa$waa
 
+    # Set pointers to NULL to signal universal WAA
+    basic_info$waa_pointer_fleets   <- user_waa$waa_pointer_fleets   <- 1:n_fleets
+    basic_info$waa_pointer_indices  <- user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    basic_info$waa_pointer_ssb      <- user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_stocks)
+    basic_info$waa_pointer_M        <- user_waa$waa_pointer_M        <- basic_info$waa_pointer_ssb
+    
   } else {
-    
-    if(is.null(user_waa$waa)) stop("waa must be specified! (dim = c(n_fleets + n_regions + n_indices + n_stocks, n_years_model, n_ages))")
-    if(is.null(user_waa$waa_pointer_fleets)) stop("waa_pointer_fleets must be specified! (dim = n_fleets)")
-    if(is.null(user_waa$waa_pointer_totcatch)) stop("waa_pointer_totcatch must be specified! (dim = n_regions)")
-    if(is.null(user_waa$waa_pointer_indices)) stop("waa_pointer_indices must be specified! (dim = n_indices)")
-    if(is.null(user_waa$waa_pointer_ssb)) stop("waa_pointer_ssb must be specified! (dim = n_regions)")
-    if(is.null(user_waa$waa_pointer_M)) stop("waa_pointer_M must be specified! (dim = n_regions)")
-    
-    basic_info$waa                  <- user_waa$waa
-    basic_info$waa_pointer_fleets   <- user_waa$waa_pointer_fleets
-    basic_info$waa_pointer_totcatch <- user_waa$waa_pointer_totcatch
-    basic_info$waa_pointer_indices  <- user_waa$waa_pointer_indices
-    basic_info$waa_pointer_ssb      <- user_waa$waa_pointer_ssb
-    basic_info$waa_pointer_M        <- user_waa$waa_pointer_M
+    stop("Invalid user_waa input.")
   }
   
-  # else {
-  #   if (length(user_waa) == na) {
-  #     W <- user_waa
-  #     for (i in 1:nwaa) basic_info$waa[i, , ] <- do.call(rbind, replicate(ny, W, simplify = FALSE))
-  #   } else if (is.matrix(user_waa) && dim(user_waa)[1] == nwaa && dim(user_waa)[2] == na) {
-  #     W <- user_waa
-  #     for (i in 1:nwaa) basic_info$waa[i, , ] <- do.call(rbind, replicate(ny, W[i,], simplify = FALSE))
-  #   } else {
-  #     warnings("Dimension of W should be either a vector of n_ages or a matrix with nrow = c(n_fleets + n_regions + n_indices + n_stocks) and ncol = n_ages!")
-  #   }
-  # }
+  message("
+  --------------------
   
-  #waa_info = list(waa = NULL, waa_pointer_fleets = NULL, waa_pointer_totcatch = NULL, waa_pointer_indices = NULL, waa_pointer_ssb = NULL, waa_pointer_M = NULL)
-
+  IMPORTANT!!!!
+  
+  For the current version of WHAM, if WAA pointers are specified (i.e., WAA differs across fleets, indices, or stocks),
+  
+  they need to be updated *after* prepare_wham_input(). Otherwise, a global WAA will be applied to all components.
+          
+  --------------------
+          ")
+  
   # Catch information
   if (is.null(catch_info)) {
     # If catch_info is not provided, set default values
@@ -582,6 +592,26 @@ generate_basic_info <- function(n_stocks = 2,
   
   # Set remaining index information
   index_info$index_cv <- index_cv.input
+  
+  message("
+  --------------------
+  IMPORTANT!!!!
+  
+  For the current version of WHAM:
+  
+  - If CV and effective sample size for **catch** vary over years,
+  or if some years have missing aggregate or age composition data for **catch**,
+  you must update these inputs *after* prepare_wham_input()
+  using the update_input_catch_info() function.
+  
+  - If CV and effective sample size for **indices** vary over years,
+  or if some years have missing aggregate or age composition data for **indices**,
+  you must update these inputs *after* prepare_wham_input()
+  using the update_input_index_info() function.
+  
+  Otherwise, WHAM will assume constant CV/sample size and complete data across all years.
+  --------------------
+          ")
   
   # Calculate index seasons and fracyr_indices using fracyr_indices.input, similar to the fracyr_SSB logic
   index_info$index_seasons <- rep(NA, n_indices)

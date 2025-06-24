@@ -51,14 +51,6 @@ update_waa <- function(input, waa_info = NULL) {
       data$waa_pointer_M <- data$waa_pointer_ssb  # Default to SSB pointer
     }
     
-    if (!is.null(waa_info$waa_pointer_totcatch)) {
-      if (length(waa_info$waa_pointer_totcatch) != data$n_stocks) {
-        stop("Length of waa_pointer_totcatch must match number of stocks.")
-      }
-      data$waa_pointer_totcatch <- waa_info$waa_pointer_totcatch
-    } else {
-      data$waa_pointer_totcatch <- data$waa_pointer_ssb  # Default to SSB pointer
-    }
     
     if (!is.null(waa_info$waa_pointer_fleets)) {
       data$waa_pointer_fleets <- waa_info$waa_pointer_fleets
@@ -68,7 +60,17 @@ update_waa <- function(input, waa_info = NULL) {
       data$waa_pointer_indices <- waa_info$waa_pointer_indices
     }
     
-    print("Updated input$data$waa with waa_info")
+    message("
+    
+    --------------------
+    
+    IMPORTANT!!!
+    
+    WAA pointers are updated!
+    
+    --------------------
+            ")
+    
   } else {
     stop("waa_info$waa is missing, cannot update input$data$waa.")
   }

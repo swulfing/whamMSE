@@ -352,38 +352,6 @@ make_aggregate_data <- function(om, em_info, ind_em, aggregate_catch_info, aggre
     aggregated_index_waa = abind::abind(aggregated_index_waa[1:f], along = 1)
   }
     
-  # ---- Aggregate Regional WAA (Weighted Average) ---- #
-  
-  waa_pointer_totcatch <- em_info$par_inputs$user_waa$waa_pointer_totcatch
-  waa_mat <- em_info$par_inputs$user_waa$waa[waa_pointer_totcatch,ind_em,]
-  
-  if (length(dim(waa_mat)) == 2) {
-    
-    waa_mat <- array(waa_mat, dim = c(1, dim(waa_mat)))
-    
-  }
-  
-  ssb_waa_weights = aggregate_weights_info$ssb_waa_weights
-  
-  if(is.null(ssb_waa_weights)) {
-    weights <- matrix(1/dim(waa_mat)[1], nrow = dim(waa_mat)[1], ncol = dim(waa_mat)[2])
-  } else {
-    if(ssb_waa_weights$fleet) {
-      pointer = ssb_waa_weights$pointer
-      weights = t(fleet_weights[[pointer]])
-    }
-    if(ssb_waa_weights$index) {
-      pointer = ssb_waa_weights$pointer
-      weights = t(index_weights[[pointer]])
-    }
-  }
-  
-  weighted_waa <- waa_mat * array(weights, dim = dim(waa_mat))
-  
-  aggregated <- apply(weighted_waa, c(2,3), sum)
-  
-  aggregated_region_waa <- array(aggregated, dim = c(1, dim(aggregated)))
-  
   # ---- Aggregate Stock WAA (Weighted Average) ---- #
   
   waa_pointer_ssb <- em_info$par_inputs$user_waa$waa_pointer_ssb
@@ -417,8 +385,7 @@ make_aggregate_data <- function(om, em_info, ind_em, aggregate_catch_info, aggre
   aggregated_stock_waa <- array(aggregated, dim = c(1, dim(aggregated)))
   
   # Store the aggregated WAA back into `em_info`
-  waa_list <- list(aggregated_fleet_waa, aggregated_region_waa,
-                   aggregated_index_waa, aggregated_stock_waa)
+  waa_list <- list(aggregated_fleet_waa, aggregated_index_waa, aggregated_stock_waa)
   
   em_info$par_inputs$user_waa$waa <- abind::abind(waa_list, along = 1)
   em_info$basic_info$waa = em_info$par_inputs$user_waa$waa
@@ -469,17 +436,14 @@ make_aggregate_data <- function(om, em_info, ind_em, aggregate_catch_info, aggre
   em_info$par_inputs$index_paa <- agg_index_paa  
   
   em_info$basic_info$waa_pointer_fleets   <- 1:n_fleets
-  em_info$basic_info$waa_pointer_totcatch <- n_fleets + n_regions
-  em_info$basic_info$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-  em_info$basic_info$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + 1)
+  em_info$basic_info$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+  em_info$basic_info$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
   em_info$basic_info$waa_pointer_M        <- em_info$basic_info$waa_pointer_ssb
   
   em_info$par_inputs$user_waa$waa_pointer_fleets   <- 1:n_fleets
-  em_info$par_inputs$user_waa$waa_pointer_totcatch <- n_fleets + n_regions
-  em_info$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-  em_info$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + 1)
+  em_info$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+  em_info$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
   em_info$par_inputs$user_waa$waa_pointer_M        <- em_info$par_inputs$user_waa$waa_pointer_ssb
   
-  # return(list(em_info = em_info, agg_catch = agg_catch, catch_paa = catch_paa, agg_indices = agg_indices, index_paa = index_paa))
   return(em_info)
 }

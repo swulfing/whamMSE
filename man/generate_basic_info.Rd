@@ -21,11 +21,11 @@ generate_basic_info(
   index_info = list(index_cv = 0.1, index_Neff = 100, fracyr_indices = 0.5, q = 0.2,
     use_indices = 1, use_index_paa = 1, units_indices = 2, units_index_paa = 2),
   user_waa = NULL,
+  user_maturity = NULL,
   fracyr_spawn = 0.5,
   fracyr_seasons = NULL,
   fleet_regions = NULL,
   index_regions = NULL,
-  user_maturity = NULL,
   bias.correct.process = FALSE,
   bias.correct.observation = FALSE,
   bias.correct.BRPs = FALSE,
@@ -103,7 +103,9 @@ generate_basic_info(
   \item `"$units_index_paa"` – Vector of length `n_indices`, or a single value applied to all indices, where 1 = biomass and 2 = numbers for index age composition data.
 }}
 
-\item{user_waa}{Numeric vector/matrix. Optional. User-defined weight-at-age vector/matrix.}
+\item{user_waa}{Numeric vector, matrix, or array. Optional. User-defined weight-at-age data. If a vector of length `n_ages`, the same values are used for all fleets, indices, regions, and stocks. If a matrix of dimension `(n_fleets + n_regions + n_indices + n_stocks) x n_ages`, user must provide pointer vectors. If a 3D array of dimension `(n_fleets + n_regions + n_indices + n_stocks, n_years_model, n_ages)`, values are used as-is and pointer vectors must also be provided.}
+
+\item{user_maturity}{Numeric vector, matrix, or array. Optional. User-defined maturity-at-age data. Can be a vector of length `n_ages` (same across stocks and years), a matrix of dimension `n_stocks x n_ages` (same across years), or a 3D array of dimension `n_stocks x n_years_model x n_ages`.}
 
 \item{fracyr_spawn}{Numeric. Fraction of the year when spawning occurs.}
 
@@ -112,8 +114,6 @@ generate_basic_info(
 \item{fleet_regions}{Integer vector. Optional. User-defined region allocation for each fleet.}
 
 \item{index_regions}{Integer vector. Optional. User-defined region allocation for each index.}
-
-\item{user_maturity}{Numeric vector. Optional. User-defined maturity-at-age vector/matrix.}
 
 \item{bias.correct.process}{Logical. Whether to apply process error bias correction.}
 

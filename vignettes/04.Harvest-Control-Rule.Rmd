@@ -157,6 +157,9 @@ NAA_re_em <- list(N1_model="equilibrium", sigma="rec+1", cor="iid")
 #### EM1: Panmictic model with 75% FXSPR
 
 ```{r, eval=FALSE}
+
+om_with_data <- update_om_fn(om, seed = 123, random = random)
+
 hcr <- list()
 hcr$hcr.type <- 1
 hcr$hcr.opts <- list(use_FXSPR = TRUE, percentFXSPR = 75)

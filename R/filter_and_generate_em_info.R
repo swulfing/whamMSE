@@ -130,8 +130,8 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
       em_info_new$par_inputs$index_regions <- NULL  # No indices left
     }
     
-    waa_pointer_totcatch <- em_info$par_inputs$user_waa$waa_pointer_totcatch
-    waa_mat <- em_info$par_inputs$user_waa$waa[waa_pointer_totcatch,ind_em,]
+    waa_pointer_ssb <- em_info$par_inputs$user_waa$waa_pointer_ssb
+    waa_mat <- em_info$par_inputs$user_waa$waa[waa_pointer_ssb,ind_em,]
     
     if (length(dim(waa_mat)) == 2) {
       
@@ -158,40 +158,34 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
     
     aggregated <- apply(weighted_waa, c(2,3), sum)
     
-    aggregated_region_waa <- array(aggregated, dim = c(1, dim(aggregated)))
-    
-    aggregated_stock_waa <- aggregated_region_waa
+    aggregated_stock_waa <- array(aggregated, dim = c(1, dim(aggregated)))
     
     # Extract WAA matrix for the region
     n_fleets = length(fleet_regions)
     waa_indices <- c(1:n_fleets,
-                     n_fleets + 1,
-                     n_fleets + n_regions + relevant_indices,
-                     n_fleets + n_regions + length(index_regions) + 1)
+                     n_fleets + relevant_indices,
+                     n_fleets + length(index_regions) + 1)
     
     dim1 = length(waa_indices)
     dim2 = length(ind_em)
-    dim3 = dim(aggregated_region_waa)[3]
+    dim3 = dim(aggregated_stock_waa)[3]
     
     em_info_new$par_inputs$user_waa$waa = array(NA, dim = c(dim1,dim2,dim3))
     em_info_new$basic_info$waa = array(NA, dim = c(dim1,dim2,dim3))
     
     em_info_new$par_inputs$user_waa$waa = em_info$basic_info$waa[waa_indices, ind_em, ] 
-    em_info_new$par_inputs$user_waa$waa[n_fleets+1,,] = aggregated_region_waa
-    em_info_new$par_inputs$user_waa$waa[dim1,,] = aggregated_region_waa
+    em_info_new$par_inputs$user_waa$waa[dim1,,] = aggregated_stock_waa
     
     em_info_new$basic_info$waa = em_info_new$par_inputs$user_waa$waa
 
     em_info_new$basic_info$waa_pointer_fleets   <- 1:n_fleets
-    em_info_new$basic_info$waa_pointer_totcatch <- n_fleets + 1 # n_region must be 1 for FAA!
-    em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + 1 + 1):(n_fleets + 1 + n_indices)
-    em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + 1 + n_indices + 1):(n_fleets + 1 + n_indices + 1)
+    em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
     em_info_new$basic_info$waa_pointer_M        <- em_info_new$basic_info$waa_pointer_ssb
     
     em_info_new$par_inputs$user_waa$waa_pointer_fleets   <- 1:n_fleets
-    em_info_new$par_inputs$user_waa$waa_pointer_totcatch <- n_fleets + 1 # n_region must be 1 for FAA!
-    em_info_new$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + 1 + 1):(n_fleets + 1 + n_indices)
-    em_info_new$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + 1 + n_indices + 1):(n_fleets + 1 + n_indices + 1)
+    em_info_new$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+    em_info_new$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
     em_info_new$par_inputs$user_waa$waa_pointer_M        <- em_info_new$par_inputs$user_waa$waa_pointer_ssb
     
     # Average MAA to get global MAA
@@ -288,23 +282,20 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
       
       # Extract WAA matrix for the region
       waa_indices <- c(relevant_fleets,
-                       length(fleet_regions) + r,
-                       length(fleet_regions) + n_regions + relevant_indices,
-                       length(fleet_regions) + n_regions + length(index_regions) + r)
+                       length(fleet_regions) + relevant_indices,
+                       length(fleet_regions) + length(index_regions) + r)
       
       em_info_new$par_inputs$user_waa$waa = em_info$basic_info$waa[waa_indices, ind_em, ] 
       
       em_info_new$basic_info$waa = em_info$basic_info$waa[waa_indices, ind_em, ]
       em_info_new$basic_info$waa_pointer_fleets   <- 1:n_fleets
-      em_info_new$basic_info$waa_pointer_totcatch <- n_fleets + 1
-      em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + 1 + 1):(n_fleets + 1 + n_indices)
-      em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + 1 + n_indices + 1):(n_fleets + 1 + n_indices + 1)
+      em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+      em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
       em_info_new$basic_info$waa_pointer_M        <- em_info_new$basic_info$waa_pointer_ssb
       
       em_info_new$par_inputs$user_waa$waa_pointer_fleets   <- 1:n_fleets
-      em_info_new$par_inputs$user_waa$waa_pointer_totcatch <- n_fleets + 1
-      em_info_new$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + 1 + 1):(n_fleets + 1 + n_indices)
-      em_info_new$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + 1 + n_indices + 1):(n_fleets + 1 + n_indices + 1)
+      em_info_new$par_inputs$user_waa$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+      em_info_new$par_inputs$user_waa$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + 1)
       em_info_new$par_inputs$user_waa$waa_pointer_M        <- em_info_new$par_inputs$user_waa$waa_pointer_ssb
       
       em_info_new$par_inputs$n_indices = length(relevant_indices)
@@ -359,20 +350,18 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
     n_fleets = length(fleet_regions)
     
     if (!is.null(filter_indices) && any(filter_indices != 0) && !all(filter_indices == 1)) { 
-      max.dim = n_fleets + n_regions + length(index_regions) + n_regions
-      index_keep = n_fleets + n_regions + relevant_indices
-      index_dim = (n_fleets + n_regions + 1):(n_fleets + n_regions + length(index_regions))
+      max.dim = n_fleets + length(index_regions) + n_regions
+      index_keep = n_fleets + relevant_indices
+      index_dim = (n_fleets + 1):(n_fleets + length(index_regions))
       index_rm = setdiff(index_dim,index_keep)
       em_info_new$par_inputs$user_waa$waa = em_info$basic_info$waa[-index_rm, ind_em, ]
       em_info_new$basic_info$waa = em_info$basic_info$waa[-index_rm, ind_em, ]
       em_info_new$basic_info$waa_pointer_fleets   <- 1:n_fleets
-      em_info_new$basic_info$waa_pointer_totcatch <- n_fleets + 1:n_regions
-      em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-      em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + n_regions)
+      em_info_new$basic_info$waa_pointer_indices  <- (n_fleets + 1):(n_fleets + n_indices)
+      em_info_new$basic_info$waa_pointer_ssb      <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_regions)
       em_info_new$basic_info$waa_pointer_M        <- em_info_new$basic_info$waa_pointer_ssb
       
       em_info_new$par_inputs$user_waa$waa_pointer_fleets    <- em_info_new$basic_info$waa_pointer_fleets
-      em_info_new$par_inputs$user_waa$waa_pointer_totcatch  <- em_info_new$basic_info$waa_pointer_totcatch
       em_info_new$par_inputs$user_waa$waa_pointer_indices   <- em_info_new$basic_info$waa_pointer_indices
       em_info_new$par_inputs$user_waa$waa_pointer_ssb       <- em_info_new$basic_info$waa_pointer_ssb
       em_info_new$par_inputs$user_waa$waa_pointer_M         <- em_info_new$basic_info$waa_pointer_M 
@@ -424,15 +413,11 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
       if (length(fleets_to_remove) > 0) {
         waa_indices_to_remove <- c(waa_indices_to_remove, fleets_to_remove)  # Remove fleet-related WAA
       }
-      if (length(remove_regions) > 0) {
-        waa_indices_to_remove <- c(waa_indices_to_remove, prev_n_fleets + which(remove_regions == 0))  # Region-specific total catch
-      }
       if (length(indices_to_remove) > 0) {
-        waa_indices_to_remove <- c(waa_indices_to_remove, prev_n_fleets + prev_n_regions + indices_to_remove)  # Indices
+        waa_indices_to_remove <- c(waa_indices_to_remove, prev_n_fleets + indices_to_remove)  # Indices
       }
       if (length(remove_regions) > 0) {
-        waa_indices_to_remove <- c(waa_indices_to_remove, 
-                                   prev_n_fleets + prev_n_regions + prev_n_indices + which(remove_regions == 0))  # SSB and M
+        waa_indices_to_remove <- c(waa_indices_to_remove, prev_n_fleets + prev_n_indices + which(remove_regions == 0))  # SSB and M
       }
       
       # Ensure valid range before subsetting
@@ -454,13 +439,11 @@ filter_and_generate_em_info <- function(em_info, em.opt, ind_em,
       
       # Update pointers for remaining data
       em_info_new$basic_info$waa_pointer_fleets   <- 1:n_fleets
-      em_info_new$basic_info$waa_pointer_totcatch <- n_fleets + 1:n_regions
-      em_info_new$basic_info$waa_pointer_indices <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-      em_info_new$basic_info$waa_pointer_ssb <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + n_regions)
+      em_info_new$basic_info$waa_pointer_indices <- (n_fleets + 1):(n_fleets + n_indices)
+      em_info_new$basic_info$waa_pointer_ssb <- (n_fleets + n_indices + 1):(n_fleets + n_indices + n_regions)
       em_info_new$basic_info$waa_pointer_M <- em_info_new$basic_info$waa_pointer_ssb
       
       em_info_new$par_inputs$user_waa$waa_pointer_fleets <- em_info_new$basic_info$waa_pointer_fleets
-      em_info_new$par_inputs$user_waa$waa_pointer_totcatch <- em_info_new$basic_info$waa_pointer_totcatch
       em_info_new$par_inputs$user_waa$waa_pointer_indices <- em_info_new$basic_info$waa_pointer_indices
       em_info_new$par_inputs$user_waa$waa_pointer_ssb <- em_info_new$basic_info$waa_pointer_ssb
       em_info_new$par_inputs$user_waa$waa_pointer_M <- em_info_new$basic_info$waa_pointer_M
