@@ -1564,7 +1564,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Harvest Control Rule</h1>
 <h4 class="author">Chengxue Li</h4>
-<h4 class="date">Last update: 2025-05-12</h4>
+<h4 class="date">Last update: 2025-06-24</h4>
 
 </div>
 
@@ -1700,7 +1700,9 @@ NAA_re_em &lt;- list(N1_model=&quot;equilibrium&quot;, sigma=&quot;rec+1&quot;, 
 <h3>10. Run MSE Scenarios. Run MSE Scenarios</h3>
 <div id="em1-panmictic-model-with-75-fxspr" class="section level4">
 <h4>EM1: Panmictic model with 75% FXSPR</h4>
-<pre class="r"><code>hcr &lt;- list()
+<pre class="r"><code>om_with_data &lt;- update_om_fn(om, seed = 123, random = random)
+
+hcr &lt;- list()
 hcr$hcr.type &lt;- 1
 hcr$hcr.opts &lt;- list(use_FXSPR = TRUE, percentFXSPR = 75)
 
