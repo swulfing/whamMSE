@@ -30,7 +30,7 @@ get_F_from_Catch <- function(om, Catch, year, method = "nlminb", by_fleet = FALS
   }
   log_M = log(rep$MAA[,,year,])
   if(is.vector(log_M)) {
-    log_M = rep$MAA[,,year,, drop = FALSE]
+    log_M = log(rep$MAA[,,year,, drop = FALSE])
     log_M = array(log_M, dim = dim(log_M)[c(1,2,4)])
   }
   mu = rep$mu[,,,year,,]
