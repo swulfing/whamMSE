@@ -11,8 +11,7 @@ update_om_fn(
   random = "log_NAA",
   method = "nlminb",
   by_fleet = TRUE,
-  do.brps = FALSE,
-  sim_ecov = TRUE
+  do.brps = FALSE
 )
 }
 \arguments{
