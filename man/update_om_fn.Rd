@@ -11,7 +11,8 @@ update_om_fn(
   random = "log_NAA",
   method = "nlminb",
   by_fleet = TRUE,
-  do.brps = FALSE
+  do.brps = FALSE,
+  sim_ecov = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ update_om_fn(
 \item{by_fleet}{Logical. If TRUE, estimates F separately for each fleet. If FALSE, estimates a single global F (default = FALSE).}
 
 \item{do.brps}{Logical. If TRUE, calculates reference points in the operating model (default = FALSE).}
+
+\item{sim_ecov}{Logical. Whether to generate pseudo ecov data for each realization, only use if ecov is included in the operating model (default = TRUE).}
 }
 \value{
 An updated operating model (`om`) with:

@@ -18,6 +18,7 @@
 #'   }
 #' @param by_fleet Logical. If TRUE, estimates F separately for each fleet. If FALSE, estimates a single global F (default = FALSE).
 #' @param do.brps Logical. If TRUE, calculates reference points in the operating model (default = FALSE).
+#' @param sim_ecov Logical. Whether to generate pseudo ecov data for each realization, only use if ecov is included in the operating model (default = TRUE).
 #' 
 #' @return An updated operating model (`om`) with:
 #'   \itemize{
@@ -30,7 +31,7 @@
 #'
 #' @seealso \code{\link{get_F_from_Catch}}, \code{\link{update_om_F}}
 #'
-update_om_fn <- function(om, interval.info = NULL, seed = 123, random = "log_NAA", method = "nlminb", by_fleet = TRUE, do.brps = FALSE) {
+update_om_fn <- function(om, interval.info = NULL, seed = 123, random = "log_NAA", method = "nlminb", by_fleet = TRUE, do.brps = FALSE, sim_ecov = TRUE) {
   
   if(!is.null(interval.info)){
     # Iterative update F in the OM using get_F_from_Catch_region function
@@ -60,6 +61,11 @@ update_om_fn <- function(om, interval.info = NULL, seed = 123, random = "log_NAA
       
       cat("\nNow simulating data for year ", y, "\n")
       
+      if (sim_ecov == FALSE) {
+        om$input$data$do_simulate_data[3] = 0
+        om <- fit_wham(om$input, do.fit = FALSE, do.brps = FALSE, MakeADFun.silent = TRUE)
+      }
+      
       # Simulate the population and observations
       om_sim <- om$simulate(complete = TRUE)
       
@@ -78,6 +84,11 @@ update_om_fn <- function(om, interval.info = NULL, seed = 123, random = "log_NAA
     
   } else {
     
+    if (sim_ecov == FALSE) {
+      om$input$data$do_simulate_data[3] = 0
+      om <- fit_wham(om$input, do.fit = FALSE, do.brps = FALSE, MakeADFun.silent = TRUE)
+    }
+      
     # Names of observation data to update
     obs_names <- c("agg_indices", "agg_catch", "catch_paa", "index_paa", "Ecov_obs", "obsvec")
     

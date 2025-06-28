@@ -51,7 +51,7 @@ plot_ssb_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
 
   # Plot
   p <- ggplot(res, aes(x = Year, y = SSB, color = Model, group = interaction(Model, Realization))) +
-    geom_line(size = 0.3, alpha = 0.2) +
+    geom_line(size = 0.3, alpha = 0.5) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle(var) +
@@ -140,7 +140,7 @@ plot_fbar_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
                              names_to = "Label", values_to = "Fbar")
 
     p <- ggplot(res_long, aes(x = Year, y = Fbar, color = Model, group = interaction(Model, Realization))) +
-      geom_line(size = 0.3, alpha = 0.2) +
+      geom_line(size = 0.3, alpha = 0.5) +
       facet_grid(Label ~ ., scales = "free") +
       scale_color_viridis_d(option = col.opt) +
       ggtitle(title) +
@@ -212,7 +212,7 @@ plot_catch_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   
   # Plot
   p <- ggplot(res, aes(x = Year, y = Catch, color = Model, group = interaction(Model, Realization))) +
-    geom_line(size = 0.3, alpha = 0.2) +
+    geom_line(size = 0.3, alpha = 0.5) +
     facet_grid(Label ~ ., scales = "free") +
     scale_color_viridis_d(option = col.opt) +
     ggtitle(var) +
@@ -5994,8 +5994,6 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
          plot = p6, width = width, height = height, dpi = dpi)
   
 }
-
-
 
 plot_all_time_series_per_realization <- function(mods, main.dir, sub.dir,
                                                  width = 10, height = 7, dpi = 300,

@@ -189,6 +189,7 @@
 #' @param add.years Logical. Use entire time series in EM (default = FALSE).
 #' @param by_fleet Logical. Calculate fleet-specific F (default = TRUE).
 #' @param FXSPR_init Numeric. Initial F for reference point calculation (optional).
+#' @param sim_ecov Logical. Whether to generate pseudo ecov data for each realization, only use if ecov is included in the operating model (default = TRUE).
 #' @param do.retro Logical. Run retrospective analysis (default = FALSE).
 #' @param do.osa Logical. Calculate OSA residuals (default = FALSE).
 #' @param do.brps Logical. Calculate reference points in OM (default = FALSE).
@@ -370,7 +371,7 @@ loop_through_fn <- function(om,
 
         cat("\nNow calculating F at age in the OM given the catch advice...\n")
         
-        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps)
+        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps, sim_ecov = sim_ecov)
         
         em_list[[i]] <- em$rep
         par.est[[i]] <- as.list(em$sdrep, "Estimate")
@@ -442,7 +443,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow calculating F at age in the OM given the catch advice...\n")
         
-        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps)
+        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps, sim_ecov = sim_ecov)
         
         em_list[[i]] <- em$rep
         par.est[[i]] <- as.list(em$sdrep, "Estimate")
@@ -533,7 +534,7 @@ loop_through_fn <- function(om,
         # interval.info <- list(catch = advice, years = assess_years[i] + 1:assess_interval)
         
         cat("\nNow calculating F at age in the OM given the catch advice...\n")
-        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps)
+        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps, sim_ecov = sim_ecov)
         
         for (s in 1:n_stocks) {
           em_list[[i]][[s]] <- em[[s]]$rep
@@ -667,7 +668,7 @@ loop_through_fn <- function(om,
         }
         
         cat("\nNow calculating F at age in the OM given the catch advice...\n")
-        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps)
+        om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps, sim_ecov = sim_ecov)
       } else {
         cat("\nNow performing simulation-estimation experiments...\n")
         conv = NULL
