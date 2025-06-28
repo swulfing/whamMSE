@@ -258,8 +258,6 @@ loop_through_fn(
   \item{\code{max}}{Numeric. Upper bound for uniform distribution.}
   \item{\code{constant_value}}{Numeric. Fixed multiplier (used if \code{method = "constant"}).}
 }}
-
-\item{sim_ecov}{Logical. Whether to generate pseudo ecov data for each realization, only use if ecov is included in the operating model (default = TRUE).}
 }
 \value{
 List with elements.
