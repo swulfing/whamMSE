@@ -353,7 +353,7 @@ generate_basic_info <- function(n_stocks = 2,
     basic_info$waa_pointer_M        <- user_waa$waa_pointer_M        <- basic_info$waa_pointer_ssb
     
   } else if (is.array(user_waa$waa)) {
-    message("Using user-specified WAA array. WAA can time-varying.")
+    message("Using user-specified WAA array. WAA can be time-varying.")
     
     basic_info$waa <- user_waa$waa
 
