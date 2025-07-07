@@ -17,7 +17,22 @@ Description:
 Depends:
     R (>= 3.6.0)
 Imports:
-    shiny
+ shiny,
+    dplyr,
+    ggplot2,
+    tidyr,
+    ggpubr,
+    fmsb,
+    ggtern,
+    numDeriv,
+    expm,
+    gridExtra,
+    grid,
+    DiagrammeR,
+    DiagrammeRsvg,
+    rsvg,
+    shinyjs,
+    ggridges
 URL: https://github.com/lichengxue/wham-mse/
 License: MIT
 Encoding: UTF-8

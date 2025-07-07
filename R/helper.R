@@ -58,8 +58,15 @@ plot_ssb_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     ylab("SSB") +
     theme_bw()
 
-  # Save the plot
-  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p, width = width, height = height, dpi = dpi)
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Time_Series")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, paste0(var, ".PNG")), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)  # Return the plot if you want to print or modify later
 }
@@ -146,8 +153,17 @@ plot_fbar_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
       ggtitle(title) +
       ylab(ylab_text) +
       theme_bw()
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Time_Series")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(file.path(new_sub_dir, paste0(filename, ".PNG")), plot = p, width = width, height = height, dpi = dpi)
 
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p, width = width, height = height, dpi = dpi)
     return(p)
   }
 
@@ -219,8 +235,15 @@ plot_catch_time_series <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
     ylab("Catch") +
     theme_bw()
   
-  # Save the plot
-  ggsave(file.path(main.dir, sub.dir, paste0(var, ".PNG")), p, width = width, height = height, dpi = dpi)
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Time_Series")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, paste0(var, ".PNG")), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)  # Return the plot if you want to print or modify later
 }
@@ -307,6 +330,12 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
                 .groups = "drop")
   }
   
+  # Add the last column: total SSB by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(SSB_Global = sum(c_across(starts_with("SSB")), na.rm = TRUE)) %>%
+    ungroup()
+  
   # Plot
   if (plot.style == "boxplot") {
     p <- ggplot(res, aes(x = Model, y = SSB, color = Model)) +
@@ -378,8 +407,17 @@ plot_ssb_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   # Save
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_last_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name),
-         p, width = width, height = height, dpi = dpi)
+  
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)
 }
@@ -443,6 +481,12 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
       }) %>% bind_rows()
     }) %>% bind_rows()
   }
+  
+  # Add the last column: total SSB by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(SSB_Global = sum(c_across(starts_with("SSB")), na.rm = TRUE)) %>%
+    ungroup()
   
   # Rename Model names if needed
   if (!is.null(new_model_names)) {
@@ -552,7 +596,16 @@ plot_ssb_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   # Save the plot
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
                       "_first_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)
 }
@@ -742,7 +795,16 @@ plot_fbar_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar"
     }
     
     plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
-    ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
     
     return(p)
   }
@@ -948,7 +1010,16 @@ plot_fbar_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar
     }
     
     plot_name <- paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")
-    ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
     
     return(p)
   }
@@ -1008,6 +1079,12 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
       }) %>% bind_rows()
     }) %>% bind_rows()
   }
+  
+  # Add the last column: total Catch by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(Catch_Global = sum(c_across(starts_with("Catch")), na.rm = TRUE)) %>%
+    ungroup()
   
   # Rename models if specified
   if (!is.null(new_model_names)) {
@@ -1115,7 +1192,16 @@ plot_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catc
   }
   
   plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"), "_last_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)
 }
@@ -1179,6 +1265,12 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
       }) %>% bind_rows()
     }) %>% bind_rows()
   }
+  
+  # Add the last column: total Catch by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(Catch_Global = sum(c_across(starts_with("Catch")), na.rm = TRUE)) %>%
+    ungroup()
   
   # Rename models if requested
   if (!is.null(new_model_names)) {
@@ -1286,9 +1378,17 @@ plot_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Cat
   }
   
   # Save the plot
-  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),
-                      "_first_", use.n.years, "_years.PNG")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p, width = width, height = height, dpi = dpi)
+  plot_name <- paste0(var, ifelse(is.null(base.model), "", "_Relative"),"_first_", use.n.years, "_years.PNG")
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)
 }
@@ -1495,13 +1595,17 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
     stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
   }
   
+  plot_name = paste0("SSB_status", ifelse(is.null(base.model), "", "_Relative"), "_last_", use.n.years, "_years.PNG")
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   # Save plot
-  ggsave(file.path(main.dir, sub.dir, paste0(
-    "SSB_status",
-    ifelse(is.null(base.model), "", "_Relative"),
-    "_last_", use.n.years, "_years.PNG"
-  )),
-  p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", plot_name), p1, width = width, height = height, dpi = dpi)
   
   # Probability plot (not affected by base.model)
   prob_long <- pivot_longer(prob, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = "Prob")
@@ -1515,9 +1619,18 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
       ylab("Probability") +
       theme_bw()
     
-    ggsave(file.path(main.dir, sub.dir,
-                     paste0("SSB_status_overfished_prob_last_", use.n.years, "_years.PNG")),
-           p2, width = width, height = height, dpi = dpi)
+    plot_name = paste0("SSB_status_overfished_prob_last_", use.n.years, "_years.PNG")
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save plot
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", plot_name), p2, width = width, height = height, dpi = dpi)
+    
   } else {
     p2 <- NULL
   }
@@ -1733,16 +1846,23 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   }
   
   # Save plot
+  plot_name = paste0("SSB_status", ifelse(is.null(base.model), "", "_Relative"),"_first_", use.n.years, "_years.PNG")
   
-  ggsave(file.path(main.dir, sub.dir,
-                   paste0("SSB_status", ifelse(is.null(base.model), "", "_Relative"),
-                          "_first_", use.n.years, "_years.PNG")),
-         p1, width = width, height = height, dpi = dpi)
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save plot
+  ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", plot_name), p1, width = width, height = height, dpi = dpi)
   
   # Point plot of probability SSB/SSBSPR < 0.5 (unchanged)
   prob_long <- pivot_longer(prob, cols = matches("^SSB[./]SSB"), names_to = "Label", values_to = "Prob")
   
   if(plot_prob) {
+    
     p2 <- ggplot(prob_long, aes(x = Model, y = Prob, color = Model)) +
       geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
       facet_grid(Label ~ ., scales = "free") +
@@ -1751,9 +1871,19 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
       ylab("Probability") +
       theme_bw()
     
-    ggsave(file.path(main.dir, sub.dir,
-                     paste0("SSB_status_overfished_prob_first_", use.n.years, "_years.PNG")),
-           p2, width = width, height = height, dpi = dpi)
+    # Save plot
+    plot_name = paste0("SSB_status_overfished_prob_first_", use.n.years, "_years.PNG")
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save plot
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", plot_name), p2, width = width, height = height, dpi = dpi)
+    
   } else {
     p2 = NULL
   }
@@ -1977,9 +2107,17 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
       } else {
         stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
       }
-
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
            p1, width = width, height = height, dpi = dpi)
+    
     return(p1)
   }
   
@@ -1994,7 +2132,16 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
       ylab(ylab_text) +
       xlab("Model") + 
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
+    
     return(p2)
   }
   
@@ -2240,7 +2387,14 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
       stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
     }
     
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", paste0(filename, ifelse(is.null(base.model), "", "_Relative"), ".PNG")),
            p1, width = width, height = height, dpi = dpi)
     return(p1)
   }
@@ -2256,7 +2410,15 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
       ylab(ylab_text) +
       xlab("Model") + 
       theme_bw()
-    ggsave(file.path(main.dir, sub.dir, paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Boxplot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(file.path(main.dir, sub.dir, "Status_Boxplot", paste0(filename, ".PNG")), p2, width = width, height = height, dpi = dpi)
     return(p2)
   }
   
@@ -2290,6 +2452,171 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
   ))
 }
 
+# plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir, 
+#                              width = 10, height = 7, dpi = 300, col.opt = "D",
+#                              new_model_names = NULL,
+#                              use.n.years = NULL,
+#                              show_density = FALSE) {
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   library(viridis)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (terminal year) is used here!\n")
+#     use.n.years <- 1
+#   }
+#   
+#   # === Extract SSB/SSBxx% ===
+#   if (!is.nsim) {
+#     Years <- mods[[1]]$om$years
+#     ssb_list <- lapply(seq_along(mods), function(i) {
+#       tmp <- mods[[i]]$om$rep$SSB
+#       tmp <- cbind(tmp, rowSums(tmp))
+#       tmp <- tmp / exp(mods[[i]]$om$rep$log_SSB_FXSPR)
+#       ssb <- tail(tmp[, ncol(tmp)], use.n.years)
+#       data.frame(Model = paste0("Model", i),
+#                  Realization = 1,
+#                  Year = tail(Years, use.n.years),
+#                  Overfished = ssb)
+#     })
+#     ssb_df <- bind_rows(ssb_list)
+#   } else {
+#     Years <- mods[[1]][[1]]$om$years
+#     ssb_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         tmp <- mods[[r]][[m]]$om$rep$SSB
+#         tmp <- cbind(tmp, rowSums(tmp))
+#         tmp <- tmp / exp(mods[[r]][[m]]$om$rep$log_SSB_FXSPR)
+#         ssb <- tail(tmp[, ncol(tmp)], use.n.years)
+#         data.frame(Model = paste0("Model", m),
+#                    Realization = r,
+#                    Year = tail(Years, use.n.years),
+#                    Overfished = ssb)
+#       })
+#     })
+#     ssb_df <- bind_rows(ssb_list)
+#   }
+#   
+#   # === Extract F/Fxx% ===
+#   if (!is.nsim) {
+#     fbar_list <- lapply(seq_along(mods), function(i) {
+#       fbar <- mods[[i]]$om$rep$Fbar[, ncol(mods[[i]]$om$rep$Fbar)]
+#       fbar_ref <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, ncol(mods[[i]]$om$rep$log_Fbar_XSPR)])
+#       ff <- tail(fbar / fbar_ref, use.n.years)
+#       data.frame(Model = paste0("Model", i),
+#                  Realization = 1,
+#                  Year = tail(Years, use.n.years),
+#                  Overfishing = ff)
+#     })
+#     fbar_df <- bind_rows(fbar_list)
+#   } else {
+#     fbar_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         fbar <- mods[[r]][[m]]$om$rep$Fbar[, ncol(mods[[r]][[m]]$om$rep$Fbar)]
+#         fbar_ref <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, ncol(mods[[r]][[m]]$om$rep$log_Fbar_XSPR)])
+#         ff <- tail(fbar / fbar_ref, use.n.years)
+#         data.frame(Model = paste0("Model", m),
+#                    Realization = r,
+#                    Year = tail(Years, use.n.years),
+#                    Overfishing = ff)
+#       })
+#     })
+#     fbar_df <- bind_rows(fbar_list)
+#   }
+#   
+#   # === Merge ===
+#   temp <- left_join(ssb_df, fbar_df, by = c("Model", "Realization", "Year"))
+#   temp$Index <- paste0("Year ", temp$Year)
+#   
+#   # === Rename Models if needed ===
+#   if (!is.null(new_model_names)) {
+#     if (length(new_model_names) != length(unique(temp$Model))) {
+#       stop("Length of new_model_names must match number of models.")
+#     }
+#     temp$Model <- factor(temp$Model,
+#                          levels = paste0("Model", seq_along(new_model_names)),
+#                          labels = new_model_names)
+#   }
+#   
+#   percentSPR <- if (!is.nsim) mods[[1]]$om$input$data$percentSPR else mods[[1]][[1]]$om$input$data$percentSPR
+#   
+#   # === Plot
+#   p <- ggplot(temp, aes(x = Overfished, y = Overfishing)) +
+#     facet_wrap(~ Model) +
+#     annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow")
+#   
+#   # === Add smoothed 2D density layer
+#   if (show_density) {
+#     p <- p + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.4, contour_var = "density", bins = 100) +
+#       scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
+#   }
+#   
+#   # === Add points and reference lines
+#   if (show_density) {
+#     p <- p +
+#       geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
+#       scale_color_viridis_d(option = col.opt) +
+#       geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+#       geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+#       xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+#       ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+#       ggtitle(paste0("Stock Status in the Last ", use.n.years, " Year(s)")) +
+#       theme_bw() +
+#       theme(axis.text = element_text(size = 12),
+#             axis.title = element_text(size = 20),
+#             plot.title = element_text(size = 12),
+#             strip.text = element_text(size = 12),
+#             legend.text = element_text(size = 12),
+#             legend.title = element_text(size = 12),
+#             aspect.ratio = 1,
+#             panel.grid.major = element_blank(),
+#             panel.grid.minor = element_blank(),
+#             panel.background = element_blank(),
+#             axis.line = element_line(colour = "black")) +
+#       coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+#                       ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+#   } else {
+#     p <- p +
+#       geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
+#       scale_color_viridis_d(option = col.opt) +
+#       geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+#       geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+#       xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+#       ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+#       ggtitle(paste0("Stock Status in the Last ", use.n.years, " Year(s)")) +
+#       theme_bw() +
+#       theme(axis.text = element_text(size = 12),
+#             axis.title = element_text(size = 20),
+#             plot.title = element_text(size = 12),
+#             strip.text = element_text(size = 12),
+#             legend.text = element_text(size = 12),
+#             legend.title = element_text(size = 12),
+#             aspect.ratio = 1,
+#             panel.grid.major = element_blank(),
+#             panel.grid.minor = element_blank(),
+#             panel.background = element_blank(),
+#             axis.line = element_line(colour = "black")) +
+#       coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+#                       ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+#   }
+#   
+#   # Save plot
+#   plot_name = paste0("Kobe_Plot_KDE_", use.n.years, "_Year.png")
+#   
+#   # Create the new subfolder if it doesn't exist
+#   new_sub_dir <- file.path(main.dir, sub.dir, "KOBE_Plot")
+#   
+#   if (!file.exists(new_sub_dir)){
+#     dir.create(new_sub_dir)
+#   }
+#   
+#   # Save the figure inside the new subfolder
+#   ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
+# 
+#   return(p)
+# }
+
 plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir, 
                              width = 10, height = 7, dpi = 300, col.opt = "D",
                              new_model_names = NULL,
@@ -2312,7 +2639,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
       tmp <- mods[[i]]$om$rep$SSB
       tmp <- cbind(tmp, rowSums(tmp))
       tmp <- tmp / exp(mods[[i]]$om$rep$log_SSB_FXSPR)
-      ssb <- tail(tmp[, ncol(tmp)], use.n.years)
+      ssb <- tail(tmp, use.n.years)
       data.frame(Model = paste0("Model", i),
                  Realization = 1,
                  Year = tail(Years, use.n.years),
@@ -2326,7 +2653,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
         tmp <- mods[[r]][[m]]$om$rep$SSB
         tmp <- cbind(tmp, rowSums(tmp))
         tmp <- tmp / exp(mods[[r]][[m]]$om$rep$log_SSB_FXSPR)
-        ssb <- tail(tmp[, ncol(tmp)], use.n.years)
+        ssb <- tail(tmp, use.n.years)
         data.frame(Model = paste0("Model", m),
                    Realization = r,
                    Year = tail(Years, use.n.years),
@@ -2336,11 +2663,19 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
     ssb_df <- bind_rows(ssb_list)
   }
   
+  ncol = ncol(ssb_df) - 3
+  ssb <- list()
+  for (i in 1:ncol) {
+    ssb[[i]] <- ssb_df[,c(1:3,3+i)]
+    names(ssb[[i]])[4] <- "Overfished"
+  }
+  
   # === Extract F/Fxx% ===
   if (!is.nsim) {
     fbar_list <- lapply(seq_along(mods), function(i) {
-      fbar <- mods[[i]]$om$rep$Fbar[, ncol(mods[[i]]$om$rep$Fbar)]
-      fbar_ref <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, ncol(mods[[i]]$om$rep$log_Fbar_XSPR)])
+      n_fleets <- mods[[i]]$om$input$data$n_fleets
+      fbar <- mods[[i]]$om$rep$Fbar[, -c(1:n_fleets)]
+      fbar_ref <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, -c(1:n_fleets)])
       ff <- tail(fbar / fbar_ref, use.n.years)
       data.frame(Model = paste0("Model", i),
                  Realization = 1,
@@ -2351,8 +2686,9 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
   } else {
     fbar_list <- lapply(seq_along(mods), function(r) {
       lapply(seq_along(mods[[r]]), function(m) {
-        fbar <- mods[[r]][[m]]$om$rep$Fbar[, ncol(mods[[r]][[m]]$om$rep$Fbar)]
-        fbar_ref <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, ncol(mods[[r]][[m]]$om$rep$log_Fbar_XSPR)])
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets
+        fbar <- mods[[r]][[m]]$om$rep$Fbar[, -c(1:n_fleets)]
+        fbar_ref <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, -c(1:n_fleets)])
         ff <- tail(fbar / fbar_ref, use.n.years)
         data.frame(Model = paste0("Model", m),
                    Realization = r,
@@ -2363,85 +2699,119 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
     fbar_df <- bind_rows(fbar_list)
   }
   
+  ncol = ncol(fbar_df) - 3
+  fbar <- list()
+  for (i in 1:ncol) {
+    fbar[[i]] <- fbar_df[,c(1:3,3+i)]
+    names(fbar[[i]])[4] <- "Overfishing"
+  }
+  
+  p <- list()
   # === Merge ===
-  temp <- left_join(ssb_df, fbar_df, by = c("Model", "Realization", "Year"))
-  temp$Index <- paste0("Year ", temp$Year)
-  
-  # === Rename Models if needed ===
-  if (!is.null(new_model_names)) {
-    if (length(new_model_names) != length(unique(temp$Model))) {
-      stop("Length of new_model_names must match number of models.")
+  for (i in 1:ncol) {
+    temp <- left_join(ssb[[i]], fbar[[i]], by = c("Model", "Realization", "Year"))
+    temp$Index <- paste0("Year ", temp$Year)
+    
+    # === Rename Models if needed ===
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(temp$Model))) {
+        stop("Length of new_model_names must match number of models.")
+      }
+      temp$Model <- factor(temp$Model,
+                           levels = paste0("Model", seq_along(new_model_names)),
+                           labels = new_model_names)
     }
-    temp$Model <- factor(temp$Model,
-                         levels = paste0("Model", seq_along(new_model_names)),
-                         labels = new_model_names)
+    
+    percentSPR <- if (!is.nsim) mods[[1]]$om$input$data$percentSPR else mods[[1]][[1]]$om$input$data$percentSPR
+    
+    # === Plot
+    p[[i]] <- ggplot(temp, aes(x = Overfished, y = Overfishing)) +
+      facet_wrap(~ Model) +
+      annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow")
+    
+    # === Add smoothed 2D density layer
+    if (show_density) {
+      p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.4, contour_var = "density", bins = 100) +
+        scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
+    }
+    
+    # === Add points and reference lines
+    if (show_density) {
+      
+      plot_title <- if (i < ncol) {
+        paste0("Stock Status in the Last ", use.n.years, " Year(s)\nRegion ", i)
+      } else {
+        paste0("Stock Status in the Last ", use.n.years, " Year(s)\nGlobal")
+      }
+      
+      p[[i]] <- p[[i]] +
+        geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
+        scale_color_viridis_d(option = col.opt) +
+        geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+        geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+        xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+        ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+        ggtitle(plot_title) +
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 20),
+              plot.title = element_text(size = 12),
+              strip.text = element_text(size = 12),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              aspect.ratio = 1,
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),
+              axis.line = element_line(colour = "black")) +
+        coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+                        ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+    } else {
+      
+      plot_title <- if (i < ncol) {
+        paste0("Stock Status in the Last ", use.n.years, " Year(s)\nRegion ", i)
+      } else {
+        paste0("Stock Status in the Last ", use.n.years, " Year(s)\nGlobal")
+      }
+      
+      p[[i]] <- p[[i]] +
+        geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
+        scale_color_viridis_d(option = col.opt) +
+        geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+        geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+        xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+        ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+        ggtitle(plot_title) +
+        theme_bw() +
+        theme(axis.text = element_text(size = 12),
+              axis.title = element_text(size = 20),
+              plot.title = element_text(size = 12),
+              strip.text = element_text(size = 12),
+              legend.text = element_text(size = 12),
+              legend.title = element_text(size = 12),
+              aspect.ratio = 1,
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),
+              axis.line = element_line(colour = "black")) +
+        coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+                        ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+    }
+    
+    # Save plot
+    plot_name = paste0("Kobe_Plot_KDE_", use.n.years, "_Year_", i, ".png")
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "KOBE_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(file.path(new_sub_dir, plot_name), plot = p[[i]], width = width, height = height, dpi = dpi)
+    
   }
-  
-  percentSPR <- if (!is.nsim) mods[[1]]$om$input$data$percentSPR else mods[[1]][[1]]$om$input$data$percentSPR
-  
-  # === Plot
-  p <- ggplot(temp, aes(x = Overfished, y = Overfishing)) +
-    facet_wrap(~ Model) +
-    annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow")
-  
-  # === Add smoothed 2D density layer
-  if (show_density) {
-    p <- p + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.4, contour_var = "density", bins = 100) +
-      scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
-  }
-  
-  # === Add points and reference lines
-  if (show_density) {
-    p <- p +
-      geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
-      scale_color_viridis_d(option = col.opt) +
-      geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
-      geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
-      xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
-      ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
-      ggtitle(paste0("Stock Status in the Last ", use.n.years, " Year(s)")) +
-      theme_bw() +
-      theme(axis.text = element_text(size = 12),
-            axis.title = element_text(size = 20),
-            plot.title = element_text(size = 12),
-            strip.text = element_text(size = 12),
-            legend.text = element_text(size = 12),
-            legend.title = element_text(size = 12),
-            aspect.ratio = 1,
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background = element_blank(),
-            axis.line = element_line(colour = "black")) +
-      coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
-                      ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
-  } else {
-    p <- p +
-      geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
-      scale_color_viridis_d(option = col.opt) +
-      geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
-      geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
-      xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
-      ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
-      ggtitle(paste0("Stock Status in the Last ", use.n.years, " Year(s)")) +
-      theme_bw() +
-      theme(axis.text = element_text(size = 12),
-            axis.title = element_text(size = 20),
-            plot.title = element_text(size = 12),
-            strip.text = element_text(size = 12),
-            legend.text = element_text(size = 12),
-            legend.title = element_text(size = 12),
-            aspect.ratio = 1,
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background = element_blank(),
-            axis.line = element_line(colour = "black")) +
-      coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
-                      ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
-  }
-  
-  # === Save
-  ggsave(file.path(main.dir, sub.dir, paste0("Kobe_Plot_KDE_", use.n.years, "_Year.png")),
-         p, width = width, height = height, dpi = dpi)
   
   return(p)
 }
@@ -2642,8 +3012,15 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
   # Plot without any further changes
   colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
   
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   # Save to PNG
-  output_file <- file.path(file.path(main.dir, sub.dir, "model_performance_radar.png"))
+  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png"))
   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
   radarchart(plot_df,
              axistype = 4,
@@ -2821,7 +3198,14 @@ plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir,
       legend.title = element_text(size = 10)
     )
   
-  ggsave(file.path(main.dir, sub.dir, "Mean_rec_par.png"), p1, width = 10, height = 10, dpi = dpi)
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Diagnostic_Results")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(file.path(main.dir, sub.dir, "Diagnostic_Results", "Mean_rec_par.png"), p1, width = 10, height = 10, dpi = dpi)
   
   return(p1)
 }
@@ -2951,7 +3335,14 @@ plot_NAA_sigma_par <- function(mods, is.nsim, main.dir, sub.dir,
       legend.title = element_text(size = 10)
     )
   
-  ggsave(file.path(main.dir, sub.dir, "Variance_Para_NAA.png"), p2, width = width, height = height, dpi = dpi)
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Diagnostic_Results")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(file.path(main.dir, sub.dir, "Diagnostic_Results", "Variance_Para_NAA.png"), p2, width = width, height = height, dpi = dpi)
   
   return(p2)
 }
@@ -3145,9 +3536,18 @@ plot_model_performance_bar <- function(mods, is.nsim,
   
   # Print and save
   print(plot)
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_barplot.png"),
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(filename = file.path(new_sub_dir, "Overall_Performance.png"),
          plot = plot, width = width, height = height, dpi = dpi)
 }
+
 
 plot_model_performance_triangle <- function(mods, is.nsim,
                                             main.dir, sub.dir,
@@ -3341,8 +3741,15 @@ plot_model_performance_triangle <- function(mods, is.nsim,
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(filename = file.path(new_sub_dir, file), plot = p, width = width, height = height, dpi = dpi)
     
     print(p)
   }
@@ -3357,14 +3764,21 @@ plot_model_performance_triangle <- function(mods, is.nsim,
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    } 
+    
+    # Save the figure inside the new subfolder
+    ggsave(filename = file.path(new_sub_dir, file), plot = p, width = width, height = height, dpi = dpi)
     
     print(p)
   }
   
-  plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short.png")
-  plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long.png")
+  plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Performance_Short(Norm).png")
+  plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "Performance_Long(Norm).png")
   
   results_short2 <- bind_rows(results_short)
   
@@ -3382,8 +3796,8 @@ plot_model_performance_triangle <- function(mods, is.nsim,
                                   labels = new_model_names)
   }
   
-  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw.png")
-  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw.png")
+  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Performance_Short(Raw).png")
+  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "Performance_Long(Raw).png")
 }
 
 calculate_aacv <- function(catch_values) {
@@ -3521,7 +3935,15 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
   
   # Save plot
   plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Annual_Variation_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(file.path(main.dir, sub.dir, "Annual_Variation_Boxplot", plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
 }
@@ -3663,7 +4085,14 @@ plot_relative_trajectories <- function(mods, is.nsim,
       Q3 = quantile(Value, user.Q3, na.rm = TRUE),
       .groups = "drop"
     )
-
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Relative_Trajectory")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   plot = list()
 
   t = 0
@@ -3685,7 +4114,8 @@ plot_relative_trajectories <- function(mods, is.nsim,
       geom_hline(yintercept = 0, col = "red", linetype = "dashed")
 
     plot_name <- paste0(name,"_trajectories.png")
-    ggsave(file.path(main.dir, sub.dir, plot_name), plot[[t]], width = width, height = height, dpi = dpi)
+    
+    ggsave(file.path(new_sub_dir, plot_name), plot[[t]], width = width, height = height, dpi = dpi)
 
     # return(list(plot[[t]]))
     # print(plot[[t]])
@@ -3801,6 +4231,13 @@ plot_relative_trajectories1 <- function(mods, is.nsim,
       .groups = "drop"
     )
   
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Relative_Trajectory")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   # --- Plot loop ---
   for (name in unique(sum_data$Index)) {
     
@@ -3817,7 +4254,7 @@ plot_relative_trajectories1 <- function(mods, is.nsim,
       geom_hline(yintercept = 0, col = "red", linetype = "dashed")
     
     plot_name <- paste0(name,"_trajectories.png")
-    ggsave(file.path(main.dir, sub.dir, plot_name), plot1, width = width, height = height, dpi = dpi)
+    ggsave(file.path(new_sub_dir, plot_name), plot1, width = width, height = height, dpi = dpi)
   }
   return(plot1)
 }
@@ -3928,6 +4365,13 @@ plot_relative_trajectories2 <- function(mods, is.nsim,
       .groups = "drop"
     )
   
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Relative_Trajectory")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   # --- Plot loop ---
   for (name in unique(sum_data$Index)) {
     
@@ -3944,7 +4388,7 @@ plot_relative_trajectories2 <- function(mods, is.nsim,
       geom_hline(yintercept = 0, col = "red", linetype = "dashed")
     
     plot_name <- paste0(name,"_trajectories.png")
-    ggsave(file.path(main.dir, sub.dir, plot_name), plot2, width = width, height = height, dpi = dpi)
+    ggsave(file.path(new_sub_dir, plot_name), plot2, width = width, height = height, dpi = dpi)
     
   }
   return(plot2)
@@ -4070,7 +4514,15 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
   
   # Save plot
   plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
-  ggsave(file.path(main.dir, sub.dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Annual_Variation_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(file.path(main.dir, sub.dir, "Annual_Variation_Boxplot", plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
 }
@@ -4214,8 +4666,16 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
   # Save
   out_dir <- file.path(main.dir, sub.dir)
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Annual_Variation_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   plot_name <- paste0(var, "_variation", ifelse(is.null(base.model), "", "_Relative"), ".png")
-  ggsave(file.path(out_dir, plot_name), p1, width = width, height = height, dpi = dpi)
+  ggsave(file.path(out_dir, "Annual_Variation_Boxplot", plot_name), p1, width = width, height = height, dpi = dpi)
   
   return(p1)
 }
@@ -4341,8 +4801,15 @@ plot_AAV_performance <- function(mods, is.nsim,
     theme_rgbw() +
     theme(plot.title = element_text(hjust = 0.5))
   
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Annual_Variation")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV.png"),
+  ggsave(filename = file.path(main.dir, sub.dir, "Holistic_Annual_Variation", "Overall_AAV_Median.png"),
          plot = p, width = width, height = height, dpi = dpi)
   
   print(p)
@@ -4380,8 +4847,9 @@ plot_AAV_performance <- function(mods, is.nsim,
     geom_confidence_tern(breaks = 0.95)
   
   print(p2)
+  
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_raw.png"),
+  ggsave(filename = file.path(main.dir, sub.dir, "Holistic_Annual_Variation", "Overall_AAV_Distribution.png"),
          plot = p2, width = width, height = height, dpi = dpi)
   
   # Raw values
@@ -4414,8 +4882,9 @@ plot_AAV_performance <- function(mods, is.nsim,
     facet_wrap(~ Variable)
   
   print(p3)
+  
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_raw_distribution.png"),
+  ggsave(filename = file.path(main.dir, sub.dir, "Holistic_Annual_Variation", "Overall_AAV_Density(Raw).png"),
          plot = p3, width = width, height = height, dpi = dpi)
   
   # Normalized
@@ -4482,7 +4951,7 @@ plot_AAV_performance <- function(mods, is.nsim,
   
   print(p4)
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_AAV_normalized_distribution.png"),
+  ggsave(filename = file.path(main.dir, sub.dir, "Holistic_Annual_Variation", "Overall_AAV_Density(Norm).png"),
          plot = p4, width = width, height = height, dpi = dpi)
 }
 
@@ -4951,7 +5420,14 @@ plot_status_triangle <- function(mods, is.nsim,
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(filename = file.path(main.dir, sub.dir, "Status_Triangle_Plot", file), plot = p,
            width = width, height = height, dpi = dpi)
     
     print(p)
@@ -4967,14 +5443,21 @@ plot_status_triangle <- function(mods, is.nsim,
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    ggsave(filename = file.path(main.dir, sub.dir, "Status_Triangle_Plot", file), plot = p,
            width = width, height = height, dpi = dpi)
     
     print(p)
   }
   
-  plot_and_save(df_short_all, paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short.png")
-  plot_and_save(df_long_all, paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), "Relative_status_triangle_long.png")
+  plot_and_save(df_short_all, paste0("Short-term Relative Status (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Status_Short.png")
+  plot_and_save(df_long_all, paste0("Long-term Relative Status (Normalized): Last ", use.n.years.last, " Years"), "Status_Long.png")
   
   results_short2 <- bind_rows(results_short)
   results_long2 <- bind_rows(results_long)
@@ -4991,8 +5474,8 @@ plot_status_triangle <- function(mods, is.nsim,
                                   labels = new_model_names)
   }
   
-  plot_and_save2(results_short2, paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Relative_status_triangle_short_raw.png")
-  plot_and_save2(results_long2, paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Relative_status_triangle_long_raw.png")
+  plot_and_save2(results_short2, paste0("Short-term Relative Status: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Status_Short(Raw).png")
+  plot_and_save2(results_long2, paste0("Long-term Relative Status: Last ", use.n.years.last, " Years"), "Status_Long(Raw).png")
   
   res_short_all_raw <- bind_rows(res_short_raw)
   res_long_all_raw <- bind_rows(res_long_raw)
@@ -5024,6 +5507,14 @@ plot_status_triangle <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5037,7 +5528,16 @@ plot_status_triangle <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_boxplot(width = 0.6, col = "red") +
       stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
@@ -5054,7 +5554,7 @@ plot_status_triangle <- function(mods, is.nsim,
   
   print(p3)
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_short_density_plot.png"),
+  ggsave(filename = file.path(new_sub_dir, "Status_Short2(Norm).png"),
          plot = p3, width = width, height = height, dpi = dpi)
   
   # Normalized
@@ -5069,6 +5569,14 @@ plot_status_triangle <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5082,7 +5590,16 @@ plot_status_triangle <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_boxplot(width = 0.6, col = "red") +
       stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
@@ -5099,7 +5616,7 @@ plot_status_triangle <- function(mods, is.nsim,
   print(p4)
   
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_long_density_plot.png"),
+  ggsave(filename = file.path(new_sub_dir, "Status_Long2(Norm).png"),
          plot = p4, width = width, height = height, dpi = dpi)
   
   # Raw values
@@ -5115,6 +5632,14 @@ plot_status_triangle <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5128,7 +5653,16 @@ plot_status_triangle <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     # Step 1: Summarize data
     res_summary <- res_short_all_raw2 %>%
       group_by(Model, Variable) %>%
@@ -5168,10 +5702,18 @@ plot_status_triangle <- function(mods, is.nsim,
   
   print(p5)
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_short_raw_density_plot.png"),
+  ggsave(filename = file.path(new_sub_dir, "Status_Short2(Raw).png"),
          plot = p5, width = width, height = height, dpi = dpi)
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5185,7 +5727,16 @@ plot_status_triangle <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Status_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     # Step 1: Summarize data
     res_summary <- res_long_all_raw2 %>%
       group_by(Model, Variable) %>%
@@ -5227,7 +5778,7 @@ plot_status_triangle <- function(mods, is.nsim,
   print(p6)
   
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "Relative_status_triangle_long_raw_density_plot.png"),
+  ggsave(filename = file.path(new_sub_dir, "Status_Long2(Raw).png"),
          plot = p6, width = width, height = height, dpi = dpi)
   
 }
@@ -5480,6 +6031,7 @@ plot_status_triangle <- function(mods, is.nsim,
 #   plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
 #   plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
 # }
+
 plot_model_performance_triangle2 <- function(mods, is.nsim,
                                              main.dir, sub.dir,
                                              width = 8, height = 7, dpi = 300,
@@ -5704,8 +6256,15 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       theme_rgbw() +
       theme(plot.title = element_text(hjust = 0.5))
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(filename = file.path(new_sub_dir, file), plot = p, width = width, height = height, dpi = dpi)
     
     print(p)
   }
@@ -5720,14 +6279,21 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       theme(plot.title = element_text(hjust = 0.5)) +
       geom_confidence_tern(breaks = 0.95)
     
-    ggsave(filename = file.path(main.dir, sub.dir, file), plot = p,
-           width = width, height = height, dpi = dpi)
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Triangle_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
+    # Save the figure inside the new subfolder
+    ggsave(filename = file.path(new_sub_dir, file), plot = p, width = width, height = height, dpi = dpi)
     
     print(p)
   }
   
-  plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short2.png")
-  plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "model_performance_triangle_long2.png")
+  plot_and_save(df_short_all, paste0("Short-term Performance (Normalized): Years ", start.years, " to ", start.years + use.n.years.first - 1), "Performance_Short2(Norm).png")
+  plot_and_save(df_long_all, paste0("Long-term Performance (Normalized): Last ", use.n.years.last, " Years"), "Performance_Long2(Norm).png")
   
   results_short2 <- bind_rows(results_short)
   results_long2 <- bind_rows(results_long)
@@ -5744,8 +6310,8 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
                                   labels = new_model_names)
   }
   
-  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "model_performance_triangle_short_raw2.png")
-  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "model_performance_triangle_long_raw2.png")
+  plot_and_save2(results_short2, paste0("Short-term Performance: Years ", start.years, " to ", start.years + use.n.years.first - 1), "Performance_Short2(Raw).png")
+  plot_and_save2(results_long2, paste0("Long-term Performance: Last ", use.n.years.last, " Years"), "Performance_Long2(Raw).png")
   
   res_short_all_raw <- bind_rows(res_short_raw)
   res_long_all_raw <- bind_rows(res_long_raw)
@@ -5777,6 +6343,13 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5791,7 +6364,16 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_boxplot(width = 0.6, col = "red") +
       stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
@@ -5807,8 +6389,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   print(p3)
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_short2_density_plot.png"),
-         plot = p3, width = width, height = height, dpi = dpi)
+  ggsave(filename = file.path(new_sub_dir, "Performance_Short2(Norm).png"), plot = p3, width = width, height = height, dpi = dpi)
   
   # Normalized
   library(tidyr)
@@ -5822,6 +6403,14 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
@@ -5836,7 +6425,16 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
         y = "Model"
       ) +
       facet_wrap(~ Variable)
+    
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
+    
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
       geom_boxplot(width = 0.6, col = "red") +
       stat_summary(fun = median, geom = "point", shape = 21, fill = "white", size = 2) +
@@ -5853,8 +6451,7 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   print(p4)
   
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_long2_density_plot.png"),
-         plot = p4, width = width, height = height, dpi = dpi)
+  ggsave(filename = file.path(new_sub_dir, "Performance_Long2(Norm).png"), plot = p4, width = width, height = height, dpi = dpi)
   
   # Raw values
   res_short_all_raw2 <- res_short_all_raw %>%
@@ -5869,6 +6466,13 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     mutate(Variable = gsub("_score", "", Variable))  # clean name
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
     
     p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
@@ -5886,6 +6490,13 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       facet_wrap(~ Variable)
     
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
     
     # Step 1: Summarize data
     res_summary <- res_short_all_raw2 %>%
@@ -5926,10 +6537,17 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   
   print(p5)
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_short2_raw_density_plot.png"),
-         plot = p5, width = width, height = height, dpi = dpi)
+  ggsave(filename = file.path(new_sub_dir, "Performance_Short2(Raw).png"), plot = p5, width = width, height = height, dpi = dpi)
+  
   
   if (density_ridges) {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Density_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
     
     p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
       geom_density_ridges(alpha = 0.8, scale = 1.0, 
@@ -5947,6 +6565,13 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
       facet_wrap(~ Variable)
     
   } else {
+    
+    # Create the new subfolder if it doesn't exist
+    new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+    
+    if (!file.exists(new_sub_dir)){
+      dir.create(new_sub_dir)
+    }
     
     # Step 1: Summarize data
     res_summary <- res_long_all_raw2 %>%
@@ -5990,7 +6615,6 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   print(p6)
   
   # Save & print
-  ggsave(filename = file.path(main.dir, sub.dir, "model_performance_triangle_long2_raw_density_plot.png"),
-         plot = p6, width = width, height = height, dpi = dpi)
+  ggsave(filename = file.path(new_sub_dir, "Performance_Long2(Raw).png"), plot = p6, width = width, height = height, dpi = dpi)
   
 }
