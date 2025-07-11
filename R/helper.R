@@ -1416,6 +1416,18 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
   }
   
   if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  }
+
+  if (!is.nsim) {
     Years <- mods[[1]]$om$years
     title_main <- paste0("Probability SSB/SSB", mods[[1]]$om$input$data$percentSPR, "% < 0.5: Last ", use.n.years, " Years")
     res_list <- lapply(seq_along(mods), function(i) {
@@ -1670,6 +1682,18 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
   }
   
   if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  }
+  
+  if (!is.nsim) {
     Years <- mods[[1]]$om$years
     title_main <- paste0("Probability SSB/SSB", mods[[1]]$om$input$data$percentSPR, "% < 0.5: Years ", start.years, " to ", start.years + use.n.years - 1) 
     res_list <- lapply(seq_along(mods), function(i) {
@@ -1915,6 +1939,18 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
   if (is.null(use.n.years)) {
     cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
     use.n.years <- 5
+  }
+  
+  if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
   }
   
   make_plot_data <- function(index_range, label_prefix) {
@@ -2196,6 +2232,18 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
   if (is.null(start.years)) {
     cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
     start.years <- 1
+  }
+  
+  if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
   }
   
   make_plot_data <- function(index_range, label_prefix) {
@@ -2632,6 +2680,18 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
     use.n.years <- 1
   }
   
+  if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  }
+  
   # === Extract SSB/SSBxx% ===
   if (!is.nsim) {
     Years <- mods[[1]]$om$years
@@ -3005,7 +3065,7 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
   }
   
   if (ncol(plot_df) < 3) {
-    warning("Radar chart needs at least 3 models. Showing barplot instead.")
+    message("Radar chart needs at least 3 models. Showing barplot instead.")
     return(invisible(NULL))
   }
   
@@ -3019,21 +3079,31 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
     dir.create(new_sub_dir)
   }
   
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(F[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(F[LT]))
+  
   # Save to PNG
   output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png"))
   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
   radarchart(plot_df,
              axistype = 4,
              pcol = colors,
-             plwd = 2,
-             plty = 1,
+             plwd = 3,
+             # pty = 1:length(colors),
+             plty = 1:length(colors),
              cglcol = "grey80",
              cglty = 1,
              axislabcol = "grey30",
-             vlcex = 0.9,
-             title = paste("Model Performance"))
-  legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
-         lty = 1, lwd = 2, cex = 0.8, bty = "n")
+             vlcex = 0.9)
+  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+         lty = 1:length(colors), 
+         # pch = 1:length(colors),
+         lwd = 3, cex = 0.9, y.intersp = 1.5)
   dev.off()
   
   # Also plot to screen (inline)
@@ -3041,17 +3111,539 @@ plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir,
   radarchart(plot_df,
              axistype = 4,
              pcol = colors,
-             plwd = 2,
-             plty = 1,
+             plwd = 3,
+             # pty = 1:length(colors),
+             plty = 1:length(colors),
              cglcol = "grey80",
              cglty = 1,
              axislabcol = "grey30",
-             vlcex = 0.9,
-             title = paste("Model Performance"))
-  legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
-         lty = 1, lwd = 2, cex = 0.8, bty = "n")
+             vlcex = 0.9)
+  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+         lty = 1:length(colors), 
+         # pch = 1:length(colors),
+         lwd = 3, cex = 0.9, y.intersp = 1.5)
   on.exit(par(op))  # restore after plotting
 }
+
+plot_model_performance_radar2 <- function(mods, is.nsim, main.dir, sub.dir, 
+                                          width = 10, height = 10, dpi = 300, col.opt = "D",
+                                          method = NULL,
+                                          use.n.years.first = 5,
+                                          use.n.years.last = 5,
+                                          start.years = 1, 
+                                          new_model_names = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  library(viridisLite)
+  
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  if (is.nsim) {
+    
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    
+    results <- list()
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+        
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+        
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+        
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+        
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } 
+      }
+      
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      results[[r]] <- tmp
+    }
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  } else {
+    
+    n_models <- length(mods)
+    results <- list()
+    
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      
+      rep <- mods[[m]]$om$rep
+      
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+      
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+      
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+      
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      }
+    }
+    
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    
+    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    results[[1]] <- tmp
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  }
+  
+  if (ncol(plot_df) < 3) {
+    message("Radar chart needs at least 3 models. Showing barplot instead.")
+    return(invisible(NULL))
+  }
+  
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  rownames(plot_df)
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(Catch[AAV]),
+                        expression(SSB[AAV]),
+                        expression(F[AAV]))
+  
+  # Save to PNG
+  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar2.png"))
+  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+  radarchart(plot_df,
+             axistype = 4,
+             pcol = colors,
+             plwd = 3,
+             # pty = 1:length(colors),
+             plty = 1:length(colors),
+             cglcol = "grey80",
+             cglty = 1,
+             axislabcol = "grey30",
+             vlcex = 0.9)
+  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+         lty = 1:length(colors), 
+         # pch = 1:length(colors),
+         lwd = 3, cex = 0.9, y.intersp = 1.5)
+  dev.off()
+  
+  # Also plot to screen (inline)
+  op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
+  radarchart(plot_df,
+             axistype = 4,
+             pcol = colors,
+             plwd = 3,
+             # pty = 1:length(colors),
+             plty = 1:length(colors),
+             cglcol = "grey80",
+             cglty = 1,
+             axislabcol = "grey30",
+             vlcex = 0.9)
+  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+         lty = 1:length(colors), 
+         # pch = 1:length(colors),
+         lwd = 3, cex = 0.9, y.intersp = 1.5)
+  on.exit(par(op))  # restore after plotting
+}
+
+# plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
+#                                          width = 10, height = 10, dpi = 300, col.opt = "D",
+#                                          method = NULL,
+#                                          use.n.years.first = 5,
+#                                          use.n.years.last = 5,
+#                                          start.years = 1, 
+#                                          new_model_names = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(fmsb)
+#   library(viridis)
+#   
+#   if (is.nsim) {
+#     
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     results <- list()
+#     
+#     for (r in seq_len(n_reps)) {
+#       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         
+#         # Catch and SSB as rowSums
+#         catch_ts <- rowSums(rep$pred_catch)
+#         ssb_ts <- rowSums(rep$SSB)
+#         
+#         # Global Fbar
+#         n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+#         n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+#         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+#         
+#         # First and last period means
+#         if(is.null(method)) method = "median"
+#         if (method == "median") {
+#           tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#           tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+#         } else if (method == "mean") {
+#           tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#           tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+#         } 
+#       }
+#       
+#       # Normalize: higher is better except for Fbar
+#       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#         }
+#       }
+#       for (v in c("Fbar_first", "Fbar_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#           tmp[[v]] <- 100 * (1 - norm_f)
+#         }
+#       }
+#       
+#       results[[r]] <- tmp
+#     }
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   } else {
+#     
+#     n_models <- length(mods)
+#     results <- list()
+#     
+#     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       
+#       rep <- mods[[m]]$om$rep
+#       
+#       # Catch and SSB as rowSums
+#       catch_ts <- rowSums(rep$pred_catch)
+#       ssb_ts <- rowSums(rep$SSB)
+#       
+#       # Global Fbar
+#       n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[m]]$om$input$data$n_regions[1]
+#       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+#       
+#       if(is.null(method)) method = "median"
+#       # First and last period means
+#       if (method == "median") {
+#         tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#         tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+#       } else if (method == "mean") {
+#         tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#         tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+#       }
+#     }
+#     
+#     # Normalize: higher is better except for Fbar
+#     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values are identical; assign full score
+#       } else {
+#         tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#       }
+#     }
+#     
+#     for (v in c("Fbar_first", "Fbar_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values identical; assign full score
+#       } else {
+#         norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#         tmp[[v]] <- 100 * (1 - norm_f)
+#       }
+#     }
+#     
+#     results[[1]] <- tmp
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   }
+#   
+#   if (ncol(plot_df) < 3) {
+#     warning("Radar chart needs at least 3 models. Showing barplot instead.")
+#     return(invisible(NULL))
+#   }
+#   
+#   # Plot without any further changes
+#   colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+#   
+#   # Create the new subfolder if it doesn't exist
+#   new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+#   
+#   if (!file.exists(new_sub_dir)){
+#     dir.create(new_sub_dir)
+#   }
+#   
+#   # Save to PNG
+#   output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png"))
+#   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 2,
+#              plty = 1,
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9,
+#              title = paste("Model Performance"))
+#   legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
+#          lty = 1, lwd = 2, cex = 0.8, bty = "n")
+#   dev.off()
+#   
+#   # Also plot to screen (inline)
+#   op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 2,
+#              plty = 1,
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9,
+#              title = paste("Model Performance"))
+#   legend(x = 1.25, y = 0.3, legend = rownames(plot_df)[-c(1,2)], col = colors,
+#          lty = 1, lwd = 2, cex = 0.8, bty = "n")
+#   on.exit(par(op))  # restore after plotting
+# }
 
 plot_mean_rec_par <- function(mods, is.nsim, main.dir, sub.dir, 
                               width = 10, height = 7, dpi = 300, col.opt = "D",
@@ -3513,15 +4105,39 @@ plot_model_performance_bar <- function(mods, is.nsim,
   n_metrics <- length(unique(summary_data$Metric))
   my_colors <- viridisLite::viridis(n = n_metrics, option = col.opt)
   
+  my_metric_labels <- c(
+    expression(bold(Catch)[ST]), # Catch will be bold
+    expression(bold(SSB)[ST]),   # SSB will be bold
+    expression(bold(F)[ST]),     # F will be bold
+    expression(bold(Catch)[LT]), # Catch will be bold
+    expression(bold(SSB)[LT]),   # SSB will be bold
+    expression(bold(F)[LT])      # F will be bold
+  )
+  
+  metric_levels <- c(
+    "Catch_first",
+    "SSB_first",
+    "Fbar_first", # Note: Fbar_first maps to F[ST]
+    "Catch_last",
+    "SSB_last",
+    "Fbar_last"   # Note: Fbar_last maps to F[LT]
+  )
+  
+  summary_data$Metric <- factor(summary_data$Metric,
+                                levels = metric_levels,
+                                labels = my_metric_labels)
+  
   # Plot
   plot <- ggplot(summary_data, aes(x = Median, y = Model, fill = Metric, color = Metric)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.7) +
     geom_errorbar(aes(xmin = Q1, xmax = Q3), col = "black",
                   position = position_dodge(width = 0.9), width = 0.3, alpha = 0.3) +
-    scale_fill_manual(values = my_colors) +
-    scale_color_manual(values = my_colors) +
+    scale_fill_manual(values = my_colors,
+                      labels = my_metric_labels) + # Add labels argument for fill legend
+    scale_color_manual(values = my_colors,
+                       labels = my_metric_labels) + # Add labels argument for color legend
     theme_bw() +
-    labs(title = paste("Model Performance"),
+    labs(title = paste("Holistic Model Performance"),
          x = "Score (0-100)",
          y = "Estimation Model",
          fill = "Metric",
@@ -3548,6 +4164,229 @@ plot_model_performance_bar <- function(mods, is.nsim,
          plot = plot, width = width, height = height, dpi = dpi)
 }
 
+plot_model_performance_bar2 <- function(mods, is.nsim,
+                                        main.dir = ".",
+                                        sub.dir = ".",
+                                        new_model_names = NULL,
+                                        width = 12, height = 8, dpi = 300,
+                                        col.opt = "D",
+                                        method = NULL,
+                                        use.n.years.first = 5,
+                                        use.n.years.last = 5,
+                                        start.years = 1) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(viridisLite)
+  
+  results_list <- list()
+  
+  if (is.nsim) {
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        input <- mods[[r]][[m]]$om$input$data
+        n_fleets <- input$n_fleets[1]
+        n_regions <- input$n_regions[1]
+        
+        # Collect timeseries
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+        
+        if(is.null(method)) method = "median"
+        # First and last period means
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+        }
+      }
+      
+      # Normalize within realization (safe check)
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("Fbar_first", "Fbar_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      tmp$Realization <- r
+      results_list[[r]] <- tmp
+    }
+    
+    combined <- bind_rows(results_list)
+    
+    # Summarize across realizations
+    summary_data <- combined %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Score") %>%
+      group_by(Model, Metric) %>%
+      summarize(
+        Median = median(Score),
+        Q1 = quantile(Score, 0.25),
+        Q3 = quantile(Score, 0.75),
+        .groups = "drop"
+      )
+    
+  } else {
+    n_models <- length(mods)
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      rep <- mods[[m]]$om$rep
+      input <- mods[[m]]$om$input$data
+      n_fleets <- input$n_fleets[1]
+      n_regions <- input$n_regions[1]
+      
+      # Collect timeseries
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+      }
+    }
+    
+    # Normalize across models (safe check)
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    for (v in c("Fbar_first", "Fbar_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    tmp$Realization <- 1
+    combined <- tmp
+    
+    summary_data <- tmp %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Median") %>%
+      mutate(Q1 = Median, Q3 = Median)
+  }
+  
+  # Rename if needed
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(summary_data$Model))) {
+      stop("Length of new_model_names must match number of models.")
+    }
+    summary_data$Model <- factor(summary_data$Model,
+                                 levels = paste0("Model", seq_along(new_model_names)),
+                                 labels = new_model_names)
+  }
+  
+  # Colors
+  n_metrics <- length(unique(summary_data$Model))
+  my_colors <- viridisLite::viridis(n = n_metrics, option = col.opt)
+  
+  my_metric_labels <- c(
+    expression(bold(Catch)[ST]), # Catch will be bold
+    expression(bold(SSB)[ST]),   # SSB will be bold
+    expression(bold(F)[ST]),     # F will be bold
+    expression(bold(Catch)[LT]), # Catch will be bold
+    expression(bold(SSB)[LT]),   # SSB will be bold
+    expression(bold(F)[LT])      # F will be bold
+  )
+  
+  metric_levels <- c(
+    "Catch_first",
+    "SSB_first",
+    "Fbar_first", # Note: Fbar_first maps to F[ST]
+    "Catch_last",
+    "SSB_last",
+    "Fbar_last"   # Note: Fbar_last maps to F[LT]
+  )
+  
+  summary_data$Metric <- factor(summary_data$Metric,
+                                levels = metric_levels,
+                                labels = my_metric_labels)
+  # Plot
+  plot <- ggplot(summary_data, aes(x = Median, y = Metric, fill = Model, color = Model)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.7) +
+    geom_errorbar(aes(xmin = Q1, xmax = Q3), col = "black",
+                  position = position_dodge(width = 0.9), width = 0.3, alpha = 0.3) +
+    scale_fill_manual(values = my_colors) +
+    scale_color_manual(values = my_colors) +
+    theme_bw() +
+    labs(title = paste("Holistic Model Performance"),
+         x = "Score (0-100)",
+         y = "Metric",
+         fill = "Model",
+         color = "Model") +
+    scale_y_discrete(labels = my_metric_labels,
+                     limits = rev(levels(summary_data$Metric))) +
+    theme(
+      axis.text = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      plot.title = element_text(size = 18, face = "bold")
+    )
+  
+  # Print and save
+  print(plot)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(filename = file.path(new_sub_dir, "Overall_Performance2.png"),
+         plot = plot, width = width, height = height, dpi = dpi)
+}
 
 plot_model_performance_triangle <- function(mods, is.nsim,
                                             main.dir, sub.dir,
@@ -4509,7 +5348,7 @@ plot_ssb_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB",
     scale_color_viridis_d(option = col.opt) +
     ggtitle(paste0("Average Annual SSB Variation",
                    if (!is.null(base.model)) paste0(" (Relative to ", base.model, ")"))) +
-    ylab(ifelse(is.null(base.model), "AACV", "Relative AACV Difference")) +
+    ylab(ifelse(is.null(base.model), "AASV", "Relative AASV Difference")) +
     theme_bw() 
   
   # Save plot
@@ -4660,7 +5499,7 @@ plot_fbar_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar",
     scale_color_viridis_d(option = col.opt) +
     ggtitle(paste0("Average Annual Fbar Variation",
                    if (!is.null(base.model)) paste0(" (Relative to ", base.model, ")"))) +
-    ylab(ifelse(is.null(base.model), "AACV", "Relative AACV Difference")) +
+    ylab(ifelse(is.null(base.model), "AAFV", "Relative AAFV Difference")) +
     theme_bw()
   
   # Save
@@ -5219,6 +6058,18 @@ plot_status_triangle <- function(mods, is.nsim,
   # Safer warning
   if (missing(start.years)) {
     warning("start.years not provided; defaulting to 1 (first historical year).")
+  }
+  
+  if (!is.nsim) {
+    if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+  } else {
+    if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
   }
   
   # Function to extract mean Catch, SSB, and Fbar
@@ -6617,4 +7468,377 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
   # Save & print
   ggsave(filename = file.path(new_sub_dir, "Performance_Long2(Raw).png"), plot = p6, width = width, height = height, dpi = dpi)
   
+}
+
+
+plot_total_catch_performance <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
+                                         width = 10, height = 7, dpi = 300, col.opt = "D",
+                                         method = NULL,
+                                         outlier.opt = NA,
+                                         plot.style = "median_iqr", 
+                                         show.whisker = TRUE,
+                                         use.n.years = NULL,
+                                         new_model_names = NULL,
+                                         base.model = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(rlang)
+  
+  if (is.null(use.n.years)) {
+    cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+    use.n.years <- 5
+  }
+  
+  res <- NULL
+  
+  # Prepare data
+  if (!is.nsim) {
+    Years <- mods[[1]]$om$years
+    res <- lapply(seq_along(mods), function(i) {
+      data.frame(
+        Catch = mods[[i]]$om$rep$pred_catch,
+        Model = paste0("Model", i),
+        Year = Years,
+        Realization = 1
+      ) %>% tail(use.n.years)
+    }) %>% bind_rows()
+  } else {
+    Years <- mods[[1]][[1]]$om$years
+    res <- lapply(seq_along(mods), function(r) {
+      lapply(seq_along(mods[[r]]), function(m) {
+        data.frame(
+          Catch = mods[[r]][[m]]$om$rep$pred_catch,
+          Model = paste0("Model", m),
+          Year = Years,
+          Realization = r
+        ) %>% tail(use.n.years)
+      }) %>% bind_rows()
+    }) %>% bind_rows()
+  }
+  
+  # Add the last column: total Catch by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(Catch_Global = sum(c_across(starts_with("Catch")), na.rm = TRUE)) %>%
+    ungroup()
+  
+  # Rename models if specified
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    res$Model <- factor(res$Model,
+                        levels = paste0("Model", seq_along(new_model_names)),
+                        labels = new_model_names)
+    # if (!is.null(base.model)) base.model <- new_model_names[base.model]
+    if (!is.null(base.model)) {
+      if (!(base.model %in% new_model_names)) {
+        warning("base.model does not match any of the new_model_names.")
+      }
+    }
+  }
+  
+  # Pivot longer if needed (for multiple Catch columns)
+  res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+  
+  # Then sum over years (use.n.years) by Model, Realization, and Label
+  res <- res %>%
+    filter(Year %in% tail(Years, use.n.years)) %>%
+    group_by(Model, Realization, Label) %>%
+    summarise(!!var := sum(!!sym(var), na.rm = TRUE), .groups = "drop")
+  
+  # Relative difference from base.model
+  if (!is.null(base.model)) {
+    base_df <- res %>%
+      filter(Model == base.model) %>%
+      rename(base_val = !!sym(var)) %>%
+      select(Realization, Label, base_val)
+    
+    res <- left_join(res, base_df, by = c("Realization", "Label")) %>%
+      mutate(!!var := (!!sym(var)) / base_val - 1)
+  }
+  
+  # Apply mean or median summarization if method is specified
+  if (!is.null(method)) {
+    res <- res %>%
+      group_by(Model, Realization, Label) %>%
+      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
+                .groups = "drop")
+  }
+  
+  # Plot
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " Difference"))) +
+      xlab("Model") + 
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " vs ", base.model)),
+                     ": Last ", use.n.years, " Years")) +
+      ylab(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " Difference"))) +
+      xlab("Model") + 
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
+  
+  plot_name <- paste0("Total_",var, ifelse(is.null(base.model), "", "_Relative"), "_last_", use.n.years, "_years.PNG")
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
+  
+  return(p)
+}
+
+
+plot_total_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch",
+                                          width = 10, height = 7, dpi = 300, col.opt = "D",
+                                          method = NULL,
+                                          outlier.opt = NA,
+                                          plot.style = "median_iqr", 
+                                          show.whisker = TRUE,
+                                          use.n.years = NULL,
+                                          start.years = NULL,
+                                          new_model_names = NULL,
+                                          base.model = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(rlang)
+  
+  if (is.null(use.n.years)) {
+    cat("\nuse.n.years is not specified, so default (5 years) is used here!\n")
+    use.n.years <- 5
+  }
+  
+  if (is.null(start.years)) {
+    cat("\nstart.years is not specified, so default (1st year in historical period) is used here!\n")
+    start.years <- 1
+  }
+  
+  res <- NULL
+  
+  if (!is.nsim) {
+    Years <- mods[[1]]$om$years
+    res <- lapply(seq_along(mods), function(i) {
+      tmp <- data.frame(
+        Catch = mods[[i]]$om$rep$pred_catch,
+        Model = paste0("Model", i),
+        Year = Years,
+        Realization = 1
+      )
+      start_idx <- start.years
+      end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+      tmp[start_idx:end_idx, ]
+    }) %>% bind_rows()
+  } else {
+    Years <- mods[[1]][[1]]$om$years
+    res <- lapply(seq_along(mods), function(r) {
+      lapply(seq_along(mods[[r]]), function(m) {
+        tmp <- data.frame(
+          Catch = mods[[r]][[m]]$om$rep$pred_catch,
+          Model = paste0("Model", m),
+          Year = Years,
+          Realization = r
+        )
+        start_idx <- start.years
+        end_idx <- min(start.years + use.n.years - 1, nrow(tmp))
+        tmp[start_idx:end_idx, ]
+      }) %>% bind_rows()
+    }) %>% bind_rows()
+  }
+  
+  # Add the last column: total Catch by Year and Realization
+  res <- res %>%
+    rowwise() %>%
+    mutate(Catch_Global = sum(c_across(starts_with("Catch")), na.rm = TRUE)) %>%
+    ungroup()
+  
+  # Rename models if requested
+  if (!is.null(new_model_names)) {
+    if (length(new_model_names) != length(unique(res$Model))) {
+      stop("Length of new_model_names must match the number of models.")
+    }
+    res$Model <- factor(res$Model,
+                        levels = paste0("Model", seq_along(new_model_names)),
+                        labels = new_model_names)
+    # if (!is.null(base.model)) base.model <- new_model_names[base.model]
+    if (!is.null(base.model)) {
+      if (!(base.model %in% new_model_names)) {
+        warning("base.model does not match any of the new_model_names.")
+      }
+    }
+  }
+  
+  # Pivot longer if multiple types
+  res <- pivot_longer(res, cols = starts_with(var), names_to = "Label", values_to = var)
+  
+  # Then sum over years (use.n.years) by Model, Realization, and Label
+  res <- res %>%
+    group_by(Model, Realization, Label) %>%
+    summarise(!!var := sum(!!sym(var), na.rm = TRUE), .groups = "drop")
+  
+  # Relative difference from base.model
+  if (!is.null(base.model)) {
+    base_df <- res %>%
+      filter(Model == base.model) %>%
+      rename(base_val = !!sym(var)) %>%
+      select(Realization, Label, base_val)
+    
+    res <- left_join(res, base_df, by = c("Realization", "Label")) %>%
+      mutate(!!var := (!!sym(var)) / base_val - 1)
+  }
+  
+  # Apply mean or median summarization if method is specified
+  if (!is.null(method)) {
+    res <- res %>%
+      group_by(Model, Realization, Label) %>%
+      summarise(!!var := if (method == "mean") mean(!!sym(var)) else median(!!sym(var)),
+                .groups = "drop")
+  }
+  
+  # Plot
+  if (plot.style == "boxplot") {
+    p <- ggplot(res, aes(x = Model, y = Catch, color = Model)) +
+      geom_boxplot(lwd = 0.8, outlier.shape = outlier.opt) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " Difference"))) +
+      xlab("Model") + 
+      theme_bw()
+  } else if (plot.style == "median_iqr") {
+    # Compute summary statistics with 1.5x IQR whiskers
+    res_summary <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        q1 = quantile(!!sym(var), 0.25),
+        med = median(!!sym(var)),
+        q3 = quantile(!!sym(var), 0.75),
+        iqr = q3 - q1,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        x = as.numeric(factor(Model)),
+        ymin = if (show.whisker) q1 - 1.5 * iqr else NA_real_,
+        ymax = if (show.whisker) q3 + 1.5 * iqr else NA_real_
+      )
+    
+    # Clip whiskers to the observed range
+    res_limits <- res %>%
+      group_by(Model, Label) %>%
+      summarise(
+        min_val = min(!!sym(var), na.rm = TRUE),
+        max_val = max(!!sym(var), na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    res_summary <- left_join(res_summary, res_limits, by = c("Model", "Label")) %>%
+      mutate(
+        ymin = pmax(ymin, min_val),
+        ymax = pmin(ymax, max_val)
+      )
+    
+    p <- ggplot(res_summary, aes(x = x, color = Model)) +
+      # Whiskers (1.5 x IQR, clipped to observed range)
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = ymin, yend = q1)) } +
+      {if (show.whisker) geom_segment(aes(x = x, xend = x, y = q3, yend = ymax)) } +
+      
+      # IQR box (no fill)
+      geom_rect(aes(xmin = x - 0.3, xmax = x + 0.3, ymin = q1, ymax = q3, col = Model),
+                fill = NA, linewidth = 0.8) +
+      
+      # Median line
+      geom_segment(aes(x = x - 0.3, xend = x + 0.3, y = med, yend = med, color = Model),
+                   linewidth = 0.8) +
+      
+      scale_x_continuous(breaks = res_summary$x, labels = res_summary$Model) +
+      facet_grid(Label ~ ., scales = "free") +
+      scale_color_viridis_d(option = col.opt) +
+      ggtitle(paste0(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total_", var, " vs ", base.model)),
+                     ": Years ", start.years, " to ", start.years + use.n.years - 1)) +
+      ylab(ifelse(is.null(base.model), paste0("Total ", var), paste0("Relative Total ", var, " Difference"))) +
+      xlab("Model") + 
+      theme_bw()
+  } else {
+    stop("Unknown plot.style. Choose 'boxplot' or 'median_iqr'.")
+  }
+  
+  # Save the plot
+  plot_name <- paste0("Total_", var, ifelse(is.null(base.model), "", "_Relative"),"_first_", use.n.years, "_years.PNG")
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Performance_Boxplot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Save the figure inside the new subfolder
+  ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
+  
+  return(p)
 }
