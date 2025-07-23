@@ -170,9 +170,19 @@ generate_basic_info <- function(n_stocks = 2,
   basic_info$onto_move_pars = onto_move_pars
   basic_info$age_mu_devs = age_mu_devs
   basic_info$apply_re_trend = apply_re_trend
-  basic_info$trend_re_rate = ifelse(apply_re_trend == 1, trend_re_rate, 0)
+  if (apply_mu_trend == 1) {
+    basic_info$trend_re_rate <- trend_re_rate
+  } else {
+    # Create an array of zeros with the exact same dimensions as trend_re_rate
+    basic_info$trend_re_rate <- 0
+  }
   basic_info$apply_mu_trend = apply_mu_trend
-  basic_info$trend_mu_rate = ifelse(apply_mu_trend == 1, trend_mu_rate, 0)
+  if (apply_mu_trend == 1) {
+    basic_info$trend_mu_rate <- trend_mu_rate
+  } else {
+    # Create an array of zeros with the exact same dimensions as trend_mu_rate
+    basic_info$trend_mu_rate <- 0
+  }
   
   basic_info$years = as.integer(base.years[1] - 1 + 1:(length(base.years) + n_feedback_years))
   basic_info$ages = as.integer(1:n_ages)

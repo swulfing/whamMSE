@@ -1555,9 +1555,9 @@ plot_ssb_status <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status"
     res_summary <- res_long %>%
       group_by(Model, Label) %>%
       summarise(
-        q1 = quantile(value, 0.25),
-        med = median(value),
-        q3 = quantile(value, 0.75),
+        q1 = quantile(value, 0.25, na.rm = TRUE),
+        med = median(value, na.rm = TRUE),
+        q3 = quantile(value, 0.75, na.rm = TRUE),
         iqr = q3 - q1,
         .groups = "drop"
       ) %>%
@@ -1818,9 +1818,9 @@ plot_ssb_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "SSB_status
     res_summary <- res_long %>%
       group_by(Model, Label) %>%
       summarise(
-        q1 = quantile(value, 0.25),
-        med = median(value),
-        q3 = quantile(value, 0.75),
+        q1 = quantile(value, 0.25, na.rm = TRUE),
+        med = median(value, na.rm = TRUE),
+        q3 = quantile(value, 0.75, na.rm = TRUE),
         iqr = q3 - q1,
         .groups = "drop"
       ) %>%
@@ -2094,9 +2094,9 @@ plot_fbar_status <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_statu
       res_summary <- res_long %>%
         group_by(Model, Label) %>%
         summarise(
-          q1 = quantile(value, 0.25),
-          med = median(value),
-          q3 = quantile(value, 0.75),
+          q1 = quantile(value, 0.25, na.rm = TRUE),
+          med = median(value, na.rm = TRUE),
+          q3 = quantile(value, 0.75, na.rm = TRUE),
           iqr = q3 - q1,
           .groups = "drop"
         ) %>%
@@ -2386,9 +2386,9 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
       res_summary <- res_long %>%
         group_by(Model, Label) %>%
         summarise(
-          q1 = quantile(value, 0.25),
-          med = median(value),
-          q3 = quantile(value, 0.75),
+          q1 = quantile(value, 0.25, na.rm = TRUE),
+          med = median(value, na.rm = TRUE),
+          q3 = quantile(value, 0.75, na.rm = TRUE),
           iqr = q3 - q1,
           .groups = "drop"
         ) %>%
@@ -2665,6 +2665,227 @@ plot_fbar_status2 <- function(mods, is.nsim, main.dir, sub.dir, var = "Fbar_stat
 #   return(p)
 # }
 
+# plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir, 
+#                              width = 10, height = 7, dpi = 300, col.opt = "D",
+#                              new_model_names = NULL,
+#                              use.n.years = NULL,
+#                              show_density = FALSE) {
+#   library(dplyr)
+#   library(tidyr)
+#   library(ggplot2)
+#   library(viridis)
+#   
+#   if (is.null(use.n.years)) {
+#     cat("\nuse.n.years is not specified, so default (terminal year) is used here!\n")
+#     use.n.years <- 1
+#   }
+#   
+#   if (!is.nsim) {
+#     if (is.null(mods[[1]]$om$rep$log_SSB_FXSPR)) {
+#       message("Biological Reference Point has not been calculated internally!")
+#       return(invisible(NULL))
+#     }
+#   } else {
+#     if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+#       message("Biological Reference Point has not been calculated internally!")
+#       return(invisible(NULL))
+#     }
+#   }
+#   
+#   # === Extract SSB/SSBxx% ===
+#   if (!is.nsim) {
+#     Years <- mods[[1]]$om$years
+#     ssb_list <- lapply(seq_along(mods), function(i) {
+#       tmp <- mods[[i]]$om$rep$SSB
+#       tmp <- cbind(tmp, rowSums(tmp))
+#       tmp <- tmp / exp(mods[[i]]$om$rep$log_SSB_FXSPR)
+#       ssb <- tail(tmp, use.n.years)
+#       data.frame(Model = paste0("Model", i),
+#                  Realization = 1,
+#                  Year = tail(Years, use.n.years),
+#                  Overfished = ssb)
+#     })
+#     ssb_df <- bind_rows(ssb_list)
+#   } else {
+#     Years <- mods[[1]][[1]]$om$years
+#     ssb_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         tmp <- mods[[r]][[m]]$om$rep$SSB
+#         tmp <- cbind(tmp, rowSums(tmp))
+#         tmp <- tmp / exp(mods[[r]][[m]]$om$rep$log_SSB_FXSPR)
+#         ssb <- tail(tmp, use.n.years)
+#         data.frame(Model = paste0("Model", m),
+#                    Realization = r,
+#                    Year = tail(Years, use.n.years),
+#                    Overfished = ssb)
+#       })
+#     })
+#     ssb_df <- bind_rows(ssb_list)
+#   }
+#   
+#   ncol = ncol(ssb_df) - 3
+#   ssb <- list()
+#   for (i in 1:ncol) {
+#     ssb[[i]] <- ssb_df[,c(1:3,3+i)]
+#     names(ssb[[i]])[4] <- "Overfished"
+#   }
+#   
+#   # === Extract F/Fxx% ===
+#   if (!is.nsim) {
+#     fbar_list <- lapply(seq_along(mods), function(i) {
+#       n_fleets <- mods[[i]]$om$input$data$n_fleets
+#       fbar <- mods[[i]]$om$rep$Fbar[, -c(1:n_fleets)]
+#       fbar_ref <- exp(mods[[i]]$om$rep$log_Fbar_XSPR[, -c(1:n_fleets)])
+#       ff <- tail(fbar / fbar_ref, use.n.years)
+#       data.frame(Model = paste0("Model", i),
+#                  Realization = 1,
+#                  Year = tail(Years, use.n.years),
+#                  Overfishing = ff)
+#     })
+#     fbar_df <- bind_rows(fbar_list)
+#   } else {
+#     fbar_list <- lapply(seq_along(mods), function(r) {
+#       lapply(seq_along(mods[[r]]), function(m) {
+#         n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets
+#         fbar <- mods[[r]][[m]]$om$rep$Fbar[, -c(1:n_fleets)]
+#         fbar_ref <- exp(mods[[r]][[m]]$om$rep$log_Fbar_XSPR[, -c(1:n_fleets)])
+#         ff <- tail(fbar / fbar_ref, use.n.years)
+#         data.frame(Model = paste0("Model", m),
+#                    Realization = r,
+#                    Year = tail(Years, use.n.years),
+#                    Overfishing = ff)
+#       })
+#     })
+#     fbar_df <- bind_rows(fbar_list)
+#   }
+#   
+#   ncol = ncol(fbar_df) - 3
+#   fbar <- list()
+#   for (i in 1:ncol) {
+#     fbar[[i]] <- fbar_df[,c(1:3,3+i)]
+#     names(fbar[[i]])[4] <- "Overfishing"
+#   }
+#   
+#   p <- list()
+#   # === Merge ===
+#   for (i in 1:ncol) {
+#     temp <- left_join(ssb[[i]], fbar[[i]], by = c("Model", "Realization", "Year"))
+#     temp$Index <- paste0("Year ", temp$Year)
+#     
+#     # === Rename Models if needed ===
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(temp$Model))) {
+#         stop("Length of new_model_names must match number of models.")
+#       }
+#       temp$Model <- factor(temp$Model,
+#                            levels = paste0("Model", seq_along(new_model_names)),
+#                            labels = new_model_names)
+#     }
+#     
+#     percentSPR <- if (!is.nsim) mods[[1]]$om$input$data$percentSPR else mods[[1]][[1]]$om$input$data$percentSPR
+#     
+#     # Check if any rows contain non-finite values in the specified columns
+#     if (any(!is.finite(temp$Overfished) | !is.finite(temp$Overfishing))) {
+#       # If non-finite values exist, print this message
+#       message("Non-finite values detected. Removing them before plotting.")
+#     }
+#     
+#     # This filtering step runs regardless of whether the message was printed
+#     temp <- temp %>% 
+#       filter(is.finite(Overfished) & is.finite(Overfishing))
+#     
+#     # === Plot
+#     p[[i]] <- ggplot(temp, aes(x = Overfished, y = Overfishing)) +
+#       facet_wrap(~ Model) +
+#       annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow")
+#     
+#     # === Add smoothed 2D density layer
+#     if (show_density) {
+#       p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.4, contour_var = "density", bins = 100) +
+#         scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
+#     }
+#     
+#     # === Add points and reference lines
+#     if (show_density) {
+#       
+#       plot_title <- if (i < ncol) {
+#         paste0("Stock Status in the Last ", use.n.years, " Year(s)\nRegion ", i)
+#       } else {
+#         paste0("Stock Status in the Last ", use.n.years, " Year(s)\nGlobal")
+#       }
+#       
+#       p[[i]] <- p[[i]] +
+#         geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
+#         scale_color_viridis_d(option = col.opt) +
+#         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+#         geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+#         xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+#         ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+#         ggtitle(plot_title) +
+#         theme_bw() +
+#         theme(axis.text = element_text(size = 12),
+#               axis.title = element_text(size = 20),
+#               plot.title = element_text(size = 12),
+#               strip.text = element_text(size = 12),
+#               legend.text = element_text(size = 12),
+#               legend.title = element_text(size = 12),
+#               aspect.ratio = 1,
+#               panel.grid.major = element_blank(),
+#               panel.grid.minor = element_blank(),
+#               panel.background = element_blank(),
+#               axis.line = element_line(colour = "black")) +
+#         coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+#                         ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+#     } else {
+#       
+#       plot_title <- if (i < ncol) {
+#         paste0("Stock Status in the Last ", use.n.years, " Year(s)\nRegion ", i)
+#       } else {
+#         paste0("Stock Status in the Last ", use.n.years, " Year(s)\nGlobal")
+#       }
+#       
+#       p[[i]] <- p[[i]] +
+#         geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
+#         scale_color_viridis_d(option = col.opt) +
+#         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
+#         geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
+#         xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
+#         ylab(bquote(paste("F/", F[.(percentSPR)*"%"]))) +
+#         ggtitle(plot_title) +
+#         theme_bw() +
+#         theme(axis.text = element_text(size = 12),
+#               axis.title = element_text(size = 20),
+#               plot.title = element_text(size = 12),
+#               strip.text = element_text(size = 12),
+#               legend.text = element_text(size = 12),
+#               legend.title = element_text(size = 12),
+#               aspect.ratio = 1,
+#               panel.grid.major = element_blank(),
+#               panel.grid.minor = element_blank(),
+#               panel.background = element_blank(),
+#               axis.line = element_line(colour = "black")) +
+#         coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
+#                         ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+#     }
+#     
+#     # Save plot
+#     plot_name = paste0("Kobe_Plot_KDE_", use.n.years, "_Year_", i, ".png")
+#     
+#     # Create the new subfolder if it doesn't exist
+#     new_sub_dir <- file.path(main.dir, sub.dir, "KOBE_Plot")
+#     
+#     if (!file.exists(new_sub_dir)){
+#       dir.create(new_sub_dir)
+#     }
+#     
+#     # Save the figure inside the new subfolder
+#     ggsave(file.path(new_sub_dir, plot_name), plot = p[[i]], width = width, height = height, dpi = dpi)
+#     
+#   }
+#   
+#   return(p)
+# }
+
 plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir, 
                              width = 10, height = 7, dpi = 300, col.opt = "D",
                              new_model_names = NULL,
@@ -2784,16 +3005,19 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
     
     percentSPR <- if (!is.nsim) mods[[1]]$om$input$data$percentSPR else mods[[1]][[1]]$om$input$data$percentSPR
     
+    # Check if any rows contain non-finite values in the specified columns
+    if (any(!is.finite(temp$Overfished) | !is.finite(temp$Overfishing))) {
+      # If non-finite values exist, print this message
+      message("Non-finite values detected. Removing them before plotting.")
+    }
+    
+    # This filtering step runs regardless of whether the message was printed
+    temp <- temp %>% 
+      filter(is.finite(Overfished) & is.finite(Overfishing))
+    
     # === Plot
     p[[i]] <- ggplot(temp, aes(x = Overfished, y = Overfishing)) +
-      facet_wrap(~ Model) +
-      annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow")
-    
-    # === Add smoothed 2D density layer
-    if (show_density) {
-      p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.4, contour_var = "density", bins = 100) +
-        scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
-    }
+      facet_wrap(~ Model) 
     
     # === Add points and reference lines
     if (show_density) {
@@ -2805,7 +3029,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
       }
       
       p[[i]] <- p[[i]] +
-        geom_point(aes(color = Model), size = 1.5, alpha = 0.3) +
+        geom_point(size = 1, alpha = 0.1) +
         scale_color_viridis_d(option = col.opt) +
         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
         geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
@@ -2826,6 +3050,11 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
               axis.line = element_line(colour = "black")) +
         coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
                         ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+      
+      # === Add smoothed 2D density layer
+      p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.9, contour_var = "density", bins = 20) +
+        scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
+      
     } else {
       
       plot_title <- if (i < ncol) {
@@ -2835,8 +3064,9 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
       }
       
       p[[i]] <- p[[i]] +
-        geom_point(aes(color = Model), size = 1.5, alpha = 0.8) +
+        geom_point(aes(color = Model), size = 1.5, alpha = 0.9) +
         scale_color_viridis_d(option = col.opt) +
+        annotate('rect', xmin = 0.5, xmax = Inf, ymin = -Inf, ymax = 1, alpha = 0.2, fill = "yellow") + 
         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red", size = 1) +
         geom_hline(yintercept = 1, linetype = "dashed", color = "red", size = 1) +
         xlab(bquote(paste("SSB/", SSB[.(percentSPR)*"%"]))) +
@@ -2856,6 +3086,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
               axis.line = element_line(colour = "black")) +
         coord_cartesian(xlim = c(0, quantile(temp$Overfished, 0.95, na.rm = TRUE)),
                         ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
+      
     }
     
     # Save plot
@@ -2868,6 +3099,8 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
       dir.create(new_sub_dir)
     }
     
+    if (show_density) plot_name = paste0("Kobe_Plot_KDE_", use.n.years, "_Year_", i, "_density.png")
+    
     # Save the figure inside the new subfolder
     ggsave(file.path(new_sub_dir, plot_name), plot = p[[i]], width = width, height = height, dpi = dpi)
     
@@ -2876,537 +3109,537 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
   return(p)
 }
 
-plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
-                                         width = 10, height = 10, dpi = 300, col.opt = "D",
-                                         method = NULL,
-                                         use.n.years.first = 5,
-                                         use.n.years.last = 5,
-                                         start.years = 1, 
-                                         new_model_names = NULL) {
-  
-  library(dplyr)
-  library(tidyr)
-  library(fmsb)
-  library(viridis)
-  
-  if (is.nsim) {
-    
-    n_models <- length(mods[[1]])
-    n_reps <- length(mods)
-    results <- list()
-    
-    for (r in seq_len(n_reps)) {
-      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-      
-      for (m in seq_len(n_models)) {
-        rep <- mods[[r]][[m]]$om$rep
-        
-        # Catch and SSB as rowSums
-        catch_ts <- rowSums(rep$pred_catch)
-        ssb_ts <- rowSums(rep$SSB)
-        
-        # Global Fbar
-        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
-        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
-        fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-        
-        # First and last period means
-        if(is.null(method)) method = "median"
-        if (method == "median") {
-          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-        } else if (method == "mean") {
-          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-          tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-        } 
-      }
-      
-      # Normalize: higher is better except for Fbar
-      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
-        range_val <- max(tmp[[v]]) - min(tmp[[v]])
-        if (range_val == 0) {
-          tmp[[v]] <- 100
-        } else {
-          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
-        }
-      }
-      for (v in c("Fbar_first", "Fbar_last")) {
-        range_val <- max(tmp[[v]]) - min(tmp[[v]])
-        if (range_val == 0) {
-          tmp[[v]] <- 100
-        } else {
-          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
-          tmp[[v]] <- 100 * (1 - norm_f)
-        }
-      }
-      
-      results[[r]] <- tmp
-    }
-    
-    # Combine and compute median across realizations
-    combined <- bind_rows(results, .id = "Realization")
-    scores_median <- combined %>%
-      group_by(Model) %>%
-      summarise(across(-Realization, median), .groups = "drop")
-    
-    # Optional renaming
-    if (!is.null(new_model_names)) {
-      if (length(new_model_names) != length(unique(scores_median$Model))) {
-        stop("Length of new_model_names must match the number of models.")
-      }
-      scores_median$Model <- factor(scores_median$Model,
-                                    levels = paste0("Model", seq_along(new_model_names)),
-                                    labels = new_model_names)
-    }
-    
-    # Radar chart prep
-    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
-    rownames(plot_df) <- plot_df$Model              # Set row names safely
-    plot_df$Model <- NULL                           # Drop Model column
-    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
-    
-    # Add min/max rows for radar scale
-    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
-    
-  } else {
-    
-    n_models <- length(mods)
-    results <- list()
-    
-    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-    
-    for (m in seq_len(n_models)) {
-      
-      rep <- mods[[m]]$om$rep
-      
-      # Catch and SSB as rowSums
-      catch_ts <- rowSums(rep$pred_catch)
-      ssb_ts <- rowSums(rep$SSB)
-      
-      # Global Fbar
-      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
-      n_regions <- mods[[m]]$om$input$data$n_regions[1]
-      fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-      
-      if(is.null(method)) method = "median"
-      # First and last period means
-      if (method == "median") {
-        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
-      } else if (method == "mean") {
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
-      }
-    }
-    
-    # Normalize: higher is better except for Fbar
-    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
-      range_val <- max(tmp[[v]]) - min(tmp[[v]])
-      if (range_val == 0) {
-        tmp[[v]] <- 100  # All values are identical; assign full score
-      } else {
-        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
-      }
-    }
-    
-    for (v in c("Fbar_first", "Fbar_last")) {
-      range_val <- max(tmp[[v]]) - min(tmp[[v]])
-      if (range_val == 0) {
-        tmp[[v]] <- 100  # All values identical; assign full score
-      } else {
-        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
-        tmp[[v]] <- 100 * (1 - norm_f)
-      }
-    }
-    
-    results[[1]] <- tmp
-    
-    # Combine and compute median across realizations
-    combined <- bind_rows(results, .id = "Realization")
-    scores_median <- combined %>%
-      group_by(Model) %>%
-      summarise(across(-Realization, median), .groups = "drop")
-    
-    # Optional renaming
-    if (!is.null(new_model_names)) {
-      if (length(new_model_names) != length(unique(scores_median$Model))) {
-        stop("Length of new_model_names must match the number of models.")
-      }
-      scores_median$Model <- factor(scores_median$Model,
-                                    levels = paste0("Model", seq_along(new_model_names)),
-                                    labels = new_model_names)
-    }
-    
-    # Radar chart prep
-    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
-    rownames(plot_df) <- plot_df$Model              # Set row names safely
-    plot_df$Model <- NULL                           # Drop Model column
-    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
-    
-    # Add min/max rows for radar scale
-    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
-    
-  }
-  
-  if (ncol(plot_df) < 3) {
-    message("Radar chart needs at least 3 models. Showing barplot instead.")
-    return(invisible(NULL))
-  }
-  
-  # Plot without any further changes
-  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
-  
-  # Create the new subfolder if it doesn't exist
-  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
-  
-  if (!file.exists(new_sub_dir)){
-    dir.create(new_sub_dir)
-  }
-  
-  # Correct way to assign expressions to rownames
-  my_legend_labels <- c(expression(Catch[ST]),
-                        expression(SSB[ST]),
-                        expression(F[ST]),
-                        expression(Catch[LT]),
-                        expression(SSB[LT]),
-                        expression(F[LT]))
-  
-  # Save to PNG
-  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png"))
-  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
-  radarchart(plot_df,
-             axistype = 4,
-             pcol = colors,
-             plwd = 3,
-             # pty = 1:length(colors),
-             plty = 1:length(colors),
-             cglcol = "grey80",
-             cglty = 1,
-             axislabcol = "grey30",
-             vlcex = 0.9)
-  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
-         lty = 1:length(colors), 
-         # pch = 1:length(colors),
-         lwd = 3, cex = 0.9, y.intersp = 1.5)
-  dev.off()
-  
-  # Also plot to screen (inline)
-  op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
-  radarchart(plot_df,
-             axistype = 4,
-             pcol = colors,
-             plwd = 3,
-             # pty = 1:length(colors),
-             plty = 1:length(colors),
-             cglcol = "grey80",
-             cglty = 1,
-             axislabcol = "grey30",
-             vlcex = 0.9)
-  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
-         lty = 1:length(colors), 
-         # pch = 1:length(colors),
-         lwd = 3, cex = 0.9, y.intersp = 1.5)
-  on.exit(par(op))  # restore after plotting
-}
+# plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
+#                                          width = 10, height = 10, dpi = 300, col.opt = "D",
+#                                          method = NULL,
+#                                          use.n.years.first = 5,
+#                                          use.n.years.last = 5,
+#                                          start.years = 1, 
+#                                          new_model_names = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(fmsb)
+#   library(viridis)
+#   
+#   if (is.nsim) {
+#     
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     results <- list()
+#     
+#     for (r in seq_len(n_reps)) {
+#       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         
+#         # Catch and SSB as rowSums
+#         catch_ts <- rowSums(rep$pred_catch)
+#         ssb_ts <- rowSums(rep$SSB)
+#         
+#         # Global Fbar
+#         n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+#         n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+#         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+#         
+#         # First and last period means
+#         if(is.null(method)) method = "median"
+#         if (method == "median") {
+#           tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#           tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+#         } else if (method == "mean") {
+#           tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#           tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+#         } 
+#       }
+#       
+#       # Normalize: higher is better except for Fbar
+#       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#         }
+#       }
+#       for (v in c("Fbar_first", "Fbar_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#           tmp[[v]] <- 100 * (1 - norm_f)
+#         }
+#       }
+#       
+#       results[[r]] <- tmp
+#     }
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   } else {
+#     
+#     n_models <- length(mods)
+#     results <- list()
+#     
+#     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       
+#       rep <- mods[[m]]$om$rep
+#       
+#       # Catch and SSB as rowSums
+#       catch_ts <- rowSums(rep$pred_catch)
+#       ssb_ts <- rowSums(rep$SSB)
+#       
+#       # Global Fbar
+#       n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[m]]$om$input$data$n_regions[1]
+#       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+#       
+#       if(is.null(method)) method = "median"
+#       # First and last period means
+#       if (method == "median") {
+#         tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#         tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+#       } else if (method == "mean") {
+#         tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#         tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+#       }
+#     }
+#     
+#     # Normalize: higher is better except for Fbar
+#     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values are identical; assign full score
+#       } else {
+#         tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#       }
+#     }
+#     
+#     for (v in c("Fbar_first", "Fbar_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values identical; assign full score
+#       } else {
+#         norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#         tmp[[v]] <- 100 * (1 - norm_f)
+#       }
+#     }
+#     
+#     results[[1]] <- tmp
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   }
+#   
+#   if (ncol(plot_df) < 3) {
+#     message("Radar chart needs at least 3 models. Showing barplot instead.")
+#     return(invisible(NULL))
+#   }
+#   
+#   # Plot without any further changes
+#   colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+#   
+#   # Create the new subfolder if it doesn't exist
+#   new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+#   
+#   if (!file.exists(new_sub_dir)){
+#     dir.create(new_sub_dir)
+#   }
+#   
+#   # Correct way to assign expressions to rownames
+#   my_legend_labels <- c(expression(Catch[ST]),
+#                         expression(SSB[ST]),
+#                         expression(F[ST]),
+#                         expression(Catch[LT]),
+#                         expression(SSB[LT]),
+#                         expression(F[LT]))
+#   
+#   # Save to PNG
+#   output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png"))
+#   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   dev.off()
+#   
+#   # Also plot to screen (inline)
+#   op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   on.exit(par(op))  # restore after plotting
+# }
 
-plot_model_performance_radar2 <- function(mods, is.nsim, main.dir, sub.dir, 
-                                          width = 10, height = 10, dpi = 300, col.opt = "D",
-                                          method = NULL,
-                                          use.n.years.first = 5,
-                                          use.n.years.last = 5,
-                                          start.years = 1, 
-                                          new_model_names = NULL) {
-  
-  library(dplyr)
-  library(tidyr)
-  library(fmsb)
-  library(viridis)
-  library(viridisLite)
-  
-  # Helper: calculate Average Annual Catch Variation (AACV)
-  calculate_aacv <- function(values) {
-    if (!is.numeric(values)) {
-      stop("Input must be a numeric vector.")
-    }
-    diffs <- abs(diff(values))
-    aacv <- sum(diffs) / sum(values[-length(values)])
-    return(aacv)
-  }
-  
-  if (is.nsim) {
-    
-    n_models <- length(mods[[1]])
-    n_reps <- length(mods)
-    
-    results <- list()
-    
-    for (r in seq_len(n_reps)) {
-      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-      
-      for (m in seq_len(n_models)) {
-        rep <- mods[[r]][[m]]$om$rep
-        
-        # Catch and SSB as rowSums
-        catch_ts <- rowSums(rep$pred_catch)
-        ssb_ts <- rowSums(rep$SSB)
-        
-        # Global Fbar
-        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
-        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
-        
-        # Catch variation
-        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
-        
-        # SSB variation
-        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
-        
-        # Fbar variation (global is last col)
-        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
-        
-        # First and last period means
-        if(is.null(method)) method = "median"
-        if (method == "median") {
-          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-          tmp$catch_aacv[m] <- catch_aacv
-          tmp$ssb_aacv[m] <- ssb_aacv
-          tmp$fbar_aacv[m] <- fbar_aacv
-        } else if (method == "mean") {
-          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-          tmp$catch_aacv[m] <- catch_aacv
-          tmp$ssb_aacv[m] <- ssb_aacv
-          tmp$fbar_aacv[m] <- fbar_aacv
-        } 
-      }
-      
-      # Normalize: higher is better except for Fbar
-      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
-        range_val <- max(tmp[[v]]) - min(tmp[[v]])
-        if (range_val == 0) {
-          tmp[[v]] <- 100
-        } else {
-          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
-        }
-      }
-      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
-        range_val <- max(tmp[[v]]) - min(tmp[[v]])
-        if (range_val == 0) {
-          tmp[[v]] <- 100
-        } else {
-          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
-          tmp[[v]] <- 100 * (1 - norm_f)
-        }
-      }
-      
-      results[[r]] <- tmp
-    }
-    
-    # Combine and compute median across realizations
-    combined <- bind_rows(results, .id = "Realization")
-    scores_median <- combined %>%
-      group_by(Model) %>%
-      summarise(across(-Realization, median), .groups = "drop")
-    
-    # Optional renaming
-    if (!is.null(new_model_names)) {
-      if (length(new_model_names) != length(unique(scores_median$Model))) {
-        stop("Length of new_model_names must match the number of models.")
-      }
-      scores_median$Model <- factor(scores_median$Model,
-                                    levels = paste0("Model", seq_along(new_model_names)),
-                                    labels = new_model_names)
-    }
-    
-    # Radar chart prep
-    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
-    rownames(plot_df) <- plot_df$Model              # Set row names safely
-    plot_df$Model <- NULL                           # Drop Model column
-    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
-    
-    # Add min/max rows for radar scale
-    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
-    
-  } else {
-    
-    n_models <- length(mods)
-    results <- list()
-    
-    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-    
-    for (m in seq_len(n_models)) {
-      
-      rep <- mods[[m]]$om$rep
-      
-      # Catch and SSB as rowSums
-      catch_ts <- rowSums(rep$pred_catch)
-      ssb_ts <- rowSums(rep$SSB)
-      
-      # Global Fbar
-      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
-      n_regions <- mods[[m]]$om$input$data$n_regions[1]
-      
-      # Catch variation
-      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
-      
-      # SSB variation
-      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
-      
-      # Fbar variation (global is last col)
-      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
-      
-      if(is.null(method)) method = "median"
-      # First and last period means
-      if (method == "median") {
-        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
-        tmp$catch_aacv[m] <- catch_aacv
-        tmp$ssb_aacv[m] <- ssb_aacv
-        tmp$fbar_aacv[m] <- fbar_aacv
-      } else if (method == "mean") {
-        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
-        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
-        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
-        tmp$catch_aacv[m] <- catch_aacv
-        tmp$ssb_aacv[m] <- ssb_aacv
-        tmp$fbar_aacv[m] <- fbar_aacv
-      }
-    }
-    
-    # Normalize: higher is better except for Fbar
-    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
-      range_val <- max(tmp[[v]]) - min(tmp[[v]])
-      if (range_val == 0) {
-        tmp[[v]] <- 100  # All values are identical; assign full score
-      } else {
-        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
-      }
-    }
-    
-    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
-      range_val <- max(tmp[[v]]) - min(tmp[[v]])
-      if (range_val == 0) {
-        tmp[[v]] <- 100  # All values identical; assign full score
-      } else {
-        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
-        tmp[[v]] <- 100 * (1 - norm_f)
-      }
-    }
-    
-    results[[1]] <- tmp
-    
-    # Combine and compute median across realizations
-    combined <- bind_rows(results, .id = "Realization")
-    scores_median <- combined %>%
-      group_by(Model) %>%
-      summarise(across(-Realization, median), .groups = "drop")
-    
-    # Optional renaming
-    if (!is.null(new_model_names)) {
-      if (length(new_model_names) != length(unique(scores_median$Model))) {
-        stop("Length of new_model_names must match the number of models.")
-      }
-      scores_median$Model <- factor(scores_median$Model,
-                                    levels = paste0("Model", seq_along(new_model_names)),
-                                    labels = new_model_names)
-    }
-    
-    # Radar chart prep
-    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
-    rownames(plot_df) <- plot_df$Model              # Set row names safely
-    plot_df$Model <- NULL                           # Drop Model column
-    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
-    
-    # Add min/max rows for radar scale
-    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
-    
-  }
-  
-  if (ncol(plot_df) < 3) {
-    message("Radar chart needs at least 3 models. Showing barplot instead.")
-    return(invisible(NULL))
-  }
-  
-  # Plot without any further changes
-  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
-  
-  # Create the new subfolder if it doesn't exist
-  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
-  
-  if (!file.exists(new_sub_dir)){
-    dir.create(new_sub_dir)
-  }
-  
-  rownames(plot_df)
-  # Correct way to assign expressions to rownames
-  my_legend_labels <- c(expression(Catch[ST]),
-                        expression(SSB[ST]),
-                        expression(Catch[LT]),
-                        expression(SSB[LT]),
-                        expression(Catch[AAV]),
-                        expression(SSB[AAV]),
-                        expression(F[AAV]))
-  
-  # Save to PNG
-  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar2.png"))
-  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
-  radarchart(plot_df,
-             axistype = 4,
-             pcol = colors,
-             plwd = 3,
-             # pty = 1:length(colors),
-             plty = 1:length(colors),
-             cglcol = "grey80",
-             cglty = 1,
-             axislabcol = "grey30",
-             vlcex = 0.9)
-  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
-         lty = 1:length(colors), 
-         # pch = 1:length(colors),
-         lwd = 3, cex = 0.9, y.intersp = 1.5)
-  dev.off()
-  
-  # Also plot to screen (inline)
-  op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
-  radarchart(plot_df,
-             axistype = 4,
-             pcol = colors,
-             plwd = 3,
-             # pty = 1:length(colors),
-             plty = 1:length(colors),
-             cglcol = "grey80",
-             cglty = 1,
-             axislabcol = "grey30",
-             vlcex = 0.9)
-  legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
-         lty = 1:length(colors), 
-         # pch = 1:length(colors),
-         lwd = 3, cex = 0.9, y.intersp = 1.5)
-  on.exit(par(op))  # restore after plotting
-}
+# plot_model_performance_radar2 <- function(mods, is.nsim, main.dir, sub.dir, 
+#                                           width = 10, height = 10, dpi = 300, col.opt = "D",
+#                                           method = NULL,
+#                                           use.n.years.first = 5,
+#                                           use.n.years.last = 5,
+#                                           start.years = 1, 
+#                                           new_model_names = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(fmsb)
+#   library(viridis)
+#   library(viridisLite)
+#   
+#   # Helper: calculate Average Annual Catch Variation (AACV)
+#   calculate_aacv <- function(values) {
+#     if (!is.numeric(values)) {
+#       stop("Input must be a numeric vector.")
+#     }
+#     diffs <- abs(diff(values))
+#     aacv <- sum(diffs) / sum(values[-length(values)])
+#     return(aacv)
+#   }
+#   
+#   if (is.nsim) {
+#     
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     
+#     results <- list()
+#     
+#     for (r in seq_len(n_reps)) {
+#       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         
+#         # Catch and SSB as rowSums
+#         catch_ts <- rowSums(rep$pred_catch)
+#         ssb_ts <- rowSums(rep$SSB)
+#         
+#         # Global Fbar
+#         n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+#         n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+#         
+#         # Catch variation
+#         catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+#         
+#         # SSB variation
+#         ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+#         
+#         # Fbar variation (global is last col)
+#         fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+#         
+#         # First and last period means
+#         if(is.null(method)) method = "median"
+#         if (method == "median") {
+#           tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#           tmp$catch_aacv[m] <- catch_aacv
+#           tmp$ssb_aacv[m] <- ssb_aacv
+#           tmp$fbar_aacv[m] <- fbar_aacv
+#         } else if (method == "mean") {
+#           tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#           tmp$catch_aacv[m] <- catch_aacv
+#           tmp$ssb_aacv[m] <- ssb_aacv
+#           tmp$fbar_aacv[m] <- fbar_aacv
+#         } 
+#       }
+#       
+#       # Normalize: higher is better except for Fbar
+#       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#         }
+#       }
+#       for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#           tmp[[v]] <- 100 * (1 - norm_f)
+#         }
+#       }
+#       
+#       results[[r]] <- tmp
+#     }
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   } else {
+#     
+#     n_models <- length(mods)
+#     results <- list()
+#     
+#     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       
+#       rep <- mods[[m]]$om$rep
+#       
+#       # Catch and SSB as rowSums
+#       catch_ts <- rowSums(rep$pred_catch)
+#       ssb_ts <- rowSums(rep$SSB)
+#       
+#       # Global Fbar
+#       n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[m]]$om$input$data$n_regions[1]
+#       
+#       # Catch variation
+#       catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+#       
+#       # SSB variation
+#       ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+#       
+#       # Fbar variation (global is last col)
+#       fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+#       
+#       if(is.null(method)) method = "median"
+#       # First and last period means
+#       if (method == "median") {
+#         tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#         tmp$catch_aacv[m] <- catch_aacv
+#         tmp$ssb_aacv[m] <- ssb_aacv
+#         tmp$fbar_aacv[m] <- fbar_aacv
+#       } else if (method == "mean") {
+#         tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#         tmp$catch_aacv[m] <- catch_aacv
+#         tmp$ssb_aacv[m] <- ssb_aacv
+#         tmp$fbar_aacv[m] <- fbar_aacv
+#       }
+#     }
+#     
+#     # Normalize: higher is better except for Fbar
+#     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values are identical; assign full score
+#       } else {
+#         tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#       }
+#     }
+#     
+#     for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values identical; assign full score
+#       } else {
+#         norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#         tmp[[v]] <- 100 * (1 - norm_f)
+#       }
+#     }
+#     
+#     results[[1]] <- tmp
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   }
+#   
+#   if (ncol(plot_df) < 3) {
+#     message("Radar chart needs at least 3 models. Showing barplot instead.")
+#     return(invisible(NULL))
+#   }
+#   
+#   # Plot without any further changes
+#   colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+#   
+#   # Create the new subfolder if it doesn't exist
+#   new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+#   
+#   if (!file.exists(new_sub_dir)){
+#     dir.create(new_sub_dir)
+#   }
+#   
+#   rownames(plot_df)
+#   # Correct way to assign expressions to rownames
+#   my_legend_labels <- c(expression(Catch[ST]),
+#                         expression(SSB[ST]),
+#                         expression(Catch[LT]),
+#                         expression(SSB[LT]),
+#                         expression(Catch[AAV]),
+#                         expression(SSB[AAV]),
+#                         expression(F[AAV]))
+#   
+#   # Save to PNG
+#   output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar2.png"))
+#   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   dev.off()
+#   
+#   # Also plot to screen (inline)
+#   op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 1.0, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   on.exit(par(op))  # restore after plotting
+# }
 
 # plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
 #                                          width = 10, height = 10, dpi = 300, col.opt = "D",
@@ -3949,32 +4182,32 @@ plot_model_performance_bar <- function(mods, is.nsim,
                                        use.n.years.first = 5,
                                        use.n.years.last = 5,
                                        start.years = 1) {
-  
+
   library(dplyr)
   library(tidyr)
   library(ggplot2)
   library(viridisLite)
-  
+
   results_list <- list()
-  
+
   if (is.nsim) {
     n_models <- length(mods[[1]])
     n_reps <- length(mods)
-    
+
     for (r in seq_len(n_reps)) {
       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-      
+
       for (m in seq_len(n_models)) {
         rep <- mods[[r]][[m]]$om$rep
         input <- mods[[r]][[m]]$om$input$data
         n_fleets <- input$n_fleets[1]
         n_regions <- input$n_regions[1]
-        
+
         # Collect timeseries
         catch_ts <- rowSums(rep$pred_catch)
         ssb_ts <- rowSums(rep$SSB)
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-        
+
         if(is.null(method)) method = "median"
         # First and last period means
         if (method == "median") {
@@ -3993,7 +4226,7 @@ plot_model_performance_bar <- function(mods, is.nsim,
           tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
         }
       }
-      
+
       # Normalize within realization (safe check)
       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
         range_val <- max(tmp[[v]]) - min(tmp[[v]])
@@ -4012,39 +4245,39 @@ plot_model_performance_bar <- function(mods, is.nsim,
           tmp[[v]] <- 100 * (1 - norm_f)
         }
       }
-      
+
       tmp$Realization <- r
       results_list[[r]] <- tmp
     }
-    
+
     combined <- bind_rows(results_list)
-    
+
     # Summarize across realizations
     summary_data <- combined %>%
       pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Score") %>%
       group_by(Model, Metric) %>%
       summarize(
-        Median = median(Score),
-        Q1 = quantile(Score, 0.25),
-        Q3 = quantile(Score, 0.75),
+        Median = median(Score, na.rm = TRUE),
+        Q1 = quantile(Score, 0.25, na.rm = TRUE),
+        Q3 = quantile(Score, 0.75, na.rm = TRUE),
         .groups = "drop"
       )
-    
+
   } else {
     n_models <- length(mods)
     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-    
+
     for (m in seq_len(n_models)) {
       rep <- mods[[m]]$om$rep
       input <- mods[[m]]$om$input$data
       n_fleets <- input$n_fleets[1]
       n_regions <- input$n_regions[1]
-      
+
       # Collect timeseries
       catch_ts <- rowSums(rep$pred_catch)
       ssb_ts <- rowSums(rep$SSB)
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-      
+
       if(is.null(method)) method = "median"
       # First and last period means
       if (method == "median") {
@@ -4063,7 +4296,7 @@ plot_model_performance_bar <- function(mods, is.nsim,
         tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
       }
     }
-    
+
     # Normalize across models (safe check)
     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
       range_val <- max(tmp[[v]]) - min(tmp[[v]])
@@ -4082,15 +4315,15 @@ plot_model_performance_bar <- function(mods, is.nsim,
         tmp[[v]] <- 100 * (1 - norm_f)
       }
     }
-    
+
     tmp$Realization <- 1
     combined <- tmp
-    
+
     summary_data <- tmp %>%
       pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Median") %>%
       mutate(Q1 = Median, Q3 = Median)
   }
-  
+
   # Rename if needed
   if (!is.null(new_model_names)) {
     if (length(new_model_names) != length(unique(summary_data$Model))) {
@@ -4100,20 +4333,20 @@ plot_model_performance_bar <- function(mods, is.nsim,
                                  levels = paste0("Model", seq_along(new_model_names)),
                                  labels = new_model_names)
   }
-  
+
   # Colors
   n_metrics <- length(unique(summary_data$Metric))
   my_colors <- viridisLite::viridis(n = n_metrics, option = col.opt)
-  
+
   my_metric_labels <- c(
-    expression(bold(Catch)[ST]), # Catch will be bold
-    expression(bold(SSB)[ST]),   # SSB will be bold
-    expression(bold(F)[ST]),     # F will be bold
-    expression(bold(Catch)[LT]), # Catch will be bold
-    expression(bold(SSB)[LT]),   # SSB will be bold
-    expression(bold(F)[LT])      # F will be bold
+    expression(Catch[ST]), # Catch will be bold
+    expression(SSB[ST]),   # SSB will be bold
+    expression(F[ST]),     # F will be bold
+    expression(Catch[LT]), # Catch will be bold
+    expression(SSB[LT]),   # SSB will be bold
+    expression(F[LT])      # F will be bold
   )
-  
+
   metric_levels <- c(
     "Catch_first",
     "SSB_first",
@@ -4122,11 +4355,11 @@ plot_model_performance_bar <- function(mods, is.nsim,
     "SSB_last",
     "Fbar_last"   # Note: Fbar_last maps to F[LT]
   )
-  
+
   summary_data$Metric <- factor(summary_data$Metric,
                                 levels = metric_levels,
                                 labels = my_metric_labels)
-  
+
   # Plot
   plot <- ggplot(summary_data, aes(x = Median, y = Model, fill = Metric, color = Metric)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.7) +
@@ -4149,17 +4382,17 @@ plot_model_performance_bar <- function(mods, is.nsim,
       legend.title = element_text(size = 16),
       plot.title = element_text(size = 18, face = "bold")
     )
-  
+
   # Print and save
   print(plot)
-  
+
   # Create the new subfolder if it doesn't exist
   new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
-  
+
   if (!file.exists(new_sub_dir)){
     dir.create(new_sub_dir)
   }
-  
+
   ggsave(filename = file.path(new_sub_dir, "Overall_Performance.png"),
          plot = plot, width = width, height = height, dpi = dpi)
 }
@@ -4174,32 +4407,32 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
                                         use.n.years.first = 5,
                                         use.n.years.last = 5,
                                         start.years = 1) {
-  
+
   library(dplyr)
   library(tidyr)
   library(ggplot2)
   library(viridisLite)
-  
+
   results_list <- list()
-  
+
   if (is.nsim) {
     n_models <- length(mods[[1]])
     n_reps <- length(mods)
-    
+
     for (r in seq_len(n_reps)) {
       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-      
+
       for (m in seq_len(n_models)) {
         rep <- mods[[r]][[m]]$om$rep
         input <- mods[[r]][[m]]$om$input$data
         n_fleets <- input$n_fleets[1]
         n_regions <- input$n_regions[1]
-        
+
         # Collect timeseries
         catch_ts <- rowSums(rep$pred_catch)
         ssb_ts <- rowSums(rep$SSB)
         fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-        
+
         if(is.null(method)) method = "median"
         # First and last period means
         if (method == "median") {
@@ -4218,7 +4451,7 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
           tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
         }
       }
-      
+
       # Normalize within realization (safe check)
       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
         range_val <- max(tmp[[v]]) - min(tmp[[v]])
@@ -4237,39 +4470,39 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
           tmp[[v]] <- 100 * (1 - norm_f)
         }
       }
-      
+
       tmp$Realization <- r
       results_list[[r]] <- tmp
     }
-    
+
     combined <- bind_rows(results_list)
-    
+
     # Summarize across realizations
     summary_data <- combined %>%
       pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Score") %>%
       group_by(Model, Metric) %>%
       summarize(
-        Median = median(Score),
-        Q1 = quantile(Score, 0.25),
-        Q3 = quantile(Score, 0.75),
+        Median = median(Score, na.rm = TRUE),
+        Q1 = quantile(Score, 0.25, na.rm = TRUE),
+        Q3 = quantile(Score, 0.75, na.rm = TRUE),
         .groups = "drop"
       )
-    
+
   } else {
     n_models <- length(mods)
     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
-    
+
     for (m in seq_len(n_models)) {
       rep <- mods[[m]]$om$rep
       input <- mods[[m]]$om$input$data
       n_fleets <- input$n_fleets[1]
       n_regions <- input$n_regions[1]
-      
+
       # Collect timeseries
       catch_ts <- rowSums(rep$pred_catch)
       ssb_ts <- rowSums(rep$SSB)
       fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
-      
+
       if(is.null(method)) method = "median"
       # First and last period means
       if (method == "median") {
@@ -4288,7 +4521,7 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
         tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
       }
     }
-    
+
     # Normalize across models (safe check)
     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
       range_val <- max(tmp[[v]]) - min(tmp[[v]])
@@ -4307,15 +4540,15 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
         tmp[[v]] <- 100 * (1 - norm_f)
       }
     }
-    
+
     tmp$Realization <- 1
     combined <- tmp
-    
+
     summary_data <- tmp %>%
       pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Median") %>%
       mutate(Q1 = Median, Q3 = Median)
   }
-  
+
   # Rename if needed
   if (!is.null(new_model_names)) {
     if (length(new_model_names) != length(unique(summary_data$Model))) {
@@ -4325,20 +4558,20 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
                                  levels = paste0("Model", seq_along(new_model_names)),
                                  labels = new_model_names)
   }
-  
+
   # Colors
   n_metrics <- length(unique(summary_data$Model))
   my_colors <- viridisLite::viridis(n = n_metrics, option = col.opt)
-  
+
   my_metric_labels <- c(
-    expression(bold(Catch)[ST]), # Catch will be bold
-    expression(bold(SSB)[ST]),   # SSB will be bold
-    expression(bold(F)[ST]),     # F will be bold
-    expression(bold(Catch)[LT]), # Catch will be bold
-    expression(bold(SSB)[LT]),   # SSB will be bold
-    expression(bold(F)[LT])      # F will be bold
+    expression(bold(Catch[ST])), # Catch will be bold
+    expression(bold(SSB[ST])),   # SSB will be bold
+    expression(bold(F[ST])),     # F will be bold
+    expression(bold(Catch[LT])), # Catch will be bold
+    expression(bold(SSB[LT])),   # SSB will be bold
+    expression(bold(F[LT]))      # F will be bold
   )
-  
+
   metric_levels <- c(
     "Catch_first",
     "SSB_first",
@@ -4347,7 +4580,7 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
     "SSB_last",
     "Fbar_last"   # Note: Fbar_last maps to F[LT]
   )
-  
+
   summary_data$Metric <- factor(summary_data$Metric,
                                 levels = metric_levels,
                                 labels = my_metric_labels)
@@ -4373,17 +4606,17 @@ plot_model_performance_bar2 <- function(mods, is.nsim,
       legend.title = element_text(size = 16),
       plot.title = element_text(size = 18, face = "bold")
     )
-  
+
   # Print and save
   print(plot)
-  
+
   # Create the new subfolder if it doesn't exist
   new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
-  
+
   if (!file.exists(new_sub_dir)){
     dir.create(new_sub_dir)
   }
-  
+
   ggsave(filename = file.path(new_sub_dir, "Overall_Performance2.png"),
          plot = plot, width = width, height = height, dpi = dpi)
 }
@@ -4789,7 +5022,7 @@ plot_catch_variation <- function(mods, is.nsim, main.dir, sub.dir, var = "Catch"
 
 plot_relative_trajectories <- function(mods, is.nsim,
                                        main.dir, sub.dir,
-                                       base.model = "Model1",
+                                       base.model = NULL,
                                        new_model_names = NULL,
                                        width = 10, height = 7, dpi = 300,
                                        col.opt = "D",
@@ -4904,7 +5137,7 @@ plot_relative_trajectories <- function(mods, is.nsim,
   } else {
     stop("base.model must be specified as a model name (e.g., 'Model1').")
   }
-
+  
   # --- Extract data ---
   data <- extract_relative_trajectories(mods, base_em_idx = base_em_idx)
 
@@ -5707,7 +5940,7 @@ plot_AAV_performance <- function(mods, is.nsim,
   # }
   
   p3 <- ggplot(res_long, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+    ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                         quantile_lines = TRUE, 
                         quantiles = 0.5,
                         linetype = 2) +
@@ -5773,7 +6006,7 @@ plot_AAV_performance <- function(mods, is.nsim,
   #   facet_wrap(~ Model)
   
   p4 <- ggplot(res_long, aes(x = Score, y = Model, fill = Model)) +
-    geom_density_ridges(alpha = 0.8, scale = 1.0, 
+    ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                         quantile_lines = TRUE, 
                         quantiles = 0.5,
                         linetype = 2) +
@@ -6072,32 +6305,36 @@ plot_status_triangle <- function(mods, is.nsim,
     }
   }
   
-  # Function to extract mean Catch, SSB, and Fbar
   process_scores <- function(rep, n_fleets, n_regions, use.n.years, start.years = NULL, type = c("short", "long")) {
-    catch_ts <- rowSums(rep$pred_catch)
-    catch_ts_brp <- exp(rep$log_Y_FXSPR[, ncol(rep$Fbar)])
-    catch_ts <- catch_ts/catch_ts_brp
+    # --- Calculate time series ratios ---
+    catch_ts <- rowSums(rep$pred_catch) / exp(rep$log_Y_FXSPR[, ncol(rep$Fbar)])
+    ssb_ts <- rowSums(rep$SSB) / exp(rep$log_SSB_FXSPR[, n_regions + 1])
+    fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] / exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
     
-    ssb_ts <- rowSums(rep$SSB)
-    ssb_ts_brp <- exp(rep$log_SSB_FXSPR[,n_regions+1])
-    ssb_ts <- ssb_ts/ssb_ts_brp
-    
-    fbar_ts <- rep$Fbar[, ncol(rep$Fbar)] # SAFER: use last column (global Fbar)
-    fbar_ts_brp <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
-    fbar_ts <- fbar_ts/fbar_ts_brp
-    
+    # --- Define time window index ---
     if (type == "short") {
       idx <- start.years:(start.years + use.n.years - 1)
     } else {
       idx <- (length(catch_ts) - use.n.years + 1):length(catch_ts)
     }
     
-    if(is.null(method)) method = "median"
-    if(method == "median") {
-      return(c(median(catch_ts[idx]), median(ssb_ts[idx]), median(fbar_ts[idx])))
+    # --- Summarize time series, ignoring NA values ---
+    if (is.null(method)) method <- "median"
+    
+    if (method == "median") {
+      return(c(
+        median(catch_ts[idx], na.rm = TRUE),
+        median(ssb_ts[idx], na.rm = TRUE),
+        median(fbar_ts[idx], na.rm = TRUE)
+      ))
     }
-    if(method == "mean") {
-      return(c(mean(catch_ts[idx]), mean(ssb_ts[idx]), mean(fbar_ts[idx])))
+    
+    if (method == "mean") {
+      return(c(
+        mean(catch_ts[idx], na.rm = TRUE),
+        mean(ssb_ts[idx], na.rm = TRUE),
+        mean(fbar_ts[idx], na.rm = TRUE)
+      ))
     }
   }
   
@@ -6367,7 +6604,7 @@ plot_status_triangle <- function(mods, is.nsim,
     }
     
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
                           linetype = 2) +
@@ -6429,7 +6666,7 @@ plot_status_triangle <- function(mods, is.nsim,
     }
     
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
                           linetype = 2) +
@@ -6492,7 +6729,7 @@ plot_status_triangle <- function(mods, is.nsim,
     }
     
     p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
                           linetype = 2) +
@@ -6566,7 +6803,7 @@ plot_status_triangle <- function(mods, is.nsim,
     }
     
     p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
                           linetype = 2) +
@@ -7202,11 +7439,10 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     }
     
     p3 <- ggplot(res_short_all2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
-                          linetype = 2,
-                          bandwidth = 0.03) +
+                          linetype = 2) +
       theme_bw() +
       scale_fill_viridis_d(option = col.opt) +
       labs(
@@ -7263,11 +7499,10 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     }
     
     p4 <- ggplot(res_long_all2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
-                          linetype = 2,
-                          bandwidth = 0.03) +
+                          linetype = 2) +
       theme_bw() +
       scale_fill_viridis_d(option = col.opt) +
       labs(
@@ -7326,11 +7561,11 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     }
     
     p5 <- ggplot(res_short_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
-                          linetype = 2,
-                          bandwidth = 0.03) +
+                          linetype = 2
+                          ) +
       theme_bw() +
       scale_fill_viridis_d(option = col.opt) +
       labs(
@@ -7401,11 +7636,10 @@ plot_model_performance_triangle2 <- function(mods, is.nsim,
     }
     
     p6 <- ggplot(res_long_all_raw2, aes(x = Score, y = Model, fill = Model)) +
-      geom_density_ridges(alpha = 0.8, scale = 1.0, 
+      ggridges::geom_density_ridges(alpha = 0.8, scale = 1.0, 
                           quantile_lines = TRUE, 
                           quantiles = 0.5,
-                          linetype = 2,
-                          bandwidth = 0.03) +
+                          linetype = 2) +
       theme_bw() +
       scale_fill_viridis_d(option = col.opt) +
       labs(
@@ -7841,4 +8075,1843 @@ plot_total_catch_performance2 <- function(mods, is.nsim, main.dir, sub.dir, var 
   ggsave(file.path(new_sub_dir, plot_name), plot = p, width = width, height = height, dpi = dpi)
   
   return(p)
+}
+
+# plot_model_performance_radar3 <- function(mods, is.nsim, main.dir, sub.dir, 
+#                                           width = 10, height = 10, dpi = 300, col.opt = "D",
+#                                           method = NULL,
+#                                           use.n.years.first = 5,
+#                                           use.n.years.last = 5,
+#                                           start.years = 1, 
+#                                           new_model_names = NULL) {
+#   
+#   library(dplyr)
+#   library(tidyr)
+#   library(fmsb)
+#   library(viridis)
+#   library(viridisLite)
+#   
+#   # Helper: calculate Average Annual Catch Variation (AACV)
+#   calculate_aacv <- function(values) {
+#     if (!is.numeric(values)) {
+#       stop("Input must be a numeric vector.")
+#     }
+#     diffs <- abs(diff(values))
+#     aacv <- sum(diffs) / sum(values[-length(values)])
+#     return(aacv)
+#   }
+#   
+#   if (is.nsim) {
+#     
+#     n_models <- length(mods[[1]])
+#     n_reps <- length(mods)
+#     
+#     results <- list()
+#     
+#     for (r in seq_len(n_reps)) {
+#       tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#       
+#       for (m in seq_len(n_models)) {
+#         rep <- mods[[r]][[m]]$om$rep
+#         
+#         # Catch and SSB as rowSums
+#         catch_ts <- rowSums(rep$pred_catch)
+#         ssb_ts <- rowSums(rep$SSB)
+#         
+#         # Global Fbar
+#         n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+#         n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+#         
+#         # Catch variation
+#         catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+#         
+#         # SSB variation
+#         ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+#         
+#         # Fbar variation (global is last col)
+#         fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+#         
+#         # First and last period means
+#         if(is.null(method)) method = "median"
+#         if (method == "median") {
+#           tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#           tmp$catch_aacv[m] <- catch_aacv
+#           tmp$ssb_aacv[m] <- ssb_aacv
+#           tmp$fbar_aacv[m] <- fbar_aacv
+#         } else if (method == "mean") {
+#           tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#           tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#           tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#           tmp$catch_aacv[m] <- catch_aacv
+#           tmp$ssb_aacv[m] <- ssb_aacv
+#           tmp$fbar_aacv[m] <- fbar_aacv
+#         }
+#         
+#         if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+#           message("Biological Reference Point has not been calculated internally!")
+#           return(invisible(NULL))
+#         }
+#         
+#         tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+#         tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+#         temp <- tmp1/tmp2
+#         temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+#         temp2 <- tail(temp, use.n.years.last)
+#         tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+#         tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+#       }
+#       
+#       # Normalize: higher is better except for Fbar
+#       for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#         }
+#       }
+#       for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+#         range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#         if (range_val == 0) {
+#           tmp[[v]] <- 100
+#         } else {
+#           norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#           tmp[[v]] <- 100 * (1 - norm_f)
+#         }
+#       }
+#       
+#       results[[r]] <- tmp
+#     }
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   } else {
+#     
+#     n_models <- length(mods)
+#     results <- list()
+#     
+#     tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+#     
+#     for (m in seq_len(n_models)) {
+#       
+#       rep <- mods[[m]]$om$rep
+#       
+#       # Catch and SSB as rowSums
+#       catch_ts <- rowSums(rep$pred_catch)
+#       ssb_ts <- rowSums(rep$SSB)
+#       
+#       # Global Fbar
+#       n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+#       n_regions <- mods[[m]]$om$input$data$n_regions[1]
+#       
+#       # Catch variation
+#       catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+#       
+#       # SSB variation
+#       ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+#       
+#       # Fbar variation (global is last col)
+#       fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+#       
+#       if(is.null(method)) method = "median"
+#       # First and last period means
+#       if (method == "median") {
+#         tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+#         tmp$catch_aacv[m] <- catch_aacv
+#         tmp$ssb_aacv[m] <- ssb_aacv
+#         tmp$fbar_aacv[m] <- fbar_aacv
+#         
+#       } else if (method == "mean") {
+#         tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+#         tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+#         tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+#         tmp$catch_aacv[m] <- catch_aacv
+#         tmp$ssb_aacv[m] <- ssb_aacv
+#         tmp$fbar_aacv[m] <- fbar_aacv
+#       }
+#     }
+#     
+#     if (is.null(rep$log_SSB_FXSPR)) {
+#       message("Biological Reference Point has not been calculated internally!")
+#       return(invisible(NULL))
+#     }
+#     
+#     tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+#     tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+#     temp <- tmp1/tmp2
+#     temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+#     temp2 <- tail(temp, use.n.years.last)
+#     tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+#     tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+#     
+#     # Normalize: higher is better except for Fbar
+#     for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values are identical; assign full score
+#       } else {
+#         tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+#       }
+#     }
+#     
+#     for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+#       range_val <- max(tmp[[v]]) - min(tmp[[v]])
+#       if (range_val == 0) {
+#         tmp[[v]] <- 100  # All values identical; assign full score
+#       } else {
+#         norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+#         tmp[[v]] <- 100 * (1 - norm_f)
+#       }
+#     }
+#     
+#     results[[1]] <- tmp
+#     
+#     # Combine and compute median across realizations
+#     combined <- bind_rows(results, .id = "Realization")
+#     scores_median <- combined %>%
+#       group_by(Model) %>%
+#       summarise(across(-Realization, median), .groups = "drop")
+#     
+#     # Optional renaming
+#     if (!is.null(new_model_names)) {
+#       if (length(new_model_names) != length(unique(scores_median$Model))) {
+#         stop("Length of new_model_names must match the number of models.")
+#       }
+#       scores_median$Model <- factor(scores_median$Model,
+#                                     levels = paste0("Model", seq_along(new_model_names)),
+#                                     labels = new_model_names)
+#     }
+#     
+#     # Radar chart prep
+#     plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+#     rownames(plot_df) <- plot_df$Model              # Set row names safely
+#     plot_df$Model <- NULL                           # Drop Model column
+#     plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+#     
+#     # Add min/max rows for radar scale
+#     plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+#     
+#   }
+#   
+#   if (ncol(plot_df) < 3) {
+#     message("Radar chart needs at least 3 models. Showing barplot instead.")
+#     return(invisible(NULL))
+#   }
+#   
+#   # Plot without any further changes
+#   colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+#   
+#   # Create the new subfolder if it doesn't exist
+#   new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+#   
+#   if (!file.exists(new_sub_dir)){
+#     dir.create(new_sub_dir)
+#   }
+#   
+#   rownames(plot_df)
+#   # Correct way to assign expressions to rownames
+#   my_legend_labels <- c(expression(Catch[ST]),
+#                         expression(SSB[ST]),
+#                         expression(Catch[LT]),
+#                         expression(SSB[LT]),
+#                         expression(Catch[AAV]),
+#                         expression(SSB[AAV]),
+#                         expression(F[AAV]),
+#                         expression(P(F[ST] > F[MSY])),
+#                         expression(P(F[LT] > F[MSY])))
+#   
+#   # Save to PNG
+#   output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar3.png"))
+#   png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 0.9, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   dev.off()
+#   
+#   # Also plot to screen (inline)
+#   op <- par(mar = c(1, 1, 3, 1))  # NEW: minimize margins
+#   radarchart(plot_df,
+#              axistype = 4,
+#              pcol = colors,
+#              plwd = 3,
+#              # pty = 1:length(colors),
+#              plty = 1:length(colors),
+#              cglcol = "grey80",
+#              cglty = 1,
+#              axislabcol = "grey30",
+#              vlcex = 0.9)
+#   legend(x = 0.9, y = 0.3, legend = my_legend_labels, col = colors,
+#          lty = 1:length(colors), 
+#          # pch = 1:length(colors),
+#          lwd = 3, cex = 0.9, y.intersp = 1.5)
+#   on.exit(par(op))  # restore after plotting
+# }
+
+
+plot_model_performance_bar3 <- function(mods, is.nsim,
+                                        main.dir = ".",
+                                        sub.dir = ".",
+                                        new_model_names = NULL,
+                                        width = 12, height = 8, dpi = 300,
+                                        col.opt = "D",
+                                        method = NULL,
+                                        use.n.years.first = 5,
+                                        use.n.years.last = 5,
+                                        start.years = 1) {
+
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  library(viridisLite)
+
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+
+  if (is.nsim) {
+
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+
+    results <- list()
+
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        }
+
+        if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+          message("Biological Reference Point has not been calculated internally!")
+          return(invisible(NULL))
+        }
+
+        tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+        tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+        temp <- tmp1/tmp2
+        temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+        temp2 <- tail(temp, use.n.years.last)
+        tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+        tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+      }
+
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+
+      tmp$Realization <- r
+      results[[r]] <- tmp
+    }
+
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+
+    # Summarize across realizations
+    scores_median <- combined %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Score") %>%
+      group_by(Model, Metric) %>%
+      summarize(
+        Median = median(Score, na.rm = TRUE),
+        Q1 = quantile(Score, 0.25, na.rm = TRUE),
+        Q3 = quantile(Score, 0.75, na.rm = TRUE),
+        .groups = "drop"
+      )
+
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+
+  } else {
+
+    n_models <- length(mods)
+    results <- list()
+
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+
+    for (m in seq_len(n_models)) {
+
+      rep <- mods[[m]]$om$rep
+
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      }
+    }
+
+    if (is.null(rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+
+    tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+    tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+    temp <- tmp1/tmp2
+    temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+    temp2 <- tail(temp, use.n.years.last)
+    tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+    tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+
+    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+
+    tmp$Realization <- 1
+    combined <- tmp
+
+    scores_median <- tmp %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Median") %>%
+      mutate(Q1 = Median, Q3 = Median)
+
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+  }
+
+  # Colors
+  n_metrics <- length(unique(scores_median$Metric))
+  # Colors
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = n_metrics, option = col.opt) # -2 for min/max rows
+
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(Catch[AAV]),
+                        expression(SSB[AAV]),
+                        expression(F[AAV]),
+                        expression(P(F[ST] > F[MSY])),
+                        expression(P(F[LT] > F[MSY])))
+
+  metric_levels <- c(
+    "Catch_first",
+    "SSB_first",
+    "Catch_last",
+    "SSB_last",
+    "catch_aacv",
+    "ssb_aacv",
+    "fbar_aacv",
+    "prob_first",
+    "prob_last"
+  )
+
+  scores_median$Metric <- factor(scores_median$Metric,
+                                 levels = metric_levels,
+                                 labels = my_legend_labels)
+
+  # Plot
+  plot <- ggplot(scores_median, aes(x = Median, y = Model, fill = Metric, color = Metric)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.7) +
+    geom_errorbar(aes(xmin = Q1, xmax = Q3), col = "black",
+                  position = position_dodge(width = 0.9), width = 0.3, alpha = 0.3) +
+    scale_fill_manual(values = colors,
+                      labels = my_legend_labels) + # Add labels argument for fill legend
+    scale_color_manual(values = colors,
+                       labels = my_legend_labels) + # Add labels argument for color legend
+    theme_bw() +
+    labs(title = paste("Holistic Model Performance"),
+         x = "Score (0-100)",
+         y = "Estimation Model",
+         fill = "Metric",
+         color = "Metric") +
+    theme(
+      axis.text = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      plot.title = element_text(size = 18, face = "bold")
+    )
+
+  # Print and save
+  print(plot)
+
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+
+  ggsave(filename = file.path(new_sub_dir, "Overall_Performance3.png"),
+         plot = plot, width = width, height = height, dpi = dpi)
+}
+
+
+plot_model_performance_bar4 <- function(mods, is.nsim,
+                                        main.dir = ".",
+                                        sub.dir = ".",
+                                        new_model_names = NULL,
+                                        width = 12, height = 8, dpi = 300,
+                                        col.opt = "D",
+                                        method = NULL,
+                                        use.n.years.first = 5,
+                                        use.n.years.last = 5,
+                                        start.years = 1) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  library(viridisLite)
+  
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  if (is.nsim) {
+    
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    
+    results <- list()
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+        
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+        
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+        
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+        
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        }
+        
+        if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+          message("Biological Reference Point has not been calculated internally!")
+          return(invisible(NULL))
+        }
+        
+        tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+        tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+        temp <- tmp1/tmp2
+        temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+        temp2 <- tail(temp, use.n.years.last)
+        tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+        tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+      }
+      
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      results[[r]] <- tmp
+    }
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    
+    # Summarize across realizations
+    scores_median <- combined %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Score") %>%
+      group_by(Model, Metric) %>%
+      summarize(
+        Median = median(Score, na.rm = TRUE),
+        Q1 = quantile(Score, 0.25, na.rm = TRUE),
+        Q3 = quantile(Score, 0.75, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+  } 
+  else {
+    
+    n_models <- length(mods)
+    results <- list()
+    
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      
+      rep <- mods[[m]]$om$rep
+      
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+      
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+      
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+      
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+        
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      }
+    }
+    
+    if (is.null(rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+    
+    tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+    tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+    temp <- tmp1/tmp2
+    temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+    temp2 <- tail(temp, use.n.years.last)
+    tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+    tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+    
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    
+    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    tmp$Realization <- 1
+    combined <- tmp
+    
+    scores_median <- tmp %>%
+      pivot_longer(-c(Model, Realization), names_to = "Metric", values_to = "Median") %>%
+      mutate(Q1 = Median, Q3 = Median)
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+  }
+  
+  # Colors
+  n_metrics <- length(unique(scores_median$Model))
+  
+  # Colors
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = n_metrics, option = col.opt) 
+
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(bold(Catch[ST])),
+                        expression(bold(SSB[ST])),
+                        expression(bold(Catch[LT])),
+                        expression(bold(SSB[LT])),
+                        expression(bold(Catch[AAV])),
+                        expression(bold(SSB[AAV])),
+                        expression(bold(F[AAV])),
+                        expression(bold(P(F[ST] > F[MSY]))),
+                        expression(bold(P(F[LT] > F[MSY]))))
+  
+  metric_levels <- c(
+    "Catch_first",
+    "SSB_first",
+    "Catch_last",
+    "SSB_last",
+    "catch_aacv",
+    "ssb_aacv",
+    "fbar_aacv",
+    "prob_first",
+    "prob_last"
+  )
+  
+  scores_median$Metric <- factor(scores_median$Metric,
+                                 levels = metric_levels,
+                                 labels = my_legend_labels)
+  
+  # Plot
+  plot <- ggplot(scores_median, aes(x = Median, y = Metric, fill = Model, color = Model)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9), width = 0.7) +
+    geom_errorbar(aes(xmin = Q1, xmax = Q3), col = "black",
+                  position = position_dodge(width = 0.9), width = 0.3, alpha = 0.3) +
+    scale_fill_manual(values = colors) +
+    scale_color_manual(values = colors) +
+    theme_bw() +
+    labs(title = paste("Holistic Model Performance"),
+         x = "Score (0-100)",
+         y = "Metric",
+         fill = "Model",
+         color = "Model") +
+    scale_y_discrete(labels = my_legend_labels,
+                     limits = rev(levels(scores_median$Metric))) +
+    theme(
+      axis.text = element_text(size = 14, face = "bold"),
+      axis.title = element_text(size = 16, face = "bold"),
+      legend.text = element_text(size = 14),
+      legend.title = element_text(size = 16),
+      plot.title = element_text(size = 18, face = "bold")
+    )
+  
+  # Print and save
+  print(plot)
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Holistic_Bar_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  ggsave(filename = file.path(new_sub_dir, "Overall_Performance4.png"),
+         plot = plot, width = width, height = height, dpi = dpi)
+}
+
+
+plot_model_performance_radar <- function(mods, is.nsim, main.dir, sub.dir, 
+                                         width = 10, height = 10, dpi = 300, col.opt = "D",
+                                         method = NULL,
+                                         use.n.years.first = 5,
+                                         use.n.years.last = 5,
+                                         start.years = 1, 
+                                         new_model_names = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  
+  if (is.nsim) {
+    
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    results <- list()
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+        fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+        
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+        } 
+      }
+      
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("Fbar_first", "Fbar_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      results[[r]] <- tmp
+    }
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  } else {
+    
+    n_models <- length(mods)
+    results <- list()
+    
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      
+      rep <- mods[[m]]$om$rep
+      
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+      fbar_ts <- rep$Fbar[, n_fleets + n_regions + 1]
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- median(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- median(tail(fbar_ts, use.n.years.last))
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Fbar_first[m] <- mean(fbar_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$Fbar_last[m] <- mean(tail(fbar_ts, use.n.years.last))
+      }
+    }
+    
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    
+    for (v in c("Fbar_first", "Fbar_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    results[[1]] <- tmp
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  }
+  
+  if (ncol(plot_df) < 3) {
+    message("Radar chart needs at least 3 models. Showing barplot instead.")
+    return(invisible(NULL))
+  }
+  
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(F[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(F[LT]))
+  
+  # --- Start of Modified Plotting Block ---
+  
+  # Save to PNG with a two-column layout
+  output_file <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar.png")
+  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+  
+  # 1. SET UP LAYOUT: Create a 2-column layout (left is 3x wider than right)
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  # 2. PLOT CHART: Plot radarchart in the left column (area 1)
+  par(mar = c(1, 1, 1, 1)) # Set margins for the chart
+  radarchart(plot_df,
+             axistype = 4,
+             pcol = colors,
+             plwd = 3,
+             plty = 1:length(colors),
+             cglcol = "grey80",
+             cglty = 1,
+             axislabcol = "grey30",
+             vlcex = 1.2)
+  
+  # 3. PLOT LEGEND: Plot legend in the right column (area 2)
+  par(mar = c(1, 1, 1, 1))  # Set margins for the legend area
+  plot.new()               # Create an empty plot area
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 1.5)
+  
+  dev.off()
+  
+  # --- Also plot to screen (inline) using the same layout ---
+  op <- par(no.readonly = TRUE) # Save original graphics settings
+  on.exit(par(op))             # Restore settings when function exits
+  
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  par(mar = c(1, 1, 2, 1))
+  radarchart(plot_df,
+             axistype = 4, pcol = colors, plwd = 3, plty = 1:length(colors),
+             cglcol = "grey80", cglty = 1, axislabcol = "grey30", vlcex = 1.2)
+  
+  par(mar = c(1, 1, 2, 1))
+  plot.new()
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 2, 
+         bty = "n")
+  
+  # --- End of Modified Plotting Block ---
+}
+
+
+plot_model_performance_radar2 <- function(mods, is.nsim, main.dir, sub.dir, 
+                                          width = 10, height = 10, dpi = 300, col.opt = "D",
+                                          method = NULL,
+                                          use.n.years.first = 5,
+                                          use.n.years.last = 5,
+                                          start.years = 1, 
+                                          new_model_names = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  library(viridisLite)
+  
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  if (is.nsim) {
+    
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    
+    results <- list()
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+        
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+        
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+        
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+        
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } 
+      }
+      
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      results[[r]] <- tmp
+    }
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  } else {
+    
+    n_models <- length(mods)
+    results <- list()
+    
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      
+      rep <- mods[[m]]$om$rep
+      
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+      
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+      
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+      
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      }
+    }
+    
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    
+    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    results[[1]] <- tmp
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  }
+  
+  if (ncol(plot_df) < 3) {
+    message("Radar chart needs at least 3 models. Showing barplot instead.")
+    return(invisible(NULL))
+  }
+  
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  rownames(plot_df)
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(Catch[AAV]),
+                        expression(SSB[AAV]),
+                        expression(F[AAV]))
+  
+  # Save to PNG
+  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar2.png"))
+  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+  
+  # 1. SET UP LAYOUT: Create a 2-column layout (left is 3x wider than right)
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  # 2. PLOT CHART: Plot radarchart in the left column (area 1)
+  par(mar = c(1, 1, 1, 1)) # Set margins for the chart
+  radarchart(plot_df,
+             axistype = 4,
+             pcol = colors,
+             plwd = 3,
+             plty = 1:length(colors),
+             cglcol = "grey80",
+             cglty = 1,
+             axislabcol = "grey30",
+             vlcex = 1.2)
+  
+  # 3. PLOT LEGEND: Plot legend in the right column (area 2)
+  par(mar = c(1, 1, 1, 1))  # Set margins for the legend area
+  plot.new()               # Create an empty plot area
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 1.5)
+  
+  dev.off()
+  
+  # --- Also plot to screen (inline) using the same layout ---
+  op <- par(no.readonly = TRUE) # Save original graphics settings
+  on.exit(par(op))             # Restore settings when function exits
+  
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  par(mar = c(1, 1, 2, 1))
+  radarchart(plot_df,
+             axistype = 4, pcol = colors, plwd = 3, plty = 1:length(colors),
+             cglcol = "grey80", cglty = 1, axislabcol = "grey30", vlcex = 1.2)
+  
+  par(mar = c(1, 1, 2, 1))
+  plot.new()
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 2, 
+         bty = "n")
+  
+  # --- End of Modified Plotting Block ---
+}
+
+plot_model_performance_radar3 <- function(mods, is.nsim, main.dir, sub.dir, 
+                                          width = 10, height = 10, dpi = 300, col.opt = "D",
+                                          method = NULL,
+                                          use.n.years.first = 5,
+                                          use.n.years.last = 5,
+                                          start.years = 1, 
+                                          new_model_names = NULL) {
+  
+  library(dplyr)
+  library(tidyr)
+  library(fmsb)
+  library(viridis)
+  library(viridisLite)
+  
+  # Helper: calculate Average Annual Catch Variation (AACV)
+  calculate_aacv <- function(values) {
+    if (!is.numeric(values)) {
+      stop("Input must be a numeric vector.")
+    }
+    diffs <- abs(diff(values))
+    aacv <- sum(diffs) / sum(values[-length(values)])
+    return(aacv)
+  }
+  
+  if (is.nsim) {
+    
+    n_models <- length(mods[[1]])
+    n_reps <- length(mods)
+    
+    results <- list()
+    
+    for (r in seq_len(n_reps)) {
+      tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+      
+      for (m in seq_len(n_models)) {
+        rep <- mods[[r]][[m]]$om$rep
+        
+        # Catch and SSB as rowSums
+        catch_ts <- rowSums(rep$pred_catch)
+        ssb_ts <- rowSums(rep$SSB)
+        
+        # Global Fbar
+        n_fleets <- mods[[r]][[m]]$om$input$data$n_fleets[1]
+        n_regions <- mods[[r]][[m]]$om$input$data$n_regions[1]
+        
+        # Catch variation
+        catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+        
+        # SSB variation
+        ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+        
+        # Fbar variation (global is last col)
+        fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+        
+        # First and last period means
+        if(is.null(method)) method = "median"
+        if (method == "median") {
+          tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        } else if (method == "mean") {
+          tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+          tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+          tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+          tmp$catch_aacv[m] <- catch_aacv
+          tmp$ssb_aacv[m] <- ssb_aacv
+          tmp$fbar_aacv[m] <- fbar_aacv
+        }
+        
+        if (is.null(mods[[1]][[1]]$om$rep$log_SSB_FXSPR)) {
+          message("Biological Reference Point has not been calculated internally!")
+          return(invisible(NULL))
+        }
+        
+        tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+        tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+        temp <- tmp1/tmp2
+        temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+        temp2 <- tail(temp, use.n.years.last)
+        tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+        tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+      }
+      
+      # Normalize: higher is better except for Fbar
+      for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+        }
+      }
+      for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+        range_val <- max(tmp[[v]]) - min(tmp[[v]])
+        if (range_val == 0) {
+          tmp[[v]] <- 100
+        } else {
+          norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+          tmp[[v]] <- 100 * (1 - norm_f)
+        }
+      }
+      
+      results[[r]] <- tmp
+    }
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  } else {
+    
+    n_models <- length(mods)
+    results <- list()
+    
+    tmp <- data.frame(Model = paste0("Model", seq_len(n_models)))
+    
+    for (m in seq_len(n_models)) {
+      
+      rep <- mods[[m]]$om$rep
+      
+      # Catch and SSB as rowSums
+      catch_ts <- rowSums(rep$pred_catch)
+      ssb_ts <- rowSums(rep$SSB)
+      
+      # Global Fbar
+      n_fleets <- mods[[m]]$om$input$data$n_fleets[1]
+      n_regions <- mods[[m]]$om$input$data$n_regions[1]
+      
+      # Catch variation
+      catch_aacv <- calculate_aacv(rowSums(rep$pred_catch))
+      
+      # SSB variation
+      ssb_aacv <- calculate_aacv(rowSums(rep$SSB))
+      
+      # Fbar variation (global is last col)
+      fbar_aacv <- calculate_aacv(rep$Fbar[, ncol(rep$Fbar)])
+      
+      if(is.null(method)) method = "median"
+      # First and last period means
+      if (method == "median") {
+        tmp$Catch_first[m] <- median(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- median(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- median(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- median(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+        
+      } else if (method == "mean") {
+        tmp$Catch_first[m] <- mean(catch_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$SSB_first[m] <- mean(ssb_ts[start.years:(start.years + use.n.years.first - 1)])
+        tmp$Catch_last[m] <- mean(tail(catch_ts, use.n.years.last))
+        tmp$SSB_last[m] <- mean(tail(ssb_ts, use.n.years.last))
+        tmp$catch_aacv[m] <- catch_aacv
+        tmp$ssb_aacv[m] <- ssb_aacv
+        tmp$fbar_aacv[m] <- fbar_aacv
+      }
+    }
+    
+    if (is.null(rep$log_SSB_FXSPR)) {
+      message("Biological Reference Point has not been calculated internally!")
+      return(invisible(NULL))
+    }
+    
+    tmp1 <- rep$Fbar[, ncol(rep$Fbar)]
+    tmp2 <- exp(rep$log_Fbar_XSPR[, ncol(rep$Fbar)])
+    temp <- tmp1/tmp2
+    temp1 <- temp[start.years:(start.years + use.n.years.first - 1)]
+    temp2 <- tail(temp, use.n.years.last)
+    tmp$prob_first[m] <- mean(temp1 > 1, na.rm = TRUE)
+    tmp$prob_last[m] <- mean(temp2 > 1, na.rm = TRUE)
+    
+    # Normalize: higher is better except for Fbar
+    for (v in c("Catch_first", "SSB_first", "Catch_last", "SSB_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values are identical; assign full score
+      } else {
+        tmp[[v]] <- 100 * (tmp[[v]] - min(tmp[[v]])) / range_val
+      }
+    }
+    
+    for (v in c("catch_aacv", "ssb_aacv", "fbar_aacv","prob_first","prob_last")) {
+      range_val <- max(tmp[[v]]) - min(tmp[[v]])
+      if (range_val == 0) {
+        tmp[[v]] <- 100  # All values identical; assign full score
+      } else {
+        norm_f <- (tmp[[v]] - min(tmp[[v]])) / range_val
+        tmp[[v]] <- 100 * (1 - norm_f)
+      }
+    }
+    
+    results[[1]] <- tmp
+    
+    # Combine and compute median across realizations
+    combined <- bind_rows(results, .id = "Realization")
+    scores_median <- combined %>%
+      group_by(Model) %>%
+      summarise(across(-Realization, median), .groups = "drop")
+    
+    # Optional renaming
+    if (!is.null(new_model_names)) {
+      if (length(new_model_names) != length(unique(scores_median$Model))) {
+        stop("Length of new_model_names must match the number of models.")
+      }
+      scores_median$Model <- factor(scores_median$Model,
+                                    levels = paste0("Model", seq_along(new_model_names)),
+                                    labels = new_model_names)
+    }
+    
+    # Radar chart prep
+    plot_df <- as.data.frame(scores_median)         # Ensure it's a base data.frame
+    rownames(plot_df) <- plot_df$Model              # Set row names safely
+    plot_df$Model <- NULL                           # Drop Model column
+    plot_df <- as.data.frame(t(plot_df))            # Transpose for radar chart
+    
+    # Add min/max rows for radar scale
+    plot_df <- rbind(rep(100, ncol(plot_df)), rep(0, ncol(plot_df)), plot_df)
+    
+  }
+  
+  if (ncol(plot_df) < 3) {
+    message("Radar chart needs at least 3 models. Showing barplot instead.")
+    return(invisible(NULL))
+  }
+  
+  # Plot without any further changes
+  colors <- viridisLite::viridis(n = nrow(plot_df) - 2, option = col.opt) # -2 for min/max rows
+  
+  # Create the new subfolder if it doesn't exist
+  new_sub_dir <- file.path(main.dir, sub.dir, "Radar_Holistic_Plot")
+  
+  if (!file.exists(new_sub_dir)){
+    dir.create(new_sub_dir)
+  }
+  
+  rownames(plot_df)
+  # Correct way to assign expressions to rownames
+  my_legend_labels <- c(expression(Catch[ST]),
+                        expression(SSB[ST]),
+                        expression(Catch[LT]),
+                        expression(SSB[LT]),
+                        expression(Catch[AAV]),
+                        expression(SSB[AAV]),
+                        expression(F[AAV]),
+                        expression(P(F[ST] > F[MSY])),
+                        expression(P(F[LT] > F[MSY])))
+  
+  # Save to PNG
+  output_file <- file.path(file.path(main.dir, sub.dir, "Radar_Holistic_Plot", "model_performance_radar3.png"))
+  png(filename = output_file, width = width, height = height, units = "in", res = dpi)
+  
+  # 1. SET UP LAYOUT: Create a 2-column layout (left is 3x wider than right)
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  # 2. PLOT CHART: Plot radarchart in the left column (area 1)
+  par(mar = c(1, 1, 1, 1)) # Set margins for the chart
+  radarchart(plot_df,
+             axistype = 4,
+             pcol = colors,
+             plwd = 3,
+             plty = 1:length(colors),
+             cglcol = "grey80",
+             cglty = 1,
+             axislabcol = "grey30",
+             vlcex = 1.2)
+  
+  # 3. PLOT LEGEND: Plot legend in the right column (area 2)
+  par(mar = c(1, 1, 1, 1))  # Set margins for the legend area
+  plot.new()               # Create an empty plot area
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 1.5)
+  
+  dev.off()
+  
+  # --- Also plot to screen (inline) using the same layout ---
+  op <- par(no.readonly = TRUE) # Save original graphics settings
+  on.exit(par(op))             # Restore settings when function exits
+  
+  layout(matrix(c(1, 2), nrow = 1), widths = c(3, 1))
+  
+  par(mar = c(1, 1, 2, 1))
+  radarchart(plot_df,
+             axistype = 4, pcol = colors, plwd = 3, plty = 1:length(colors),
+             cglcol = "grey80", cglty = 1, axislabcol = "grey30", vlcex = 1.2)
+  
+  par(mar = c(1, 1, 2, 1))
+  plot.new()
+  legend("center",         # Place legend in the center of its area
+         legend = my_legend_labels,
+         col = colors,
+         lty = 1:length(colors),
+         lwd = 3,
+         cex = 0.9,
+         y.intersp = 2, 
+         bty = "n")
+  
+  # --- End of Modified Plotting Block ---
 }
