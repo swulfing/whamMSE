@@ -24,6 +24,7 @@
 #'       }
 #'     }
 #'   }
+#' @param proj.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
 #'
 #' @return A matrix containing the projected catch advice for \code{pro.yr} years.
 #'
@@ -45,7 +46,11 @@
 #'
 #' @seealso \code{\link{project_wham}}
 #' @export
-advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL) {
+advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj.ecov) {
+  
+  if(is.null(proj.ecov)){
+    proj.ecov = FALSE
+  }
   
   # Ensure hcr and hcr.opts are always lists
   if (is.null(hcr)) {
@@ -91,7 +96,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL) {
   
   # --- HCR type 1 & 2 ---
   if (hcr.type %in% 1:2) {
-    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
+    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
   }
   
   if (hcr.type == 1) {
@@ -138,7 +143,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL) {
           proj_opts$percentFXSPR <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
@@ -165,7 +170,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL) {
           proj_opts$percentFMSY <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
