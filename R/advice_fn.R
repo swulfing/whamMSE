@@ -24,7 +24,7 @@
 #'       }
 #'     }
 #'   }
-#' @param proj.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
+#' @param proj_ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
 #'
 #' @return A matrix containing the projected catch advice for \code{pro.yr} years.
 #'
@@ -46,10 +46,10 @@
 #'
 #' @seealso \code{\link{project_wham}}
 #' @export
-advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj.ecov) {
+advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov) {
   
-  if(is.null(proj.ecov)){
-    proj.ecov = FALSE
+  if(is.null(proj_ecov)){
+    proj_ecov = FALSE
   }
   
   # Ensure hcr and hcr.opts are always lists
@@ -96,7 +96,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj.ecov) {
   
   # --- HCR type 1 & 2 ---
   if (hcr.type %in% 1:2) {
-    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
+    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov)
   }
   
   if (hcr.type == 1) {
@@ -143,7 +143,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj.ecov) {
           proj_opts$percentFXSPR <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
@@ -170,7 +170,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj.ecov) {
           proj_opts$percentFMSY <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
