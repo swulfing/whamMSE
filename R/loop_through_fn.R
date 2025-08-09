@@ -618,7 +618,7 @@ loop_through_fn <- function(om,
         if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
         
         cat("\nNow generating catch advice...\n")
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov))
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov)
         if(!is.null(reduce_region_info$remove_regions)) {
           remove_regions = reduce_region_info$remove_regions
           fleets_to_remove <- which(om$input$data$fleet_regions %in% which(remove_regions == 0))  # Get fleet indices
