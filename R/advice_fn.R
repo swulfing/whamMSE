@@ -25,7 +25,6 @@
 #'     }
 #'   }
 #' @param proj_ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
-#' @param cont_ecov Logical. Sets weather or not to override the default AR1 process for ecov
 #'
 #' @return A matrix containing the projected catch advice for \code{pro.yr} years.
 #'
@@ -47,7 +46,7 @@
 #'
 #' @seealso \code{\link{project_wham}}
 #' @export
-advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov, cont_ecov) {
+advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov) {
   
   if(is.null(proj_ecov)){
     proj_ecov = FALSE
@@ -93,8 +92,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov, cont_
     avg.yrs = tail(em$years, avg_yrs),
     cont.M.re = cont.M.re,
     cont.move.re = cont.move.re,
-    proj.ecov = proj_ecov,
-    cont.ecov = cont_ecov
+    proj.ecov = proj_ecov
   )
   
   # --- HCR type 1 & 2 ---
