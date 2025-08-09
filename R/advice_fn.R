@@ -47,7 +47,7 @@
 #'
 #' @seealso \code{\link{project_wham}}
 #' @export
-advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov = proj.ecov, cont_ecov = continue_ecov) {
+advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov, cont_ecov) {
   
   if(is.null(proj_ecov)){
     proj_ecov = FALSE
