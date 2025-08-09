@@ -325,7 +325,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         
-        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov)
         
         if(is.vector(em.advice)) em.advice = matrix(em.advice, byrow = TRUE)
         
@@ -409,7 +409,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         # advice <- advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov)
         
         if(is.vector(advice)) advice <- as.matrix(t(advice))
         colnames(advice) <- paste0("Fleet_", 1:om$input$data$n_fleets)
@@ -497,7 +497,7 @@ loop_through_fn <- function(om,
           pdHess <- check_conv(em[[s]])$pdHess
           if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
           
-          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov))
           advice <- cbind(advice, tmp)
         }
         
@@ -618,7 +618,7 @@ loop_through_fn <- function(om,
         if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
         
         cat("\nNow generating catch advice...\n")
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov))
         if(!is.null(reduce_region_info$remove_regions)) {
           remove_regions = reduce_region_info$remove_regions
           fleets_to_remove <- which(om$input$data$fleet_regions %in% which(remove_regions == 0))  # Get fleet indices
