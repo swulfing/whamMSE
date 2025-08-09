@@ -92,12 +92,14 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov = proj
     percentFMSY = percentFMSY,
     avg.yrs = tail(em$years, avg_yrs),
     cont.M.re = cont.M.re,
-    cont.move.re = cont.move.re
+    cont.move.re = cont.move.re,
+    proj.ecov = proj_ecov,
+    cont.ecov = cont_ecov
   )
   
   # --- HCR type 1 & 2 ---
   if (hcr.type %in% 1:2) {
-    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov, cont.ecov = cont_ecov)
+    em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
   }
   
   if (hcr.type == 1) {
@@ -144,7 +146,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov = proj
           proj_opts$percentFXSPR <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov, cont.ecov = cont_ecov)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
@@ -171,7 +173,7 @@ advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov = proj
           proj_opts$percentFMSY <- min_percent
         }
         
-        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE, proj.ecov = proj_ecov, cont.ecov = cont_ecov)
+        em_proj <- project_wham(em, proj.opts = proj_opts, MakeADFun.silent = TRUE)
         advice <- em_proj$rep$pred_catch[
           (length(em_proj$years) + 1):(length(em_proj$years) + pro.yr), 
         ]
