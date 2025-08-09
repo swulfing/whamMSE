@@ -48,10 +48,6 @@
 #' @export
 advice_fn <- function(em, pro.yr = assess.interval, hcr = NULL, proj_ecov) {
   
-  if(is.null(proj_ecov)){
-    proj_ecov = FALSE
-  }
-  
   # Ensure hcr and hcr.opts are always lists
   if (is.null(hcr)) {
     hcr <- list(hcr.type = 1, hcr.opts = list())
