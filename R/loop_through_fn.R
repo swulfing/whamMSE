@@ -13,6 +13,7 @@
 #' @param catchability_em Configuration for survey catchability in the assessment model.
 #' @param ecov_em Configuration for environmental covariates in the assessment model.
 #' @param proj.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
+#' @param continue_ecov Logical. Sets weather or not to override the default AR1 process for ecov
 #' @param age_comp_em Character. Likelihood distribution for age composition data in the assessment model.
 #'   \itemize{
 #'     \item \code{"multinomial"} (default)
@@ -226,6 +227,7 @@ loop_through_fn <- function(om,
                             catchability_em = NULL,
                             ecov_em = NULL,
                             proj.ecov = NULL,
+                            continue_ecov = TRUE,
                             age_comp_em = "multinomial", 
                             em.opt = list(separate.em = TRUE, separate.em.type = 1,
                                           do.move = FALSE, est.move = FALSE), 
