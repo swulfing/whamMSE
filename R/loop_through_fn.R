@@ -497,7 +497,7 @@ loop_through_fn <- function(om,
           pdHess <- check_conv(em[[s]])$pdHess
           if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
           
-          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov))
+          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = proj.ecov, cont_ecov = continue_ecov)
           advice <- cbind(advice, tmp)
         }
         
