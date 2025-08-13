@@ -12,7 +12,7 @@
 #' @param move_em Configuration for movement in the assessment model.
 #' @param catchability_em Configuration for survey catchability in the assessment model.
 #' @param ecov_em Configuration for environmental covariates in the assessment model.
-#' @param proj.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
+#' @param project.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
 #' @param age_comp_em Character. Likelihood distribution for age composition data in the assessment model.
 #'   \itemize{
 #'     \item \code{"multinomial"} (default)
@@ -225,7 +225,7 @@ loop_through_fn <- function(om,
                             move_em = NULL, 
                             catchability_em = NULL,
                             ecov_em = NULL,
-                            proj.ecov = NULL,
+                            project.ecov = NULL,
                             age_comp_em = "multinomial", 
                             em.opt = list(separate.em = TRUE, separate.em.type = 1,
                                           do.move = FALSE, est.move = FALSE), 
@@ -298,6 +298,7 @@ loop_through_fn <- function(om,
                                 M_em = M_em, sel_em = sel_em,
                                 NAA_re_em = NAA_re_em, move_em = move_em, 
                                 catchability_em = catchability_em, ecov_em = ecov_em,
+                                ecov_obs = ecov_em$mean,
                                 em.opt = em.opt, em_years = em.years, year.use = year.use, 
                                 age_comp_em = age_comp_em,
                                 aggregate_catch_info = aggregate_catch_info,
@@ -323,7 +324,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         
-        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
         
         if(is.vector(em.advice)) em.advice = matrix(em.advice, byrow = TRUE)
         
@@ -407,7 +408,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         # advice <- advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
         
         if(is.vector(advice)) advice <- as.matrix(t(advice))
         colnames(advice) <- paste0("Fleet_", 1:om$input$data$n_fleets)
@@ -495,7 +496,7 @@ loop_through_fn <- function(om,
           pdHess <- check_conv(em[[s]])$pdHess
           if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
           
-          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
           advice <- cbind(advice, tmp)
         }
         
@@ -574,6 +575,7 @@ loop_through_fn <- function(om,
                                 M_em = M_em, sel_em = sel_em,
                                 NAA_re_em = NAA_re_em, move_em = move_em, 
                                 catchability_em = catchability_em, ecov_em = ecov_em,
+                                ecov_obs = ecov_em$mean,
                                 em.opt = em.opt, em_years = em.years, year.use = year.use, 
                                 age_comp_em = age_comp_em,
                                 aggregate_catch_info = aggregate_catch_info,
@@ -616,7 +618,7 @@ loop_through_fn <- function(om,
         if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
         
         cat("\nNow generating catch advice...\n")
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = proj.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
         if(!is.null(reduce_region_info$remove_regions)) {
           remove_regions = reduce_region_info$remove_regions
           fleets_to_remove <- which(om$input$data$fleet_regions %in% which(remove_regions == 0))  # Get fleet indices

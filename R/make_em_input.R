@@ -92,6 +92,7 @@
 #'     \item `$catchability_em` Cathability configuration for the "reduced" assessment model.
 #'     \item `$move_em` Movement configuration for the "reduced" assessment model.
 #'     \item `$ecov_em` Environmental covariate configuration for the "reduced" assessment model.
+#'     \item `$ecov_obs` List of Environmental covariate
 #'     \item `$onto_move_list` List of ontogenetic movement information for the "reduced" assessment model:
 #'       \itemize{
 #'         \item `$onto_move` (array, dimension: `n_stocks × n_regions × (n_regions-1)`)  
@@ -129,6 +130,7 @@ make_em_input <- function(om,
                           move_em, 
                           catchability_em,
                           ecov_em,
+                          ecov_obs,
                           em.opt, 
                           em_years, 
                           year.use,
@@ -208,7 +210,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -306,7 +308,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -391,7 +393,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -494,7 +496,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs#om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -723,7 +725,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs #om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -807,7 +809,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
