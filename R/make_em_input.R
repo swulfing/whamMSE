@@ -210,7 +210,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs# ecov_obs# om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -308,7 +308,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs #ecov_obs# om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -393,7 +393,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs#ecov_obs#om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -496,7 +496,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- om$input$data$Ecov_obs#ecov_obs#om$input$data$Ecov_obs
+        ecov_mean <- ecov_obs#om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -725,7 +725,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs#ecov_obs #om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs #om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -809,7 +809,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- om$input$data$Ecov_obs#ecov_obs#om$input$data$Ecov_obs
+          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
