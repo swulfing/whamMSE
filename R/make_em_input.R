@@ -92,7 +92,6 @@
 #'     \item `$catchability_em` Cathability configuration for the "reduced" assessment model.
 #'     \item `$move_em` Movement configuration for the "reduced" assessment model.
 #'     \item `$ecov_em` Environmental covariate configuration for the "reduced" assessment model.
-#'     \item `$ecov_obs` List of Environmental covariate
 #'     \item `$onto_move_list` List of ontogenetic movement information for the "reduced" assessment model:
 #'       \itemize{
 #'         \item `$onto_move` (array, dimension: `n_stocks × n_regions × (n_regions-1)`)  
@@ -115,6 +114,21 @@
 #'     \item `$agg_index_sigma` Matrix. Either full (n_years x n_indices) or subset (length(ind_em) x n_indices).
 #'     \item `$index_Neff` Matrix. Same dimension as `agg_index_sigma`.
 #'   }
+#'   
+#' @param ecov_em_opts List (optional). Options for projecting environmental
+#'   covariates in the estimation model during catch advice. Allows explicit
+#'   control of Ecov inputs in the projection period. The expected components include:
+#'   \itemize{
+#'     \item `$use_ecov_em` Logical. If `TRUE`, the EM uses user-specified or
+#'       projected Ecov values instead of directly continuing the OM process.
+#'     \item `$lag` Integer. Specifies the lag (in years) to align Ecov values when used in
+#'       recruitment or other population processes. Must be provided if `$use_ecov_em = TRUE`.
+#'     \item `$period` Integer vector (optional). If provided, specifies the projection
+#'       years (indices relative to the Ecov time series) to override with user-defined
+#'       values. If `NULL`, then the entire projection period is replaced.
+#'   }
+#'   If `NULL`, Ecov values for projections are inherited directly from the OM/EM state without override.
+#'   
 #' @return List. A `wham` input object prepared for stock assessment.
 #' 
 #' @export
@@ -130,7 +144,6 @@ make_em_input <- function(om,
                           move_em, 
                           catchability_em,
                           ecov_em,
-                          ecov_obs,
                           em.opt, 
                           em_years, 
                           year.use,
@@ -141,7 +154,8 @@ make_em_input <- function(om,
                           filter_indices = NULL,
                           reduce_region_info = NULL,
                           update_catch_info = NULL,
-                          update_index_info = NULL) {
+                          update_index_info = NULL,
+                          ecov_em_opts = NULL) {
   
   if (is.null(em.opt)) stop("em.opt must be specified!")
   
@@ -173,7 +187,7 @@ make_em_input <- function(om,
   }
   
   if (em.opt$separate.em) {    # Non-spatial or Spatially implicit  
-
+    
     if (em.opt$separate.em.type == 1) {
       
       n_fleets <- ifelse(is.null(aggregate_catch_info$n_fleets), 1, aggregate_catch_info$n_fleets)
@@ -210,7 +224,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
+        ecov_mean <- om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -249,7 +263,7 @@ make_em_input <- function(om,
       if(!is.null(filter_indices) && length(filter_indices) != n_indices) stop("Length of filter_indices must = n_indices!")
       fleet_regions <- em_info$catch_info$fleet_regions
       index_regions <- em_info$index_info$index_regions
-
+      
       em_info <- filter_and_generate_em_info(em_info, 
                                              em.opt = em.opt, 
                                              ind_em, 
@@ -266,7 +280,7 @@ make_em_input <- function(om,
       info <- generate_basic_info_em(em_info, em_years, n_stocks = 1, n_regions = 1, n_fleets = n_fleets, n_indices = n_indices, filter_indices = filter_indices)
       
       basic_info <- info$basic_info
-
+      
       info$catch_info$fleet_regions[] = 1
       info$index_info$index_regions[] = 1
       
@@ -308,7 +322,7 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- ecov_obs# om$input$data$Ecov_obs
+        ecov_mean <- om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -341,7 +355,7 @@ make_em_input <- function(om,
     
     if (em.opt$separate.em.type == 3) {
       # Multiple regions and stocks scenario
-
+      
       # fleet_regions <- em_info$catch_info$fleet_regions
       # index_regions <- em_info$index_info$index_regions
       fleet_regions <- data$fleet_regions
@@ -393,7 +407,7 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
+          ecov_mean <- om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
@@ -496,8 +510,15 @@ make_em_input <- function(om,
       if(!is.null(ecov_em)) {
         ecov_em_new <- ecov_em
         ecov_em_new$year <- ecov_em_new$year
-        ecov_mean <- ecov_obs#om$input$data$Ecov_obs
+        ecov_mean <- om$input$data$Ecov_obs
         ecov_em_new$mean <- ecov_mean
+        if(!is.null(ecov_em_opts) && ecov_em_opts$use_ecov_em) {
+          if(!is.null(ecov_em_opts$period)) {
+            ecov_em_new$mean[ecov_em_opts$period,] <- ecov_em$mean[ecov_em_opts$period,]
+          } else {
+            ecov_em_new$mean <- ecov_em$mean
+          }
+        } 
         if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
           ecov_em_new$logsigma = ecov_em_new$logsigma
         } else {
@@ -657,7 +678,7 @@ make_em_input <- function(om,
                                      n_fleets = n_fleets, 
                                      n_indices = n_indices, 
                                      filter_indices = filter_indices)
-                                            
+      
       basic_info <- info$basic_info
       id_fleets = info$fleets_to_remove
       id_indices = info$indices_to_remove
@@ -674,7 +695,7 @@ make_em_input <- function(om,
         info$catch_info$use_agg_catch <- info$catch_info$use_agg_catch[ind_em, , drop = FALSE]
         info$catch_info$use_catch_paa <- info$catch_info$use_catch_paa[ind_em, , drop = FALSE]
       }
-
+      
       if (!is.null(filter_indices) & any(filter_indices == 0)) {
         info$index_info$agg_indices <- data$agg_indices[ind_em, idx, drop = FALSE]
         info$index_info$index_paa <- data$index_paa[idx, ind_em, , drop = FALSE]
@@ -725,8 +746,9 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- ecov_obs #om$input$data$Ecov_obs
+          ecov_mean <- om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
+          if(!is.null(ecov_em_opts) && ecov_em_opts$use_ecov_em) ecov_em_new$mean[ecov_em_opts$period,] <- ecov_em$mean[ecov_em_opts$period,]
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
           } else {
@@ -809,8 +831,9 @@ make_em_input <- function(om,
         if(!is.null(ecov_em)) {
           ecov_em_new <- ecov_em
           ecov_em_new$year <- ecov_em_new$year
-          ecov_mean <- ecov_obs#om$input$data$Ecov_obs
+          ecov_mean <- om$input$data$Ecov_obs
           ecov_em_new$mean <- ecov_mean
+          if(!is.null(ecov_em_opts) && ecov_em_opts$use_ecov_em) ecov_em_new$mean[ecov_em_opts$period,] <- ecov_em$mean[ecov_em_opts$period,]
           if (any(ecov_em_new$logsigma %in% c("est_1", "est_re"))) {
             ecov_em_new$logsigma = ecov_em_new$logsigma
           } else {

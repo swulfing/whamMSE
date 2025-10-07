@@ -12,7 +12,19 @@
 #' @param move_em Configuration for movement in the assessment model.
 #' @param catchability_em Configuration for survey catchability in the assessment model.
 #' @param ecov_em Configuration for environmental covariates in the assessment model.
-#' @param project.ecov Matrix. user-specified environmental covariate(s) for projections. n.yrs x n.ecov
+#' @param ecov_em_opts List (optional). Options for projecting environmental
+#'   covariates in the estimation model during catch advice. Allows explicit
+#'   control of Ecov inputs in the projection period. The expected components include:
+#'   \itemize{
+#'     \item `$use_ecov_em` Logical. If `TRUE`, the EM uses user-specified or
+#'       projected Ecov values instead of directly continuing the OM process.
+#'     \item `$lag` Integer. Specifies the lag (in years) to align Ecov values when used in
+#'       recruitment or other population processes. Must be provided if `$use_ecov_em = TRUE`.
+#'     \item `$period` Integer vector (optional). If provided, specifies the projection
+#'       years (indices relative to the Ecov time series) to override with user-defined
+#'       values. If `NULL`, then the entire projection period is replaced.
+#'   }
+#'   If `NULL`, Ecov values for projections are inherited directly from the OM/EM state without override.
 #' @param age_comp_em Character. Likelihood distribution for age composition data in the assessment model.
 #'   \itemize{
 #'     \item \code{"multinomial"} (default)
@@ -225,7 +237,7 @@ loop_through_fn <- function(om,
                             move_em = NULL, 
                             catchability_em = NULL,
                             ecov_em = NULL,
-                            project.ecov = NULL,
+                            ecov_em_opts = NULL,
                             age_comp_em = "multinomial", 
                             em.opt = list(separate.em = TRUE, separate.em.type = 1,
                                           do.move = FALSE, est.move = FALSE), 
@@ -253,7 +265,7 @@ loop_through_fn <- function(om,
                             seed = 123, 
                             save.sdrep = FALSE, 
                             save.last.em = FALSE
-                            ) {
+) {
   
   start.time <- Sys.time()
   
@@ -293,12 +305,11 @@ loop_through_fn <- function(om,
       em.years <- base_years[1]:y
       
       if (add.years && i != 1) year.use = year.use + assess_interval
-        
+      
       em_input <- make_em_input(om = om, em_info = em_info, 
                                 M_em = M_em, sel_em = sel_em,
                                 NAA_re_em = NAA_re_em, move_em = move_em, 
                                 catchability_em = catchability_em, ecov_em = ecov_em,
-                                ecov_obs = ecov_em$mean,
                                 em.opt = em.opt, em_years = em.years, year.use = year.use, 
                                 age_comp_em = age_comp_em,
                                 aggregate_catch_info = aggregate_catch_info,
@@ -316,7 +327,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow fitting assessment model...\n")
         em <- fit_wham(em_input, do.retro = do.retro, do.osa = do.osa, do.brps = TRUE, MakeADFun.silent = TRUE)
-     
+        
         cat("\nNow checking convergence of assessment model...\n")
         conv <- check_conv(em)$conv
         pdHess <- check_conv(em)$pdHess
@@ -324,7 +335,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         
-        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
+        em.advice <- advice_fn(em, pro.yr = assess_interval, hcr)
         
         if(is.vector(em.advice)) em.advice = matrix(em.advice, byrow = TRUE)
         
@@ -370,7 +381,7 @@ loop_through_fn <- function(om,
           interval.info <- list(catch = advice, years = y + 1:assess_interval)
           real_catch = advice
         }
-
+        
         cat("\nNow calculating F at age in the OM given the catch advice...\n")
         
         om <- update_om_fn(om, interval.info, seed = seed, random = random, method = "nlminb", by_fleet = by_fleet, do.brps = do.brps)
@@ -400,7 +411,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow fitting assessment model...\n")
         em <- fit_wham(em_input, do.retro = do.retro, do.osa = do.osa, do.brps = TRUE, MakeADFun.silent = TRUE)
-
+        
         cat("\nNow checking convergence of assessment model...\n")
         conv <- check_conv(em)$conv
         pdHess <- check_conv(em)$pdHess
@@ -408,7 +419,7 @@ loop_through_fn <- function(om,
         
         cat("\nNow using the EM to project catch...\n")
         # advice <- advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr)
         
         if(is.vector(advice)) advice <- as.matrix(t(advice))
         colnames(advice) <- paste0("Fleet_", 1:om$input$data$n_fleets)
@@ -496,7 +507,7 @@ loop_through_fn <- function(om,
           pdHess <- check_conv(em[[s]])$pdHess
           if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
           
-          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
+          tmp <- advice_fn(em[[s]], pro.yr = assess_interval, hcr)
           advice <- cbind(advice, tmp)
         }
         
@@ -563,7 +574,7 @@ loop_through_fn <- function(om,
     }
   } else {
     for (y in assess_years) {
-     
+      
       cat(paste0("\nNow conducting stock assessment for year ", y, "\n"))
       
       i <- which(assess_years == y)
@@ -575,7 +586,6 @@ loop_through_fn <- function(om,
                                 M_em = M_em, sel_em = sel_em,
                                 NAA_re_em = NAA_re_em, move_em = move_em, 
                                 catchability_em = catchability_em, ecov_em = ecov_em,
-                                ecov_obs = ecov_em$mean,
                                 em.opt = em.opt, em_years = em.years, year.use = year.use, 
                                 age_comp_em = age_comp_em,
                                 aggregate_catch_info = aggregate_catch_info,
@@ -583,7 +593,8 @@ loop_through_fn <- function(om,
                                 filter_indices = filter_indices,
                                 reduce_region_info = reduce_region_info,
                                 update_catch_info = update_catch_info,
-                                update_index_info = update_index_info) 
+                                update_index_info = update_index_info,
+                                ecov_em_opts = ecov_em_opts) 
       
       if(!is.null(user_SPR_weights_info)) {
         if(is.null(user_SPR_weights_info$method)) user_SPR_weights_info$method = "equal"
@@ -593,7 +604,7 @@ loop_through_fn <- function(om,
                                        method = user_SPR_weights$weights_method,
                                        weight_years = user_SPR_weights_info$weight_years, 
                                        index_pointer = user_SPR_weights_info$index_pointer
-                                       )
+        )
       }
       
       if(!is.null(FXSPR_init)) em_input$data$FXSPR_init[] = FXSPR_init
@@ -618,7 +629,7 @@ loop_through_fn <- function(om,
         if (conv & pdHess) cat("\nAssessment model is converged.\n") else warnings("\nAssessment model is not converged!\n")
         
         cat("\nNow generating catch advice...\n")
-        advice <- advice_fn(em, pro.yr = assess_interval, hcr, proj_ecov = project.ecov)
+        advice <- advice_fn(em, pro.yr = assess_interval, hcr, ecov_em_opts)
         if(!is.null(reduce_region_info$remove_regions)) {
           remove_regions = reduce_region_info$remove_regions
           fleets_to_remove <- which(om$input$data$fleet_regions %in% which(remove_regions == 0))  # Get fleet indices
@@ -678,7 +689,7 @@ loop_through_fn <- function(om,
         pdHess = NULL
         advice = NULL
       }
-
+      
       em_list[[i]] <- em$rep
       par.est[[i]] <- as.list(em$sdrep, "Estimate")
       par.se[[i]] <- as.list(em$sdrep, "Std. Error")
