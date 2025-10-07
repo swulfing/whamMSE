@@ -2890,7 +2890,8 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
                              width = 10, height = 7, dpi = 300, col.opt = "D",
                              new_model_names = NULL,
                              use.n.years = NULL,
-                             show_density = FALSE) {
+                             show_density = FALSE,
+                             nbins = 20) {
   library(dplyr)
   library(tidyr)
   library(ggplot2)
@@ -3052,7 +3053,7 @@ plot_kobe_status <- function(mods, is.nsim, main.dir, sub.dir,
                         ylim = c(0, quantile(temp$Overfishing, 0.95, na.rm = TRUE)))
       
       # === Add smoothed 2D density layer
-      p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.9, contour_var = "density", bins = 20) +
+      p[[i]] <- p[[i]] + geom_density_2d_filled(aes(fill = after_stat(level)), alpha = 0.9, contour_var = "density", bins = nbins) +
         scale_fill_viridis_d(option = col.opt) + guides(fill = "none") 
       
     } else {
